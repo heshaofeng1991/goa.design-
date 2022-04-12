@@ -9,6 +9,7 @@ package product
 
 import (
 	"context"
+	"io"
 
 	goa "goa.design/goa/v3/pkg"
 )
@@ -17,17 +18,27 @@ import (
 type Client struct {
 	BatchesCreateProductEndpoint goa.Endpoint
 	UpdateProductEndpoint        goa.Endpoint
+	ExportProductEndpoint        goa.Endpoint
+	DownloadTemplatesEndpoint    goa.Endpoint
+	UploadProductEndpoint        goa.Endpoint
+	UploadProductUpdateEndpoint  goa.Endpoint
 	GenerateBarcodeEndpoint      goa.Endpoint
-	GenerateTokenEndpoint        goa.Endpoint
+	ProductsQueryEndpoint        goa.Endpoint
+	ProductDetailEndpoint        goa.Endpoint
 }
 
 // NewClient initializes a "product" service client given the endpoints.
-func NewClient(batchesCreateProduct, updateProduct, generateBarcode, generateToken goa.Endpoint) *Client {
+func NewClient(batchesCreateProduct, updateProduct, exportProduct, downloadTemplates, uploadProduct, uploadProductUpdate, generateBarcode, productsQuery, productDetail goa.Endpoint) *Client {
 	return &Client{
 		BatchesCreateProductEndpoint: batchesCreateProduct,
 		UpdateProductEndpoint:        updateProduct,
+		ExportProductEndpoint:        exportProduct,
+		DownloadTemplatesEndpoint:    downloadTemplates,
+		UploadProductEndpoint:        uploadProduct,
+		UploadProductUpdateEndpoint:  uploadProductUpdate,
 		GenerateBarcodeEndpoint:      generateBarcode,
-		GenerateTokenEndpoint:        generateToken,
+		ProductsQueryEndpoint:        productsQuery,
+		ProductDetailEndpoint:        productDetail,
 	}
 }
 
@@ -52,9 +63,59 @@ func (c *Client) UpdateProduct(ctx context.Context, p *Product) (res *UpdateResp
 	return ires.(*UpdateResponse), nil
 }
 
+// ExportProduct calls the "export_product" endpoint of the "product" service.
+// ExportProduct may return the following errors:
+//	- "internal_error" (type *goa.ServiceError): Fault while processing download.
+//	- error: internal error
+func (c *Client) ExportProduct(ctx context.Context, p *ProductQueryPayload) (res *ExportProductResult, resp io.ReadCloser, err error) {
+	var ires interface{}
+	ires, err = c.ExportProductEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	o := ires.(*ExportProductResponseData)
+	return o.Result, o.Body, nil
+}
+
+// DownloadTemplates calls the "download_templates" endpoint of the "product"
+// service.
+// DownloadTemplates may return the following errors:
+//	- "internal_error" (type *goa.ServiceError): Fault while processing download.
+//	- error: internal error
+func (c *Client) DownloadTemplates(ctx context.Context, p *DownloadTemplatesReq) (res *ExportProductResult, resp io.ReadCloser, err error) {
+	var ires interface{}
+	ires, err = c.DownloadTemplatesEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	o := ires.(*DownloadTemplatesResponseData)
+	return o.Result, o.Body, nil
+}
+
+// UploadProduct calls the "upload_product" endpoint of the "product" service.
+func (c *Client) UploadProduct(ctx context.Context, p *UploadProductPayload) (res *UploadProductResponse, err error) {
+	var ires interface{}
+	ires, err = c.UploadProductEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*UploadProductResponse), nil
+}
+
+// UploadProductUpdate calls the "upload_product_update" endpoint of the
+// "product" service.
+func (c *Client) UploadProductUpdate(ctx context.Context, p *UploadProductPayload) (res *UploadProductResponse, err error) {
+	var ires interface{}
+	ires, err = c.UploadProductUpdateEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*UploadProductResponse), nil
+}
+
 // GenerateBarcode calls the "generate_barcode" endpoint of the "product"
 // service.
-func (c *Client) GenerateBarcode(ctx context.Context, p *BarCode) (res *BarCodeRsp, err error) {
+func (c *Client) GenerateBarcode(ctx context.Context, p *AuthToken) (res *BarCodeRsp, err error) {
 	var ires interface{}
 	ires, err = c.GenerateBarcodeEndpoint(ctx, p)
 	if err != nil {
@@ -63,12 +124,22 @@ func (c *Client) GenerateBarcode(ctx context.Context, p *BarCode) (res *BarCodeR
 	return ires.(*BarCodeRsp), nil
 }
 
-// GenerateToken calls the "generate_token" endpoint of the "product" service.
-func (c *Client) GenerateToken(ctx context.Context, p *GenerateTokenReq) (res *GenerateTokenRsp, err error) {
+// ProductsQuery calls the "products_query" endpoint of the "product" service.
+func (c *Client) ProductsQuery(ctx context.Context, p *ProductsQueryReq) (res *ProductsQueryRsp, err error) {
 	var ires interface{}
-	ires, err = c.GenerateTokenEndpoint(ctx, p)
+	ires, err = c.ProductsQueryEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*GenerateTokenRsp), nil
+	return ires.(*ProductsQueryRsp), nil
+}
+
+// ProductDetail calls the "product_detail" endpoint of the "product" service.
+func (c *Client) ProductDetail(ctx context.Context, p *ProductDetailReq) (res *ProductDetailRsp, err error) {
+	var ires interface{}
+	ires, err = c.ProductDetailEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*ProductDetailRsp), nil
 }

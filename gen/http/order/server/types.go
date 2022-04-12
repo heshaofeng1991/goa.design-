@@ -31,7 +31,7 @@ type CreateInboundOrderRequestBody struct {
 	EstimatedArrivalAt *string `form:"estimated_arrival_at,omitempty" json:"estimated_arrival_at,omitempty" xml:"estimated_arrival_at,omitempty"`
 	// inbound order items
 	Items []*ItemRequestBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
-	// delivery mode(1 direct，2 warehouse)
+	// delivery mode(1 direct，2 warehouse, 3 platform)
 	Type *int `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
 	// address
 	Address *ShippingAddressRequestBody `form:"address,omitempty" json:"address,omitempty" xml:"address,omitempty"`
@@ -60,7 +60,7 @@ type UpdateInboundOrderRequestBody struct {
 	EstimatedArrivalAt *string `form:"estimated_arrival_at,omitempty" json:"estimated_arrival_at,omitempty" xml:"estimated_arrival_at,omitempty"`
 	// inbound order items
 	Items []*ItemRequestBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
-	// delivery mode(1 direct，2 warehouse)
+	// delivery mode(1 direct，2 warehouse, 3 platform)
 	Type *int `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
 	// address
 	Address *ShippingAddressRequestBody `form:"address,omitempty" json:"address,omitempty" xml:"address,omitempty"`
@@ -70,80 +70,6 @@ type UpdateInboundOrderRequestBody struct {
 	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
 	// inbound order id
 	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-}
-
-// CreateOutboundOrderRequestBody is the type of the "order" service
-// "create_outbound_order" endpoint HTTP request body.
-type CreateOutboundOrderRequestBody struct {
-	// customer order id
-	CustomerOrderID *string `form:"customer_order_id,omitempty" json:"customer_order_id,omitempty" xml:"customer_order_id,omitempty"`
-	// customer code
-	CustomerCode *string `form:"customer_code,omitempty" json:"customer_code,omitempty" xml:"customer_code,omitempty"`
-	// total price
-	TotalPrice *float64 `form:"total_price,omitempty" json:"total_price,omitempty" xml:"total_price,omitempty"`
-	// currency
-	Currency *string `form:"currency,omitempty" json:"currency,omitempty" xml:"currency,omitempty"`
-	// customer tariff number
-	CustomerTariffNumber *string `form:"customer_tariff_number,omitempty" json:"customer_tariff_number,omitempty" xml:"customer_tariff_number,omitempty"`
-	// customer tariff number of type
-	CustomerTariffNumberType *int `form:"customer_tariff_number_type,omitempty" json:"customer_tariff_number_type,omitempty" xml:"customer_tariff_number_type,omitempty"`
-	// enable prepay tariff
-	EnablePrepayTariff *bool `form:"enable_prepay_tariff,omitempty" json:"enable_prepay_tariff,omitempty" xml:"enable_prepay_tariff,omitempty"`
-	// shipping type(1 Economic, 2 Fastest, 3 Recommended)
-	ShippingType *int `form:"shipping_type,omitempty" json:"shipping_type,omitempty" xml:"shipping_type,omitempty"`
-	// receiver info
-	ReceiverInfo *ShippingAddressRequestBody `form:"receiver_info,omitempty" json:"receiver_info,omitempty" xml:"receiver_info,omitempty"`
-	// order items
-	Items []*OutboundOrderItemRequestBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
-	// channel id
-	ChannelID *int `form:"channel_id,omitempty" json:"channel_id,omitempty" xml:"channel_id,omitempty"`
-	// description
-	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
-	// 入库单ID
-	InboundOrderID *int64 `form:"inbound_order_id,omitempty" json:"inbound_order_id,omitempty" xml:"inbound_order_id,omitempty"`
-	// delivery mode(1 direct，2 warehouse)
-	Type *int `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
-	// outbound order id
-	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// package id
-	PackageID *int64 `form:"package_id,omitempty" json:"package_id,omitempty" xml:"package_id,omitempty"`
-}
-
-// UpdateOutboundOrderRequestBody is the type of the "order" service
-// "update_outbound_order" endpoint HTTP request body.
-type UpdateOutboundOrderRequestBody struct {
-	// customer order id
-	CustomerOrderID *string `form:"customer_order_id,omitempty" json:"customer_order_id,omitempty" xml:"customer_order_id,omitempty"`
-	// customer code
-	CustomerCode *string `form:"customer_code,omitempty" json:"customer_code,omitempty" xml:"customer_code,omitempty"`
-	// total price
-	TotalPrice *float64 `form:"total_price,omitempty" json:"total_price,omitempty" xml:"total_price,omitempty"`
-	// currency
-	Currency *string `form:"currency,omitempty" json:"currency,omitempty" xml:"currency,omitempty"`
-	// customer tariff number
-	CustomerTariffNumber *string `form:"customer_tariff_number,omitempty" json:"customer_tariff_number,omitempty" xml:"customer_tariff_number,omitempty"`
-	// customer tariff number of type
-	CustomerTariffNumberType *int `form:"customer_tariff_number_type,omitempty" json:"customer_tariff_number_type,omitempty" xml:"customer_tariff_number_type,omitempty"`
-	// enable prepay tariff
-	EnablePrepayTariff *bool `form:"enable_prepay_tariff,omitempty" json:"enable_prepay_tariff,omitempty" xml:"enable_prepay_tariff,omitempty"`
-	// shipping type(1 Economic, 2 Fastest, 3 Recommended)
-	ShippingType *int `form:"shipping_type,omitempty" json:"shipping_type,omitempty" xml:"shipping_type,omitempty"`
-	// receiver info
-	ReceiverInfo *ShippingAddressRequestBody `form:"receiver_info,omitempty" json:"receiver_info,omitempty" xml:"receiver_info,omitempty"`
-	// order items
-	Items []*OutboundOrderItemRequestBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
-	// channel id
-	ChannelID *int `form:"channel_id,omitempty" json:"channel_id,omitempty" xml:"channel_id,omitempty"`
-	// description
-	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
-	// 入库单ID
-	InboundOrderID *int64 `form:"inbound_order_id,omitempty" json:"inbound_order_id,omitempty" xml:"inbound_order_id,omitempty"`
-	// delivery mode(1 direct，2 warehouse)
-	Type *int `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
-	// outbound order id
-	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// package id
-	PackageID *int64 `form:"package_id,omitempty" json:"package_id,omitempty" xml:"package_id,omitempty"`
 }
 
 // CreatePickupOrderRequestBody is the type of the "order" service
@@ -161,36 +87,218 @@ type CreatePickupOrderRequestBody struct {
 	CustomerCode *string `form:"customer_code,omitempty" json:"customer_code,omitempty" xml:"customer_code,omitempty"`
 }
 
+// CreateOutboundOrderRequestBody is the type of the "order" service
+// "create_outbound_order" endpoint HTTP request body.
+type CreateOutboundOrderRequestBody struct {
+	// customer order id
+	CustomerOrderID *string `form:"customer_order_id,omitempty" json:"customer_order_id,omitempty" xml:"customer_order_id,omitempty"`
+	// customer code
+	CustomerCode *string `form:"customer_code,omitempty" json:"customer_code,omitempty" xml:"customer_code,omitempty"`
+	// total price
+	TotalPrice *float64 `form:"total_price,omitempty" json:"total_price,omitempty" xml:"total_price,omitempty"`
+	// currency
+	Currency *string `form:"currency,omitempty" json:"currency,omitempty" xml:"currency,omitempty"`
+	// customer tariff number
+	CustomerTariffNumber *string `form:"customer_tariff_number,omitempty" json:"customer_tariff_number,omitempty" xml:"customer_tariff_number,omitempty"`
+	// country code
+	CountryCode *string `form:"country_code,omitempty" json:"country_code,omitempty" xml:"country_code,omitempty"`
+	// enable prepay tariff
+	EnablePrepayTariff *bool `form:"enable_prepay_tariff,omitempty" json:"enable_prepay_tariff,omitempty" xml:"enable_prepay_tariff,omitempty"`
+	// shipping type(1 Economic, 2 Fastest, 3 Recommended)
+	ShippingType *int `form:"shipping_type,omitempty" json:"shipping_type,omitempty" xml:"shipping_type,omitempty"`
+	// receiver info
+	ReceiverInfo *ShippingAddressRequestBody `form:"receiver_info,omitempty" json:"receiver_info,omitempty" xml:"receiver_info,omitempty"`
+	// order items
+	Items []*OutboundOrderItemRequestBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
+	// channel id
+	ChannelID *int `form:"channel_id,omitempty" json:"channel_id,omitempty" xml:"channel_id,omitempty"`
+	// description
+	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
+	// inbound number
+	InboundOrderNumber *string `form:"inbound_order_number,omitempty" json:"inbound_order_number,omitempty" xml:"inbound_order_number,omitempty"`
+	// delivery mode(1 direct，2 warehouse, 3 platform)
+	Type *int `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
+	// outbound order id
+	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// package id
+	PackageID *string `form:"package_id,omitempty" json:"package_id,omitempty" xml:"package_id,omitempty"`
+	// store id
+	StoreID *int32 `form:"store_id,omitempty" json:"store_id,omitempty" xml:"store_id,omitempty"`
+	// estimated weight
+	EstimatedWeight *int64 `form:"estimated_weight,omitempty" json:"estimated_weight,omitempty" xml:"estimated_weight,omitempty"`
+	// platform order no
+	PlatformOrderNo *string `form:"platform_order_no,omitempty" json:"platform_order_no,omitempty" xml:"platform_order_no,omitempty"`
+	// Platform created at
+	PlatformCreatedAt *string `form:"platform_created_at,omitempty" json:"platform_created_at,omitempty" xml:"platform_created_at,omitempty"`
+	// request shipping at
+	RequestShippingAt *string `form:"request_shipping_at,omitempty" json:"request_shipping_at,omitempty" xml:"request_shipping_at,omitempty"`
+	// remark
+	Remark *string `form:"remark,omitempty" json:"remark,omitempty" xml:"remark,omitempty"`
+	// var number
+	VatNumber *string `form:"vat_number,omitempty" json:"vat_number,omitempty" xml:"vat_number,omitempty"`
+}
+
+// UpdateOutboundOrderRequestBody is the type of the "order" service
+// "update_outbound_order" endpoint HTTP request body.
+type UpdateOutboundOrderRequestBody struct {
+	// warehouse id
+	WarehouseID *int `form:"warehouse_id,omitempty" json:"warehouse_id,omitempty" xml:"warehouse_id,omitempty"`
+	// offline
+	Offline *bool `form:"offline,omitempty" json:"offline,omitempty" xml:"offline,omitempty"`
+	// enable prepay tariff
+	EnablePrepayTariff *bool `form:"enable_prepay_tariff,omitempty" json:"enable_prepay_tariff,omitempty" xml:"enable_prepay_tariff,omitempty"`
+	// customer tariff number of type
+	CustomerTariffNumberType *int `form:"customer_tariff_number_type,omitempty" json:"customer_tariff_number_type,omitempty" xml:"customer_tariff_number_type,omitempty"`
+	// customer tariff country code
+	CustomerTariffCountryCode *string `form:"customer_tariff_country_code,omitempty" json:"customer_tariff_country_code,omitempty" xml:"customer_tariff_country_code,omitempty"`
+	// customer tariff number
+	CustomerTariffNumber *string `form:"customer_tariff_number,omitempty" json:"customer_tariff_number,omitempty" xml:"customer_tariff_number,omitempty"`
+	// receiver info
+	ReceiverInfo *AddressRequestBody `form:"receiver_info,omitempty" json:"receiver_info,omitempty" xml:"receiver_info,omitempty"`
+	// order items
+	Items []*OutboundOrderItemUpdateRequestRequestBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
+	// description
+	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
+}
+
+// BatchUpdateOutboundOrderRequestBody is the type of the "order" service
+// "batch_update_outbound_order" endpoint HTTP request body.
+type BatchUpdateOutboundOrderRequestBody struct {
+	// Update Order Data
+	Orders []*OutboundOrderUpdateRequestRequestBody `form:"orders,omitempty" json:"orders,omitempty" xml:"orders,omitempty"`
+}
+
+// CreateOutboundOrderItemRequestBody is the type of the "order" service
+// "create_outbound_order_item" endpoint HTTP request body.
+type CreateOutboundOrderItemRequestBody struct {
+	// outbound order id
+	OutboundOrderID *int64 `form:"outbound_order_id,omitempty" json:"outbound_order_id,omitempty" xml:"outbound_order_id,omitempty"`
+	// product SKU
+	ProductSku *string `form:"product_sku,omitempty" json:"product_sku,omitempty" xml:"product_sku,omitempty"`
+	// ext order item id
+	ExtOrderItemID *string `form:"ext_order_item_id,omitempty" json:"ext_order_item_id,omitempty" xml:"ext_order_item_id,omitempty"`
+	// product name
+	ProductName *string `form:"product_name,omitempty" json:"product_name,omitempty" xml:"product_name,omitempty"`
+	// product price
+	ProductPrice *float64 `form:"product_price,omitempty" json:"product_price,omitempty" xml:"product_price,omitempty"`
+	// 产品barcode
+	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+	// 产品数量
+	Qty *int `form:"qty,omitempty" json:"qty,omitempty" xml:"qty,omitempty"`
+	// hs code
+	HsCode *string `form:"hs_code,omitempty" json:"hs_code,omitempty" xml:"hs_code,omitempty"`
+	// declared cn name
+	DeclaredCnName *string `form:"declared_cn_name,omitempty" json:"declared_cn_name,omitempty" xml:"declared_cn_name,omitempty"`
+	// declared en name
+	DeclaredEnName *string `form:"declared_en_name,omitempty" json:"declared_en_name,omitempty" xml:"declared_en_name,omitempty"`
+	// declared value in usd
+	DeclaredValueInUsd *float64 `form:"declared_value_in_usd,omitempty" json:"declared_value_in_usd,omitempty" xml:"declared_value_in_usd,omitempty"`
+	// declared value in eur
+	DeclaredValueInEur *float64 `form:"declared_value_in_eur,omitempty" json:"declared_value_in_eur,omitempty" xml:"declared_value_in_eur,omitempty"`
+	// claim weight
+	ProductWeight *float64 `form:"product_weight,omitempty" json:"product_weight,omitempty" xml:"product_weight,omitempty"`
+	// product attributes
+	ProductAttributes []string `form:"product_attributes,omitempty" json:"product_attributes,omitempty" xml:"product_attributes,omitempty"`
+	// customer code
+	CustomerCode *string `form:"customer_code,omitempty" json:"customer_code,omitempty" xml:"customer_code,omitempty"`
+	// images
+	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	// material
+	Material *string `form:"material,omitempty" json:"material,omitempty" xml:"material,omitempty"`
+	// purpose
+	Purpose *string `form:"purpose,omitempty" json:"purpose,omitempty" xml:"purpose,omitempty"`
+	// requires shipping
+	RequiresShipping *bool `form:"requires_shipping,omitempty" json:"requires_shipping,omitempty" xml:"requires_shipping,omitempty"`
+	// length
+	ProductLength *float64 `form:"product_length,omitempty" json:"product_length,omitempty" xml:"product_length,omitempty"`
+	// width
+	ProductWidth *float64 `form:"product_width,omitempty" json:"product_width,omitempty" xml:"product_width,omitempty"`
+	// height
+	ProductHeight *float64 `form:"product_height,omitempty" json:"product_height,omitempty" xml:"product_height,omitempty"`
+}
+
+// UpdateOutboundOrderItemRequestBody is the type of the "order" service
+// "update_outbound_order_item" endpoint HTTP request body.
+type UpdateOutboundOrderItemRequestBody struct {
+	// outbound order id
+	OutboundOrderID *int64 `form:"outbound_order_id,omitempty" json:"outbound_order_id,omitempty" xml:"outbound_order_id,omitempty"`
+	// product SKU
+	ProductSku *string `form:"product_sku,omitempty" json:"product_sku,omitempty" xml:"product_sku,omitempty"`
+	// ext order item id
+	ExtOrderItemID *string `form:"ext_order_item_id,omitempty" json:"ext_order_item_id,omitempty" xml:"ext_order_item_id,omitempty"`
+	// product name
+	ProductName *string `form:"product_name,omitempty" json:"product_name,omitempty" xml:"product_name,omitempty"`
+	// product price
+	ProductPrice *float64 `form:"product_price,omitempty" json:"product_price,omitempty" xml:"product_price,omitempty"`
+	// 产品barcode
+	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+	// 产品数量
+	Qty *int `form:"qty,omitempty" json:"qty,omitempty" xml:"qty,omitempty"`
+	// hs code
+	HsCode *string `form:"hs_code,omitempty" json:"hs_code,omitempty" xml:"hs_code,omitempty"`
+	// declared cn name
+	DeclaredCnName *string `form:"declared_cn_name,omitempty" json:"declared_cn_name,omitempty" xml:"declared_cn_name,omitempty"`
+	// declared en name
+	DeclaredEnName *string `form:"declared_en_name,omitempty" json:"declared_en_name,omitempty" xml:"declared_en_name,omitempty"`
+	// declared value in usd
+	DeclaredValueInUsd *float64 `form:"declared_value_in_usd,omitempty" json:"declared_value_in_usd,omitempty" xml:"declared_value_in_usd,omitempty"`
+	// declared value in eur
+	DeclaredValueInEur *float64 `form:"declared_value_in_eur,omitempty" json:"declared_value_in_eur,omitempty" xml:"declared_value_in_eur,omitempty"`
+	// claim weight
+	ProductWeight *float64 `form:"product_weight,omitempty" json:"product_weight,omitempty" xml:"product_weight,omitempty"`
+	// product attributes
+	ProductAttributes []string `form:"product_attributes,omitempty" json:"product_attributes,omitempty" xml:"product_attributes,omitempty"`
+	// customer code
+	CustomerCode *string `form:"customer_code,omitempty" json:"customer_code,omitempty" xml:"customer_code,omitempty"`
+	// images
+	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	// material
+	Material *string `form:"material,omitempty" json:"material,omitempty" xml:"material,omitempty"`
+	// purpose
+	Purpose *string `form:"purpose,omitempty" json:"purpose,omitempty" xml:"purpose,omitempty"`
+	// requires shipping
+	RequiresShipping *bool `form:"requires_shipping,omitempty" json:"requires_shipping,omitempty" xml:"requires_shipping,omitempty"`
+	// length
+	ProductLength *float64 `form:"product_length,omitempty" json:"product_length,omitempty" xml:"product_length,omitempty"`
+	// width
+	ProductWidth *float64 `form:"product_width,omitempty" json:"product_width,omitempty" xml:"product_width,omitempty"`
+	// height
+	ProductHeight *float64 `form:"product_height,omitempty" json:"product_height,omitempty" xml:"product_height,omitempty"`
+	// ext order item id
+	ExtProductID *string `form:"ext_product_id,omitempty" json:"ext_product_id,omitempty" xml:"ext_product_id,omitempty"`
+	// ext order item id
+	PlatformProductID *int32 `form:"platform_product_id,omitempty" json:"platform_product_id,omitempty" xml:"platform_product_id,omitempty"`
+}
+
+// UploadOutboundOrdersRequestBody is the type of the "order" service
+// "upload_outbound_orders" endpoint HTTP request body.
+type UploadOutboundOrdersRequestBody struct {
+	// file
+	File []byte `form:"file,omitempty" json:"file,omitempty" xml:"file,omitempty"`
+	// file name
+	FileName *string `form:"file_name,omitempty" json:"file_name,omitempty" xml:"file_name,omitempty"`
+}
+
 // CreateInboundOrderResponseBody is the type of the "order" service
 // "create_inbound_order" endpoint HTTP response body.
 type CreateInboundOrderResponseBody struct {
-	// inbound order id
-	InboundOrderID *int64 `form:"inbound_order_id,omitempty" json:"inbound_order_id,omitempty" xml:"inbound_order_id,omitempty"`
-	// label url
-	LabelURL *string `form:"label_url,omitempty" json:"label_url,omitempty" xml:"label_url,omitempty"`
+	// data
+	Data *InboundOrderDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
 }
 
 // UpdateInboundOrderResponseBody is the type of the "order" service
 // "update_inbound_order" endpoint HTTP response body.
 type UpdateInboundOrderResponseBody struct {
-	// status
-	Status int32 `form:"status" json:"status" xml:"status"`
-}
-
-// CreateOutboundOrderResponseBody is the type of the "order" service
-// "create_outbound_order" endpoint HTTP response body.
-type CreateOutboundOrderResponseBody struct {
-	// outbound order id
-	OutboundOrderID *int64 `form:"outbound_order_id,omitempty" json:"outbound_order_id,omitempty" xml:"outbound_order_id,omitempty"`
-	// tracking number
-	TrackingNumber *string `form:"tracking_number,omitempty" json:"tracking_number,omitempty" xml:"tracking_number,omitempty"`
-}
-
-// UpdateOutboundOrderResponseBody is the type of the "order" service
-// "update_outbound_order" endpoint HTTP response body.
-type UpdateOutboundOrderResponseBody struct {
-	// status
-	Status int32 `form:"status" json:"status" xml:"status"`
+	// data
+	Data *UpdateResponseDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
 }
 
 // CreatePickupOrderResponseBody is the type of the "order" service
@@ -200,13 +308,153 @@ type CreatePickupOrderResponseBody struct {
 	ErrorMsg string `form:"error_msg" json:"error_msg" xml:"error_msg"`
 }
 
+// BatchQueryInboundOrderResponseBody is the type of the "order" service
+// "batch_query_inbound_order" endpoint HTTP response body.
+type BatchQueryInboundOrderResponseBody struct {
+	// data
+	Data *InboundOrderInfoResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
 // GetInboundOrderResponseBody is the type of the "order" service
 // "get_inbound_order" endpoint HTTP response body.
-type GetInboundOrderResponseBody []*InboundOrderResponseResponse
+type GetInboundOrderResponseBody struct {
+	// data
+	Data *InboundOrderResponseDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// CreateOutboundOrderResponseBody is the type of the "order" service
+// "create_outbound_order" endpoint HTTP response body.
+type CreateOutboundOrderResponseBody struct {
+	// data
+	Data *OutboundOrderRspDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// UpdateOutboundOrderResponseBody is the type of the "order" service
+// "update_outbound_order" endpoint HTTP response body.
+type UpdateOutboundOrderResponseBody struct {
+	// data
+	Data *UpdateResponseDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// BatchUpdateOutboundOrderResponseBody is the type of the "order" service
+// "batch_update_outbound_order" endpoint HTTP response body.
+type BatchUpdateOutboundOrderResponseBody struct {
+	// Data
+	Data []*BatchUpdateResultResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// CreateOutboundOrderItemResponseBody is the type of the "order" service
+// "create_outbound_order_item" endpoint HTTP response body.
+type CreateOutboundOrderItemResponseBody struct {
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// UpdateOutboundOrderItemResponseBody is the type of the "order" service
+// "update_outbound_order_item" endpoint HTTP response body.
+type UpdateOutboundOrderItemResponseBody struct {
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// DeleteOutboundOrderItemResponseBody is the type of the "order" service
+// "delete_outbound_order_item" endpoint HTTP response body.
+type DeleteOutboundOrderItemResponseBody struct {
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// BatchQueryOutboundOrderResponseBody is the type of the "order" service
+// "batch_query_outbound_order" endpoint HTTP response body.
+type BatchQueryOutboundOrderResponseBody struct {
+	// data
+	Data *OrderInfoResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
 
 // GetOutboundOrderResponseBody is the type of the "order" service
 // "get_outbound_order" endpoint HTTP response body.
-type GetOutboundOrderResponseBody []*OrderRspResponse
+type GetOutboundOrderResponseBody struct {
+	// data
+	Data *OrderDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// GetOutboundOrderListFiltersResponseBody is the type of the "order" service
+// "get_outbound_order_list_filters" endpoint HTTP response body.
+type GetOutboundOrderListFiltersResponseBody struct {
+	// data
+	Data *OrderListFiltersResultDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// GetOutboundOrderCountResponseBody is the type of the "order" service
+// "get_outbound_order_count" endpoint HTTP response body.
+type GetOutboundOrderCountResponseBody struct {
+	// Order Counts
+	Data *OrderCountDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// GetOutboundOrderListResponseBody is the type of the "order" service
+// "get_outbound_order_list" endpoint HTTP response body.
+type GetOutboundOrderListResponseBody struct {
+	// Data
+	Data *GetOrderListDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
+
+// UploadOutboundOrdersResponseBody is the type of the "order" service
+// "upload_outbound_orders" endpoint HTTP response body.
+type UploadOutboundOrdersResponseBody struct {
+	// Data
+	Data *UploadOrdersDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
+}
 
 // CreateInboundOrderUnauthorizedResponseBody is the type of the "order"
 // service "create_inbound_order" endpoint HTTP response body for the
@@ -231,6 +479,62 @@ type CreateInboundOrderUnauthorizedResponseBody struct {
 // service "update_inbound_order" endpoint HTTP response body for the
 // "Unauthorized" error.
 type UpdateInboundOrderUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// CreatePickupOrderUnauthorizedResponseBody is the type of the "order" service
+// "create_pickup_order" endpoint HTTP response body for the "Unauthorized"
+// error.
+type CreatePickupOrderUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// BatchQueryInboundOrderUnauthorizedResponseBody is the type of the "order"
+// service "batch_query_inbound_order" endpoint HTTP response body for the
+// "Unauthorized" error.
+type BatchQueryInboundOrderUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// GetInboundOrderUnauthorizedResponseBody is the type of the "order" service
+// "get_inbound_order" endpoint HTTP response body for the "Unauthorized" error.
+type GetInboundOrderUnauthorizedResponseBody struct {
 	// Name is the name of this class of errors.
 	Name string `form:"name" json:"name" xml:"name"`
 	// ID is a unique identifier for this particular occurrence of the problem.
@@ -284,10 +588,10 @@ type UpdateOutboundOrderUnauthorizedResponseBody struct {
 	Fault bool `form:"fault" json:"fault" xml:"fault"`
 }
 
-// CreatePickupOrderUnauthorizedResponseBody is the type of the "order" service
-// "create_pickup_order" endpoint HTTP response body for the "Unauthorized"
-// error.
-type CreatePickupOrderUnauthorizedResponseBody struct {
+// BatchUpdateOutboundOrderUnauthorizedResponseBody is the type of the "order"
+// service "batch_update_outbound_order" endpoint HTTP response body for the
+// "Unauthorized" error.
+type BatchUpdateOutboundOrderUnauthorizedResponseBody struct {
 	// Name is the name of this class of errors.
 	Name string `form:"name" json:"name" xml:"name"`
 	// ID is a unique identifier for this particular occurrence of the problem.
@@ -303,9 +607,67 @@ type CreatePickupOrderUnauthorizedResponseBody struct {
 	Fault bool `form:"fault" json:"fault" xml:"fault"`
 }
 
-// GetInboundOrderUnauthorizedResponseBody is the type of the "order" service
-// "get_inbound_order" endpoint HTTP response body for the "Unauthorized" error.
-type GetInboundOrderUnauthorizedResponseBody struct {
+// CreateOutboundOrderItemUnauthorizedResponseBody is the type of the "order"
+// service "create_outbound_order_item" endpoint HTTP response body for the
+// "Unauthorized" error.
+type CreateOutboundOrderItemUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// UpdateOutboundOrderItemUnauthorizedResponseBody is the type of the "order"
+// service "update_outbound_order_item" endpoint HTTP response body for the
+// "Unauthorized" error.
+type UpdateOutboundOrderItemUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// DeleteOutboundOrderItemUnauthorizedResponseBody is the type of the "order"
+// service "delete_outbound_order_item" endpoint HTTP response body for the
+// "Unauthorized" error.
+type DeleteOutboundOrderItemUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// BatchQueryOutboundOrderUnauthorizedResponseBody is the type of the "order"
+// service "batch_query_outbound_order" endpoint HTTP response body for the
+// "Unauthorized" error.
+type BatchQueryOutboundOrderUnauthorizedResponseBody struct {
 	// Name is the name of this class of errors.
 	Name string `form:"name" json:"name" xml:"name"`
 	// ID is a unique identifier for this particular occurrence of the problem.
@@ -340,54 +702,233 @@ type GetOutboundOrderUnauthorizedResponseBody struct {
 	Fault bool `form:"fault" json:"fault" xml:"fault"`
 }
 
-// InboundOrderResponseResponse is used to define fields on response body types.
-type InboundOrderResponseResponse struct {
-	// client order id
-	ClientOrderID string `form:"client_order_id" json:"client_order_id" xml:"client_order_id"`
-	// order status(1 准备揽件 2 运输中 3 已到库)
+// GetOutboundOrderListFiltersUnauthorizedResponseBody is the type of the
+// "order" service "get_outbound_order_list_filters" endpoint HTTP response
+// body for the "Unauthorized" error.
+type GetOutboundOrderListFiltersUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// GetOutboundOrderCountUnauthorizedResponseBody is the type of the "order"
+// service "get_outbound_order_count" endpoint HTTP response body for the
+// "Unauthorized" error.
+type GetOutboundOrderCountUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// GetOutboundOrderListUnauthorizedResponseBody is the type of the "order"
+// service "get_outbound_order_list" endpoint HTTP response body for the
+// "Unauthorized" error.
+type GetOutboundOrderListUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// UploadOutboundOrdersUnauthorizedResponseBody is the type of the "order"
+// service "upload_outbound_orders" endpoint HTTP response body for the
+// "Unauthorized" error.
+type UploadOutboundOrdersUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// ExportOutboundOrdersUnauthorizedResponseBody is the type of the "order"
+// service "export_outbound_orders" endpoint HTTP response body for the
+// "Unauthorized" error.
+type ExportOutboundOrdersUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// ExportOutboundOrdersInternalErrorResponseBody is the type of the "order"
+// service "export_outbound_orders" endpoint HTTP response body for the
+// "internal_error" error.
+type ExportOutboundOrdersInternalErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name string `form:"name" json:"name" xml:"name"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID string `form:"id" json:"id" xml:"id"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message string `form:"message" json:"message" xml:"message"`
+	// Is the error temporary?
+	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
+	// Is the error a timeout?
+	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
+	// Is the error a server-side fault?
+	Fault bool `form:"fault" json:"fault" xml:"fault"`
+}
+
+// InboundOrderDataResponseBody is used to define fields on response body types.
+type InboundOrderDataResponseBody struct {
+	// inbound order number
+	OrderNumber string `form:"order_number" json:"order_number" xml:"order_number"`
+	// label url
+	LabelURL string `form:"label_url" json:"label_url" xml:"label_url"`
+}
+
+// UpdateResponseDataResponseBody is used to define fields on response body
+// types.
+type UpdateResponseDataResponseBody struct {
+	// status
+	Status int32 `form:"status" json:"status" xml:"status"`
+}
+
+// InboundOrderInfoResponseBody is used to define fields on response body types.
+type InboundOrderInfoResponseBody struct {
+	// inbounds data
+	List []*InboundOrderResponseDataResponseBody `form:"list" json:"list" xml:"list"`
+	// MetaData info
+	Meta *MetaDataResponseBody `form:"meta" json:"meta" xml:"meta"`
+}
+
+// InboundOrderResponseDataResponseBody is used to define fields on response
+// body types.
+type InboundOrderResponseDataResponseBody struct {
+	// customer order id
+	CustomerOrderID string `form:"customer_order_id" json:"customer_order_id" xml:"customer_order_id"`
+	// order status(1 初始状态 10 准备揽件 20 运输中 30 已到库)
 	Status int `form:"status" json:"status" xml:"status"`
-	// platform order id
-	PlatformOrderID int64 `form:"platform_order_id" json:"platform_order_id" xml:"platform_order_id"`
+	// inbound order number
+	OrderNumber string `form:"order_number" json:"order_number" xml:"order_number"`
 	// tracking number
 	TrackingNumber string `form:"tracking_number" json:"tracking_number" xml:"tracking_number"`
 	// tracking url
 	TrackingURL string `form:"tracking_url" json:"tracking_url" xml:"tracking_url"`
 	// items
-	Items []*ItemResponse `form:"items" json:"items" xml:"items"`
+	Items []*ItemResponseBody `form:"items" json:"items" xml:"items"`
 	// timestamp
 	Timestamp string `form:"timestamp" json:"timestamp" xml:"timestamp"`
+	// carrier name
+	CarrierName string `form:"carrier_name" json:"carrier_name" xml:"carrier_name"`
 }
 
-// ItemResponse is used to define fields on response body types.
-type ItemResponse struct {
+// ItemResponseBody is used to define fields on response body types.
+type ItemResponseBody struct {
 	// product name
 	ProductName string `form:"product_name" json:"product_name" xml:"product_name"`
 	// product sku
 	ProductSku string `form:"product_sku" json:"product_sku" xml:"product_sku"`
-	// barcode
-	Barcode string `form:"barcode" json:"barcode" xml:"barcode"`
-	// quality
+	// product barcode
+	ProductBarcode string `form:"product_barcode" json:"product_barcode" xml:"product_barcode"`
+	// product quality
 	Qty int `form:"qty" json:"qty" xml:"qty"`
 }
 
-// OrderRspResponse is used to define fields on response body types.
-type OrderRspResponse struct {
-	// client order id
-	ClientOrderID string `form:"client_order_id" json:"client_order_id" xml:"client_order_id"`
+// MetaDataResponseBody is used to define fields on response body types.
+type MetaDataResponseBody struct {
+	// current
+	Current int `form:"current" json:"current" xml:"current"`
+	// page_size
+	PageSize int `form:"page_size" json:"page_size" xml:"page_size"`
+	// total
+	Total int `form:"total" json:"total" xml:"total"`
+}
+
+// OutboundOrderRspDataResponseBody is used to define fields on response body
+// types.
+type OutboundOrderRspDataResponseBody struct {
+	// order number
+	OrderNumber string `form:"order_number" json:"order_number" xml:"order_number"`
+	// tracking number
+	TrackingNumber string `form:"tracking_number" json:"tracking_number" xml:"tracking_number"`
+}
+
+// BatchUpdateResultResponseBody is used to define fields on response body
+// types.
+type BatchUpdateResultResponseBody struct {
+	// outbound order id
+	ID int32 `form:"id" json:"id" xml:"id"`
+	// success
+	Success bool `form:"success" json:"success" xml:"success"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
+
+// OrderInfoResponseBody is used to define fields on response body types.
+type OrderInfoResponseBody struct {
+	// outbounds data
+	List []*OrderDataResponseBody `form:"list" json:"list" xml:"list"`
+	// MetaData info
+	Meta *MetaDataResponseBody `form:"meta" json:"meta" xml:"meta"`
+}
+
+// OrderDataResponseBody is used to define fields on response body types.
+type OrderDataResponseBody struct {
+	// customer order id
+	CustomerOrderID string `form:"customer_order_id" json:"customer_order_id" xml:"customer_order_id"`
 	// order status
 	Status int `form:"status" json:"status" xml:"status"`
-	// platform order id
-	PlatformOrderID int64 `form:"platform_order_id" json:"platform_order_id" xml:"platform_order_id"`
+	// outbound order number
+	OrderNumber string `form:"order_number" json:"order_number" xml:"order_number"`
 	// tracking number
 	TrackingNumber string `form:"tracking_number" json:"tracking_number" xml:"tracking_number"`
 	// tracking url
 	TrackingURL string `form:"tracking_url" json:"tracking_url" xml:"tracking_url"`
 	// items
-	Items []*OutboundOrderItemResponse `form:"items" json:"items" xml:"items"`
+	Items []*OutboundOrderItemResponseBody `form:"items" json:"items" xml:"items"`
 }
 
-// OutboundOrderItemResponse is used to define fields on response body types.
-type OutboundOrderItemResponse struct {
+// OutboundOrderItemResponseBody is used to define fields on response body
+// types.
+type OutboundOrderItemResponseBody struct {
 	// product name
 	ProductName string `form:"product_name" json:"product_name" xml:"product_name"`
 	// product SKU
@@ -405,7 +946,7 @@ type OutboundOrderItemResponse struct {
 	// declared value in usd
 	DeclaredValueInUsd float64 `form:"declared_value_in_usd" json:"declared_value_in_usd" xml:"declared_value_in_usd"`
 	// product weight
-	ProductWeight float64 `form:"product_weight" json:"product_weight" xml:"product_weight"`
+	ProductWeight int `form:"product_weight" json:"product_weight" xml:"product_weight"`
 	// product length
 	ProductLength int `form:"product_length" json:"product_length" xml:"product_length"`
 	// product width
@@ -415,9 +956,181 @@ type OutboundOrderItemResponse struct {
 	// product attributes
 	ProductAttributes []string `form:"product_attributes" json:"product_attributes" xml:"product_attributes"`
 	// 产品barcode
-	Barcode string `form:"barcode" json:"barcode" xml:"barcode"`
+	ProductBarcode string `form:"product_barcode" json:"product_barcode" xml:"product_barcode"`
 	// declared value in eur（€）
 	DeclaredValueInEur float64 `form:"declared_value_in_eur" json:"declared_value_in_eur" xml:"declared_value_in_eur"`
+	// requires shipping
+	RequiresShipping *bool `form:"requires_shipping,omitempty" json:"requires_shipping,omitempty" xml:"requires_shipping,omitempty"`
+	// Ext. order item id
+	ExtOrderItemID *string `form:"ext_order_item_id,omitempty" json:"ext_order_item_id,omitempty" xml:"ext_order_item_id,omitempty"`
+	// Ext. order item id
+	ExtProductID *string `form:"ext_product_id,omitempty" json:"ext_product_id,omitempty" xml:"ext_product_id,omitempty"`
+	// Ext. order item id
+	PlatformProductID *int32 `form:"platform_product_id,omitempty" json:"platform_product_id,omitempty" xml:"platform_product_id,omitempty"`
+	// Material
+	Material string `form:"material" json:"material" xml:"material"`
+	// Purpose
+	Purpose string `form:"purpose" json:"purpose" xml:"purpose"`
+}
+
+// OrderListFiltersResultDataResponseBody is used to define fields on response
+// body types.
+type OrderListFiltersResultDataResponseBody struct {
+	// List of keywords types
+	KeywordsTypeList []*SelectOptionResponseBody `form:"keywords_type_list,omitempty" json:"keywords_type_list,omitempty" xml:"keywords_type_list,omitempty"`
+	// List of user's platforms
+	PlatformList []*SelectOptionResponseBody `form:"platform_list,omitempty" json:"platform_list,omitempty" xml:"platform_list,omitempty"`
+	// List of user's stores
+	StoreList []*SelectOptionResponseBody `form:"store_list,omitempty" json:"store_list,omitempty" xml:"store_list,omitempty"`
+	// List of user's warehouses
+	WarehouseList []*SelectOptionResponseBody `form:"warehouse_list,omitempty" json:"warehouse_list,omitempty" xml:"warehouse_list,omitempty"`
+	// List of user's countries
+	CountryList []*SelectOptionResponseBody `form:"country_list,omitempty" json:"country_list,omitempty" xml:"country_list,omitempty"`
+}
+
+// SelectOptionResponseBody is used to define fields on response body types.
+type SelectOptionResponseBody struct {
+	// Value
+	Value string `form:"value" json:"value" xml:"value"`
+	// Label
+	Label string `form:"label" json:"label" xml:"label"`
+}
+
+// OrderCountDataResponseBody is used to define fields on response body types.
+type OrderCountDataResponseBody struct {
+	// Total
+	Total *int `form:"total,omitempty" json:"total,omitempty" xml:"total,omitempty"`
+	// Ready To Ship
+	ReadyToShip *int `form:"ready_to_ship,omitempty" json:"ready_to_ship,omitempty" xml:"ready_to_ship,omitempty"`
+	// Pending
+	Pending *int `form:"pending,omitempty" json:"pending,omitempty" xml:"pending,omitempty"`
+	// Shipped
+	Shipped *int `form:"shipped,omitempty" json:"shipped,omitempty" xml:"shipped,omitempty"`
+	// Cancelled
+	Cancelled *int `form:"cancelled,omitempty" json:"cancelled,omitempty" xml:"cancelled,omitempty"`
+	// Exception
+	Exception *int `form:"exception,omitempty" json:"exception,omitempty" xml:"exception,omitempty"`
+}
+
+// GetOrderListDataResponseBody is used to define fields on response body types.
+type GetOrderListDataResponseBody struct {
+	// List
+	List []*ListItemResponseBody `form:"list,omitempty" json:"list,omitempty" xml:"list,omitempty"`
+	// meta
+	Mate *MetaDataResponseBody `form:"mate,omitempty" json:"mate,omitempty" xml:"mate,omitempty"`
+}
+
+// ListItemResponseBody is used to define fields on response body types.
+type ListItemResponseBody struct {
+	// Order Id
+	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Platform Order id
+	PlatformOrderID *string `form:"platform_order_id,omitempty" json:"platform_order_id,omitempty" xml:"platform_order_id,omitempty"`
+	// Platform Order No
+	PlatformOrderNo *string `form:"platform_order_no,omitempty" json:"platform_order_no,omitempty" xml:"platform_order_no,omitempty"`
+	// Platform
+	Platform *string `form:"platform,omitempty" json:"platform,omitempty" xml:"platform,omitempty"`
+	// Store Id
+	StoreID *int32 `form:"store_id,omitempty" json:"store_id,omitempty" xml:"store_id,omitempty"`
+	// Store Name
+	StoreName *string `form:"store_name,omitempty" json:"store_name,omitempty" xml:"store_name,omitempty"`
+	// Shipping Info
+	ShippingInfo *OrderListItemShipInfoResponseBody `form:"shipping_info,omitempty" json:"shipping_info,omitempty" xml:"shipping_info,omitempty"`
+	// Channel Id
+	ChannelID *int32 `form:"channel_id,omitempty" json:"channel_id,omitempty" xml:"channel_id,omitempty"`
+	// Channel Name
+	ChannelName *string `form:"channel_name,omitempty" json:"channel_name,omitempty" xml:"channel_name,omitempty"`
+	// Channel Type
+	ChannelType *int `form:"channel_type,omitempty" json:"channel_type,omitempty" xml:"channel_type,omitempty"`
+	// Channel Type Name
+	ChannelTypeName *string `form:"channel_type_name,omitempty" json:"channel_type_name,omitempty" xml:"channel_type_name,omitempty"`
+	// Delivery Cost
+	DeliveryCost *float64 `form:"delivery_cost,omitempty" json:"delivery_cost,omitempty" xml:"delivery_cost,omitempty"`
+	// NSS Tracking Number
+	NssTrackingNumber *string `form:"nss_tracking_number,omitempty" json:"nss_tracking_number,omitempty" xml:"nss_tracking_number,omitempty"`
+	// Items
+	Items []*OrderItemResponseBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
+	// Warehouse Id
+	WarehouseID *int32 `form:"warehouse_id,omitempty" json:"warehouse_id,omitempty" xml:"warehouse_id,omitempty"`
+	// Warehouse Name
+	WarehouseName *string `form:"warehouse_name,omitempty" json:"warehouse_name,omitempty" xml:"warehouse_name,omitempty"`
+	// Status
+	Status *int `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+	// Status Name
+	StatusName *string `form:"status_name,omitempty" json:"status_name,omitempty" xml:"status_name,omitempty"`
+	// Created At
+	CreatedAt *string `form:"created_at,omitempty" json:"created_at,omitempty" xml:"created_at,omitempty"`
+	// Ship Date
+	ShipDate *string `form:"ship_date,omitempty" json:"ship_date,omitempty" xml:"ship_date,omitempty"`
+	// Channel Options
+	ChannelOptions []*ChannelOptionResponseBody `form:"channel_options,omitempty" json:"channel_options,omitempty" xml:"channel_options,omitempty"`
+	// Hold Reasons
+	HoldReasons []*HoldReasonResponseBody `form:"hold_reasons,omitempty" json:"hold_reasons,omitempty" xml:"hold_reasons,omitempty"`
+}
+
+// OrderListItemShipInfoResponseBody is used to define fields on response body
+// types.
+type OrderListItemShipInfoResponseBody struct {
+	// Shipping Name
+	ShippingName *string `form:"shipping_name,omitempty" json:"shipping_name,omitempty" xml:"shipping_name,omitempty"`
+	// Shipping Country
+	ShippingCountry *string `form:"shipping_country,omitempty" json:"shipping_country,omitempty" xml:"shipping_country,omitempty"`
+	// Shipping Phone
+	ZipCode *string `form:"zip_code,omitempty" json:"zip_code,omitempty" xml:"zip_code,omitempty"`
+}
+
+// OrderItemResponseBody is used to define fields on response body types.
+type OrderItemResponseBody struct {
+	// SKU
+	Sku *string `form:"sku,omitempty" json:"sku,omitempty" xml:"sku,omitempty"`
+	// Qty
+	Qty *int `form:"qty,omitempty" json:"qty,omitempty" xml:"qty,omitempty"`
+}
+
+// ChannelOptionResponseBody is used to define fields on response body types.
+type ChannelOptionResponseBody struct {
+	// Channel Cost Id
+	ID *int64 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Channel Name
+	ChannelName *string `form:"channel_name,omitempty" json:"channel_name,omitempty" xml:"channel_name,omitempty"`
+	// Shipping Cost
+	ShippingCost *float64 `form:"shipping_cost,omitempty" json:"shipping_cost,omitempty" xml:"shipping_cost,omitempty"`
+	// Channel Type Name
+	ChannelTypeName *string `form:"channel_type_name,omitempty" json:"channel_type_name,omitempty" xml:"channel_type_name,omitempty"`
+	// Min Normal Days
+	MinNormalDays *int `form:"min_normal_days,omitempty" json:"min_normal_days,omitempty" xml:"min_normal_days,omitempty"`
+	// Max Normal Days
+	MaxNormalDays *int `form:"max_normal_days,omitempty" json:"max_normal_days,omitempty" xml:"max_normal_days,omitempty"`
+	// Charge Weight
+	ChargeWeight *int64 `form:"charge_weight,omitempty" json:"charge_weight,omitempty" xml:"charge_weight,omitempty"`
+	// Fuel Fee
+	FuelFee *float64 `form:"fuel_fee,omitempty" json:"fuel_fee,omitempty" xml:"fuel_fee,omitempty"`
+	// Misc Fee
+	MiscFee *float64 `form:"misc_fee,omitempty" json:"misc_fee,omitempty" xml:"misc_fee,omitempty"`
+	// Processing Fee
+	ProcessingFee *float64 `form:"processing_fee,omitempty" json:"processing_fee,omitempty" xml:"processing_fee,omitempty"`
+	// Total Fee
+	TotalFee *float64 `form:"total_fee,omitempty" json:"total_fee,omitempty" xml:"total_fee,omitempty"`
+}
+
+// HoldReasonResponseBody is used to define fields on response body types.
+type HoldReasonResponseBody struct {
+	// Hold Reason Type
+	Type *string `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
+	// Hold Reason
+	Reason *string `form:"reason,omitempty" json:"reason,omitempty" xml:"reason,omitempty"`
+}
+
+// UploadOrdersDataResponseBody is used to define fields on response body types.
+type UploadOrdersDataResponseBody struct {
+	// Total Count
+	TotalCount *int `form:"total_count,omitempty" json:"total_count,omitempty" xml:"total_count,omitempty"`
+	// Success Count
+	SuccessCount *int `form:"success_count,omitempty" json:"success_count,omitempty" xml:"success_count,omitempty"`
+	// Fail Count
+	FailCount *int `form:"fail_count,omitempty" json:"fail_count,omitempty" xml:"fail_count,omitempty"`
+	// Result File
+	ResultFile *string `form:"result_file,omitempty" json:"result_file,omitempty" xml:"result_file,omitempty"`
 }
 
 // ItemRequestBody is used to define fields on request body types.
@@ -426,9 +1139,9 @@ type ItemRequestBody struct {
 	ProductName *string `form:"product_name,omitempty" json:"product_name,omitempty" xml:"product_name,omitempty"`
 	// product sku
 	ProductSku *string `form:"product_sku,omitempty" json:"product_sku,omitempty" xml:"product_sku,omitempty"`
-	// barcode
-	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
-	// quality
+	// product barcode
+	ProductBarcode *string `form:"product_barcode,omitempty" json:"product_barcode,omitempty" xml:"product_barcode,omitempty"`
+	// product quality
 	Qty *int `form:"qty,omitempty" json:"qty,omitempty" xml:"qty,omitempty"`
 }
 
@@ -458,6 +1171,16 @@ type ShippingAddressRequestBody struct {
 	ZipCode *string `form:"zip_code,omitempty" json:"zip_code,omitempty" xml:"zip_code,omitempty"`
 	// name
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// company
+	Company *string `form:"company,omitempty" json:"company,omitempty" xml:"company,omitempty"`
+	// email
+	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
+	// certificate type
+	CertificateType *string `form:"certificate_type,omitempty" json:"certificate_type,omitempty" xml:"certificate_type,omitempty"`
+	// certificate code
+	CertificateCode *string `form:"certificate_code,omitempty" json:"certificate_code,omitempty" xml:"certificate_code,omitempty"`
+	// certificate period
+	CertificatePeriod *string `form:"certificate_period,omitempty" json:"certificate_period,omitempty" xml:"certificate_period,omitempty"`
 }
 
 // OutboundOrderItemRequestBody is used to define fields on request body types.
@@ -479,7 +1202,7 @@ type OutboundOrderItemRequestBody struct {
 	// declared value in usd
 	DeclaredValueInUsd *float64 `form:"declared_value_in_usd,omitempty" json:"declared_value_in_usd,omitempty" xml:"declared_value_in_usd,omitempty"`
 	// product weight
-	ProductWeight *float64 `form:"product_weight,omitempty" json:"product_weight,omitempty" xml:"product_weight,omitempty"`
+	ProductWeight *int `form:"product_weight,omitempty" json:"product_weight,omitempty" xml:"product_weight,omitempty"`
 	// product length
 	ProductLength *int `form:"product_length,omitempty" json:"product_length,omitempty" xml:"product_length,omitempty"`
 	// product width
@@ -489,17 +1212,158 @@ type OutboundOrderItemRequestBody struct {
 	// product attributes
 	ProductAttributes []string `form:"product_attributes,omitempty" json:"product_attributes,omitempty" xml:"product_attributes,omitempty"`
 	// 产品barcode
-	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+	ProductBarcode *string `form:"product_barcode,omitempty" json:"product_barcode,omitempty" xml:"product_barcode,omitempty"`
 	// declared value in eur（€）
 	DeclaredValueInEur *float64 `form:"declared_value_in_eur,omitempty" json:"declared_value_in_eur,omitempty" xml:"declared_value_in_eur,omitempty"`
+	// requires shipping
+	RequiresShipping *bool `form:"requires_shipping,omitempty" json:"requires_shipping,omitempty" xml:"requires_shipping,omitempty"`
+	// Ext. order item id
+	ExtOrderItemID *string `form:"ext_order_item_id,omitempty" json:"ext_order_item_id,omitempty" xml:"ext_order_item_id,omitempty"`
+	// Ext. order item id
+	ExtProductID *string `form:"ext_product_id,omitempty" json:"ext_product_id,omitempty" xml:"ext_product_id,omitempty"`
+	// Ext. order item id
+	PlatformProductID *int32 `form:"platform_product_id,omitempty" json:"platform_product_id,omitempty" xml:"platform_product_id,omitempty"`
+	// Material
+	Material *string `form:"material,omitempty" json:"material,omitempty" xml:"material,omitempty"`
+	// Purpose
+	Purpose *string `form:"purpose,omitempty" json:"purpose,omitempty" xml:"purpose,omitempty"`
+}
+
+// AddressRequestBody is used to define fields on request body types.
+type AddressRequestBody struct {
+	// First name
+	FirstName *string `form:"first_name,omitempty" json:"first_name,omitempty" xml:"first_name,omitempty"`
+	// Last name
+	LastName *string `form:"last_name,omitempty" json:"last_name,omitempty" xml:"last_name,omitempty"`
+	// Phone number
+	PhoneNumber *string `form:"phone_number,omitempty" json:"phone_number,omitempty" xml:"phone_number,omitempty"`
+	// Country Name
+	CountryName *string `form:"country_name,omitempty" json:"country_name,omitempty" xml:"country_name,omitempty"`
+	// Country code
+	CountryCode *string `form:"country_code,omitempty" json:"country_code,omitempty" xml:"country_code,omitempty"`
+	// State Name
+	StateName *string `form:"state_name,omitempty" json:"state_name,omitempty" xml:"state_name,omitempty"`
+	// State code
+	StateCode *string `form:"state_code,omitempty" json:"state_code,omitempty" xml:"state_code,omitempty"`
+	// Address Line 1
+	Address1 *string `form:"address1,omitempty" json:"address1,omitempty" xml:"address1,omitempty"`
+	// Address Line 2
+	Address2 *string `form:"address2,omitempty" json:"address2,omitempty" xml:"address2,omitempty"`
+	// City Name
+	CityName *string `form:"city_name,omitempty" json:"city_name,omitempty" xml:"city_name,omitempty"`
+	// ZIP code
+	ZipCode *string `form:"zip_code,omitempty" json:"zip_code,omitempty" xml:"zip_code,omitempty"`
+	// name
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// company
+	Company *string `form:"company,omitempty" json:"company,omitempty" xml:"company,omitempty"`
+	// email
+	Email *string `form:"email,omitempty" json:"email,omitempty" xml:"email,omitempty"`
+	// certificate type
+	CertificateType *string `form:"certificate_type,omitempty" json:"certificate_type,omitempty" xml:"certificate_type,omitempty"`
+	// certificate code
+	CertificateCode *string `form:"certificate_code,omitempty" json:"certificate_code,omitempty" xml:"certificate_code,omitempty"`
+	// certificate period
+	CertificatePeriod *string `form:"certificate_period,omitempty" json:"certificate_period,omitempty" xml:"certificate_period,omitempty"`
+}
+
+// OutboundOrderItemUpdateRequestRequestBody is used to define fields on
+// request body types.
+type OutboundOrderItemUpdateRequestRequestBody struct {
+	// outbound order id
+	OutboundOrderID *int64 `form:"outbound_order_id,omitempty" json:"outbound_order_id,omitempty" xml:"outbound_order_id,omitempty"`
+	// product SKU
+	ProductSku *string `form:"product_sku,omitempty" json:"product_sku,omitempty" xml:"product_sku,omitempty"`
+	// ext order item id
+	ExtOrderItemID *string `form:"ext_order_item_id,omitempty" json:"ext_order_item_id,omitempty" xml:"ext_order_item_id,omitempty"`
+	// product name
+	ProductName *string `form:"product_name,omitempty" json:"product_name,omitempty" xml:"product_name,omitempty"`
+	// product price
+	ProductPrice *float64 `form:"product_price,omitempty" json:"product_price,omitempty" xml:"product_price,omitempty"`
+	// 产品barcode
+	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+	// 产品数量
+	Qty *int `form:"qty,omitempty" json:"qty,omitempty" xml:"qty,omitempty"`
+	// hs code
+	HsCode *string `form:"hs_code,omitempty" json:"hs_code,omitempty" xml:"hs_code,omitempty"`
+	// declared cn name
+	DeclaredCnName *string `form:"declared_cn_name,omitempty" json:"declared_cn_name,omitempty" xml:"declared_cn_name,omitempty"`
+	// declared en name
+	DeclaredEnName *string `form:"declared_en_name,omitempty" json:"declared_en_name,omitempty" xml:"declared_en_name,omitempty"`
+	// declared value in usd
+	DeclaredValueInUsd *float64 `form:"declared_value_in_usd,omitempty" json:"declared_value_in_usd,omitempty" xml:"declared_value_in_usd,omitempty"`
+	// declared value in eur
+	DeclaredValueInEur *float64 `form:"declared_value_in_eur,omitempty" json:"declared_value_in_eur,omitempty" xml:"declared_value_in_eur,omitempty"`
+	// claim weight
+	ProductWeight *float64 `form:"product_weight,omitempty" json:"product_weight,omitempty" xml:"product_weight,omitempty"`
+	// product attributes
+	ProductAttributes []string `form:"product_attributes,omitempty" json:"product_attributes,omitempty" xml:"product_attributes,omitempty"`
+	// customer code
+	CustomerCode *string `form:"customer_code,omitempty" json:"customer_code,omitempty" xml:"customer_code,omitempty"`
+	// images
+	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	// material
+	Material *string `form:"material,omitempty" json:"material,omitempty" xml:"material,omitempty"`
+	// purpose
+	Purpose *string `form:"purpose,omitempty" json:"purpose,omitempty" xml:"purpose,omitempty"`
+	// requires shipping
+	RequiresShipping *bool `form:"requires_shipping,omitempty" json:"requires_shipping,omitempty" xml:"requires_shipping,omitempty"`
+	// length
+	ProductLength *float64 `form:"product_length,omitempty" json:"product_length,omitempty" xml:"product_length,omitempty"`
+	// width
+	ProductWidth *float64 `form:"product_width,omitempty" json:"product_width,omitempty" xml:"product_width,omitempty"`
+	// height
+	ProductHeight *float64 `form:"product_height,omitempty" json:"product_height,omitempty" xml:"product_height,omitempty"`
+	// ext order item id
+	ExtProductID *string `form:"ext_product_id,omitempty" json:"ext_product_id,omitempty" xml:"ext_product_id,omitempty"`
+	// ext order item id
+	PlatformProductID *int32 `form:"platform_product_id,omitempty" json:"platform_product_id,omitempty" xml:"platform_product_id,omitempty"`
+	// outbound order item id
+	ID *int64 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Authorization
+	Authorization *string `form:"Authorization,omitempty" json:"Authorization,omitempty" xml:"Authorization,omitempty"`
+	// JWT used for authentication
+	Token *string `form:"token,omitempty" json:"token,omitempty" xml:"token,omitempty"`
+}
+
+// OutboundOrderUpdateRequestRequestBody is used to define fields on request
+// body types.
+type OutboundOrderUpdateRequestRequestBody struct {
+	// outbound order id
+	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// warehouse id
+	WarehouseID *int `form:"warehouse_id,omitempty" json:"warehouse_id,omitempty" xml:"warehouse_id,omitempty"`
+	// offline
+	Offline *bool `form:"offline,omitempty" json:"offline,omitempty" xml:"offline,omitempty"`
+	// enable prepay tariff
+	EnablePrepayTariff *bool `form:"enable_prepay_tariff,omitempty" json:"enable_prepay_tariff,omitempty" xml:"enable_prepay_tariff,omitempty"`
+	// customer tariff number of type
+	CustomerTariffNumberType *int `form:"customer_tariff_number_type,omitempty" json:"customer_tariff_number_type,omitempty" xml:"customer_tariff_number_type,omitempty"`
+	// customer tariff country code
+	CustomerTariffCountryCode *string `form:"customer_tariff_country_code,omitempty" json:"customer_tariff_country_code,omitempty" xml:"customer_tariff_country_code,omitempty"`
+	// customer tariff number
+	CustomerTariffNumber *string `form:"customer_tariff_number,omitempty" json:"customer_tariff_number,omitempty" xml:"customer_tariff_number,omitempty"`
+	// receiver info
+	ReceiverInfo *AddressRequestBody `form:"receiver_info,omitempty" json:"receiver_info,omitempty" xml:"receiver_info,omitempty"`
+	// order items
+	Items []*OutboundOrderItemUpdateRequestRequestBody `form:"items,omitempty" json:"items,omitempty" xml:"items,omitempty"`
+	// description
+	Description *string `form:"description,omitempty" json:"description,omitempty" xml:"description,omitempty"`
+	// Authorization
+	Authorization *string `form:"Authorization,omitempty" json:"Authorization,omitempty" xml:"Authorization,omitempty"`
+	// JWT used for authentication
+	Token *string `form:"token,omitempty" json:"token,omitempty" xml:"token,omitempty"`
 }
 
 // NewCreateInboundOrderResponseBody builds the HTTP response body from the
 // result of the "create_inbound_order" endpoint of the "order" service.
 func NewCreateInboundOrderResponseBody(res *order.InboundOrderRsp) *CreateInboundOrderResponseBody {
 	body := &CreateInboundOrderResponseBody{
-		InboundOrderID: res.InboundOrderID,
-		LabelURL:       res.LabelURL,
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderInboundOrderDataToInboundOrderDataResponseBody(res.Data)
 	}
 	return body
 }
@@ -508,26 +1372,11 @@ func NewCreateInboundOrderResponseBody(res *order.InboundOrderRsp) *CreateInboun
 // result of the "update_inbound_order" endpoint of the "order" service.
 func NewUpdateInboundOrderResponseBody(res *order.UpdateResponse) *UpdateInboundOrderResponseBody {
 	body := &UpdateInboundOrderResponseBody{
-		Status: res.Status,
+		Code:    res.Code,
+		Message: res.Message,
 	}
-	return body
-}
-
-// NewCreateOutboundOrderResponseBody builds the HTTP response body from the
-// result of the "create_outbound_order" endpoint of the "order" service.
-func NewCreateOutboundOrderResponseBody(res *order.OutboundOrderRsp) *CreateOutboundOrderResponseBody {
-	body := &CreateOutboundOrderResponseBody{
-		OutboundOrderID: res.OutboundOrderID,
-		TrackingNumber:  res.TrackingNumber,
-	}
-	return body
-}
-
-// NewUpdateOutboundOrderResponseBody builds the HTTP response body from the
-// result of the "update_outbound_order" endpoint of the "order" service.
-func NewUpdateOutboundOrderResponseBody(res *order.UpdateResponse) *UpdateOutboundOrderResponseBody {
-	body := &UpdateOutboundOrderResponseBody{
-		Status: res.Status,
+	if res.Data != nil {
+		body.Data = marshalOrderUpdateResponseDataToUpdateResponseDataResponseBody(res.Data)
 	}
 	return body
 }
@@ -541,22 +1390,184 @@ func NewCreatePickupOrderResponseBody(res *order.PickupOrderRsp) *CreatePickupOr
 	return body
 }
 
+// NewBatchQueryInboundOrderResponseBody builds the HTTP response body from the
+// result of the "batch_query_inbound_order" endpoint of the "order" service.
+func NewBatchQueryInboundOrderResponseBody(res *order.InboundOrderResponse) *BatchQueryInboundOrderResponseBody {
+	body := &BatchQueryInboundOrderResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderInboundOrderInfoToInboundOrderInfoResponseBody(res.Data)
+	}
+	return body
+}
+
 // NewGetInboundOrderResponseBody builds the HTTP response body from the result
 // of the "get_inbound_order" endpoint of the "order" service.
-func NewGetInboundOrderResponseBody(res []*order.InboundOrderResponse) GetInboundOrderResponseBody {
-	body := make([]*InboundOrderResponseResponse, len(res))
-	for i, val := range res {
-		body[i] = marshalOrderInboundOrderResponseToInboundOrderResponseResponse(val)
+func NewGetInboundOrderResponseBody(res *order.QueryInboundOrderRsp) *GetInboundOrderResponseBody {
+	body := &GetInboundOrderResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderInboundOrderResponseDataToInboundOrderResponseDataResponseBody(res.Data)
+	}
+	return body
+}
+
+// NewCreateOutboundOrderResponseBody builds the HTTP response body from the
+// result of the "create_outbound_order" endpoint of the "order" service.
+func NewCreateOutboundOrderResponseBody(res *order.OutboundOrderRsp) *CreateOutboundOrderResponseBody {
+	body := &CreateOutboundOrderResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderOutboundOrderRspDataToOutboundOrderRspDataResponseBody(res.Data)
+	}
+	return body
+}
+
+// NewUpdateOutboundOrderResponseBody builds the HTTP response body from the
+// result of the "update_outbound_order" endpoint of the "order" service.
+func NewUpdateOutboundOrderResponseBody(res *order.UpdateResponse) *UpdateOutboundOrderResponseBody {
+	body := &UpdateOutboundOrderResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderUpdateResponseDataToUpdateResponseDataResponseBody(res.Data)
+	}
+	return body
+}
+
+// NewBatchUpdateOutboundOrderResponseBody builds the HTTP response body from
+// the result of the "batch_update_outbound_order" endpoint of the "order"
+// service.
+func NewBatchUpdateOutboundOrderResponseBody(res *order.BatchUpdateOrderResponse) *BatchUpdateOutboundOrderResponseBody {
+	body := &BatchUpdateOutboundOrderResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = make([]*BatchUpdateResultResponseBody, len(res.Data))
+		for i, val := range res.Data {
+			body.Data[i] = marshalOrderBatchUpdateResultToBatchUpdateResultResponseBody(val)
+		}
+	}
+	return body
+}
+
+// NewCreateOutboundOrderItemResponseBody builds the HTTP response body from
+// the result of the "create_outbound_order_item" endpoint of the "order"
+// service.
+func NewCreateOutboundOrderItemResponseBody(res *order.BaseResponse) *CreateOutboundOrderItemResponseBody {
+	body := &CreateOutboundOrderItemResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	return body
+}
+
+// NewUpdateOutboundOrderItemResponseBody builds the HTTP response body from
+// the result of the "update_outbound_order_item" endpoint of the "order"
+// service.
+func NewUpdateOutboundOrderItemResponseBody(res *order.BaseResponse) *UpdateOutboundOrderItemResponseBody {
+	body := &UpdateOutboundOrderItemResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	return body
+}
+
+// NewDeleteOutboundOrderItemResponseBody builds the HTTP response body from
+// the result of the "delete_outbound_order_item" endpoint of the "order"
+// service.
+func NewDeleteOutboundOrderItemResponseBody(res *order.BaseResponse) *DeleteOutboundOrderItemResponseBody {
+	body := &DeleteOutboundOrderItemResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	return body
+}
+
+// NewBatchQueryOutboundOrderResponseBody builds the HTTP response body from
+// the result of the "batch_query_outbound_order" endpoint of the "order"
+// service.
+func NewBatchQueryOutboundOrderResponseBody(res *order.OrderRsp) *BatchQueryOutboundOrderResponseBody {
+	body := &BatchQueryOutboundOrderResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderOrderInfoToOrderInfoResponseBody(res.Data)
 	}
 	return body
 }
 
 // NewGetOutboundOrderResponseBody builds the HTTP response body from the
 // result of the "get_outbound_order" endpoint of the "order" service.
-func NewGetOutboundOrderResponseBody(res []*order.OrderRsp) GetOutboundOrderResponseBody {
-	body := make([]*OrderRspResponse, len(res))
-	for i, val := range res {
-		body[i] = marshalOrderOrderRspToOrderRspResponse(val)
+func NewGetOutboundOrderResponseBody(res *order.QueryOrderRsp) *GetOutboundOrderResponseBody {
+	body := &GetOutboundOrderResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderOrderDataToOrderDataResponseBody(res.Data)
+	}
+	return body
+}
+
+// NewGetOutboundOrderListFiltersResponseBody builds the HTTP response body
+// from the result of the "get_outbound_order_list_filters" endpoint of the
+// "order" service.
+func NewGetOutboundOrderListFiltersResponseBody(res *order.OrderListFilters) *GetOutboundOrderListFiltersResponseBody {
+	body := &GetOutboundOrderListFiltersResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderOrderListFiltersResultDataToOrderListFiltersResultDataResponseBody(res.Data)
+	}
+	return body
+}
+
+// NewGetOutboundOrderCountResponseBody builds the HTTP response body from the
+// result of the "get_outbound_order_count" endpoint of the "order" service.
+func NewGetOutboundOrderCountResponseBody(res *order.OrderCountResult) *GetOutboundOrderCountResponseBody {
+	body := &GetOutboundOrderCountResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderOrderCountDataToOrderCountDataResponseBody(res.Data)
+	}
+	return body
+}
+
+// NewGetOutboundOrderListResponseBody builds the HTTP response body from the
+// result of the "get_outbound_order_list" endpoint of the "order" service.
+func NewGetOutboundOrderListResponseBody(res *order.GetOrderListResult) *GetOutboundOrderListResponseBody {
+	body := &GetOutboundOrderListResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderGetOrderListDataToGetOrderListDataResponseBody(res.Data)
+	}
+	return body
+}
+
+// NewUploadOutboundOrdersResponseBody builds the HTTP response body from the
+// result of the "upload_outbound_orders" endpoint of the "order" service.
+func NewUploadOutboundOrdersResponseBody(res *order.UploadOrdersResult) *UploadOutboundOrdersResponseBody {
+	body := &UploadOutboundOrdersResponseBody{
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalOrderUploadOrdersDataToUploadOrdersDataResponseBody(res.Data)
 	}
 	return body
 }
@@ -581,6 +1592,49 @@ func NewCreateInboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *Creat
 // service.
 func NewUpdateInboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *UpdateInboundOrderUnauthorizedResponseBody {
 	body := &UpdateInboundOrderUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewCreatePickupOrderUnauthorizedResponseBody builds the HTTP response body
+// from the result of the "create_pickup_order" endpoint of the "order" service.
+func NewCreatePickupOrderUnauthorizedResponseBody(res *goa.ServiceError) *CreatePickupOrderUnauthorizedResponseBody {
+	body := &CreatePickupOrderUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewBatchQueryInboundOrderUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "batch_query_inbound_order" endpoint of the
+// "order" service.
+func NewBatchQueryInboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *BatchQueryInboundOrderUnauthorizedResponseBody {
+	body := &BatchQueryInboundOrderUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewGetInboundOrderUnauthorizedResponseBody builds the HTTP response body
+// from the result of the "get_inbound_order" endpoint of the "order" service.
+func NewGetInboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *GetInboundOrderUnauthorizedResponseBody {
+	body := &GetInboundOrderUnauthorizedResponseBody{
 		Name:      res.Name,
 		ID:        res.ID,
 		Message:   res.Message,
@@ -621,10 +1675,11 @@ func NewUpdateOutboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *Upda
 	return body
 }
 
-// NewCreatePickupOrderUnauthorizedResponseBody builds the HTTP response body
-// from the result of the "create_pickup_order" endpoint of the "order" service.
-func NewCreatePickupOrderUnauthorizedResponseBody(res *goa.ServiceError) *CreatePickupOrderUnauthorizedResponseBody {
-	body := &CreatePickupOrderUnauthorizedResponseBody{
+// NewBatchUpdateOutboundOrderUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "batch_update_outbound_order" endpoint of the
+// "order" service.
+func NewBatchUpdateOutboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *BatchUpdateOutboundOrderUnauthorizedResponseBody {
+	body := &BatchUpdateOutboundOrderUnauthorizedResponseBody{
 		Name:      res.Name,
 		ID:        res.ID,
 		Message:   res.Message,
@@ -635,10 +1690,56 @@ func NewCreatePickupOrderUnauthorizedResponseBody(res *goa.ServiceError) *Create
 	return body
 }
 
-// NewGetInboundOrderUnauthorizedResponseBody builds the HTTP response body
-// from the result of the "get_inbound_order" endpoint of the "order" service.
-func NewGetInboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *GetInboundOrderUnauthorizedResponseBody {
-	body := &GetInboundOrderUnauthorizedResponseBody{
+// NewCreateOutboundOrderItemUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "create_outbound_order_item" endpoint of the
+// "order" service.
+func NewCreateOutboundOrderItemUnauthorizedResponseBody(res *goa.ServiceError) *CreateOutboundOrderItemUnauthorizedResponseBody {
+	body := &CreateOutboundOrderItemUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewUpdateOutboundOrderItemUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "update_outbound_order_item" endpoint of the
+// "order" service.
+func NewUpdateOutboundOrderItemUnauthorizedResponseBody(res *goa.ServiceError) *UpdateOutboundOrderItemUnauthorizedResponseBody {
+	body := &UpdateOutboundOrderItemUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewDeleteOutboundOrderItemUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "delete_outbound_order_item" endpoint of the
+// "order" service.
+func NewDeleteOutboundOrderItemUnauthorizedResponseBody(res *goa.ServiceError) *DeleteOutboundOrderItemUnauthorizedResponseBody {
+	body := &DeleteOutboundOrderItemUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewBatchQueryOutboundOrderUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "batch_query_outbound_order" endpoint of the
+// "order" service.
+func NewBatchQueryOutboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *BatchQueryOutboundOrderUnauthorizedResponseBody {
+	body := &BatchQueryOutboundOrderUnauthorizedResponseBody{
 		Name:      res.Name,
 		ID:        res.ID,
 		Message:   res.Message,
@@ -663,113 +1764,155 @@ func NewGetOutboundOrderUnauthorizedResponseBody(res *goa.ServiceError) *GetOutb
 	return body
 }
 
+// NewGetOutboundOrderListFiltersUnauthorizedResponseBody builds the HTTP
+// response body from the result of the "get_outbound_order_list_filters"
+// endpoint of the "order" service.
+func NewGetOutboundOrderListFiltersUnauthorizedResponseBody(res *goa.ServiceError) *GetOutboundOrderListFiltersUnauthorizedResponseBody {
+	body := &GetOutboundOrderListFiltersUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewGetOutboundOrderCountUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "get_outbound_order_count" endpoint of the
+// "order" service.
+func NewGetOutboundOrderCountUnauthorizedResponseBody(res *goa.ServiceError) *GetOutboundOrderCountUnauthorizedResponseBody {
+	body := &GetOutboundOrderCountUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewGetOutboundOrderListUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "get_outbound_order_list" endpoint of the
+// "order" service.
+func NewGetOutboundOrderListUnauthorizedResponseBody(res *goa.ServiceError) *GetOutboundOrderListUnauthorizedResponseBody {
+	body := &GetOutboundOrderListUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewUploadOutboundOrdersUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "upload_outbound_orders" endpoint of the "order"
+// service.
+func NewUploadOutboundOrdersUnauthorizedResponseBody(res *goa.ServiceError) *UploadOutboundOrdersUnauthorizedResponseBody {
+	body := &UploadOutboundOrdersUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewExportOutboundOrdersUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "export_outbound_orders" endpoint of the "order"
+// service.
+func NewExportOutboundOrdersUnauthorizedResponseBody(res *goa.ServiceError) *ExportOutboundOrdersUnauthorizedResponseBody {
+	body := &ExportOutboundOrdersUnauthorizedResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
+// NewExportOutboundOrdersInternalErrorResponseBody builds the HTTP response
+// body from the result of the "export_outbound_orders" endpoint of the "order"
+// service.
+func NewExportOutboundOrdersInternalErrorResponseBody(res *goa.ServiceError) *ExportOutboundOrdersInternalErrorResponseBody {
+	body := &ExportOutboundOrdersInternalErrorResponseBody{
+		Name:      res.Name,
+		ID:        res.ID,
+		Message:   res.Message,
+		Temporary: res.Temporary,
+		Timeout:   res.Timeout,
+		Fault:     res.Fault,
+	}
+	return body
+}
+
 // NewCreateInboundOrderInboundOrder builds a order service
 // create_inbound_order endpoint payload.
-func NewCreateInboundOrderInboundOrder(body *CreateInboundOrderRequestBody) *order.InboundOrder {
+func NewCreateInboundOrderInboundOrder(body *CreateInboundOrderRequestBody, authorization *string, token *string) *order.InboundOrder {
 	v := &order.InboundOrder{
 		CustomerOrderID:    *body.CustomerOrderID,
 		WarehouseID:        *body.WarehouseID,
 		CustomerCode:       *body.CustomerCode,
-		TrackingNumber:     *body.TrackingNumber,
-		RequestedPickupAt:  *body.RequestedPickupAt,
-		EstimatedArrivalAt: *body.EstimatedArrivalAt,
+		TrackingNumber:     body.TrackingNumber,
+		RequestedPickupAt:  body.RequestedPickupAt,
+		EstimatedArrivalAt: body.EstimatedArrivalAt,
 		Type:               *body.Type,
 		IsPickup:           *body.IsPickup,
-		Description:        *body.Description,
+		Description:        body.Description,
 		ID:                 body.ID,
 	}
 	v.Items = make([]*order.Item, len(body.Items))
 	for i, val := range body.Items {
 		v.Items[i] = unmarshalItemRequestBodyToOrderItem(val)
 	}
-	v.Address = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.Address)
+	if body.Address != nil {
+		v.Address = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.Address)
+	}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v
 }
 
 // NewUpdateInboundOrderInboundOrder builds a order service
 // update_inbound_order endpoint payload.
-func NewUpdateInboundOrderInboundOrder(body *UpdateInboundOrderRequestBody) *order.InboundOrder {
+func NewUpdateInboundOrderInboundOrder(body *UpdateInboundOrderRequestBody, authorization *string, token *string) *order.InboundOrder {
 	v := &order.InboundOrder{
 		CustomerOrderID:    *body.CustomerOrderID,
 		WarehouseID:        *body.WarehouseID,
 		CustomerCode:       *body.CustomerCode,
-		TrackingNumber:     *body.TrackingNumber,
-		RequestedPickupAt:  *body.RequestedPickupAt,
-		EstimatedArrivalAt: *body.EstimatedArrivalAt,
+		TrackingNumber:     body.TrackingNumber,
+		RequestedPickupAt:  body.RequestedPickupAt,
+		EstimatedArrivalAt: body.EstimatedArrivalAt,
 		Type:               *body.Type,
 		IsPickup:           *body.IsPickup,
-		Description:        *body.Description,
+		Description:        body.Description,
 		ID:                 body.ID,
 	}
 	v.Items = make([]*order.Item, len(body.Items))
 	for i, val := range body.Items {
 		v.Items[i] = unmarshalItemRequestBodyToOrderItem(val)
 	}
-	v.Address = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.Address)
-
-	return v
-}
-
-// NewCreateOutboundOrderOutboundOrder builds a order service
-// create_outbound_order endpoint payload.
-func NewCreateOutboundOrderOutboundOrder(body *CreateOutboundOrderRequestBody) *order.OutboundOrder {
-	v := &order.OutboundOrder{
-		CustomerOrderID:          *body.CustomerOrderID,
-		CustomerCode:             *body.CustomerCode,
-		TotalPrice:               *body.TotalPrice,
-		Currency:                 *body.Currency,
-		CustomerTariffNumber:     *body.CustomerTariffNumber,
-		CustomerTariffNumberType: *body.CustomerTariffNumberType,
-		EnablePrepayTariff:       *body.EnablePrepayTariff,
-		ShippingType:             *body.ShippingType,
-		ChannelID:                *body.ChannelID,
-		Description:              *body.Description,
-		InboundOrderID:           *body.InboundOrderID,
-		Type:                     *body.Type,
-		ID:                       body.ID,
-		PackageID:                body.PackageID,
+	if body.Address != nil {
+		v.Address = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.Address)
 	}
-	v.ReceiverInfo = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.ReceiverInfo)
-	v.Items = make([]*order.OutboundOrderItem, len(body.Items))
-	for i, val := range body.Items {
-		v.Items[i] = unmarshalOutboundOrderItemRequestBodyToOrderOutboundOrderItem(val)
-	}
-
-	return v
-}
-
-// NewUpdateOutboundOrderOutboundOrder builds a order service
-// update_outbound_order endpoint payload.
-func NewUpdateOutboundOrderOutboundOrder(body *UpdateOutboundOrderRequestBody) *order.OutboundOrder {
-	v := &order.OutboundOrder{
-		CustomerOrderID:          *body.CustomerOrderID,
-		CustomerCode:             *body.CustomerCode,
-		TotalPrice:               *body.TotalPrice,
-		Currency:                 *body.Currency,
-		CustomerTariffNumber:     *body.CustomerTariffNumber,
-		CustomerTariffNumberType: *body.CustomerTariffNumberType,
-		EnablePrepayTariff:       *body.EnablePrepayTariff,
-		ShippingType:             *body.ShippingType,
-		ChannelID:                *body.ChannelID,
-		Description:              *body.Description,
-		InboundOrderID:           *body.InboundOrderID,
-		Type:                     *body.Type,
-		ID:                       body.ID,
-		PackageID:                body.PackageID,
-	}
-	v.ReceiverInfo = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.ReceiverInfo)
-	v.Items = make([]*order.OutboundOrderItem, len(body.Items))
-	for i, val := range body.Items {
-		v.Items[i] = unmarshalOutboundOrderItemRequestBodyToOrderOutboundOrderItem(val)
-	}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v
 }
 
 // NewCreatePickupOrderPickupOrder builds a order service create_pickup_order
 // endpoint payload.
-func NewCreatePickupOrderPickupOrder(body *CreatePickupOrderRequestBody) *order.PickupOrder {
+func NewCreatePickupOrderPickupOrder(body *CreatePickupOrderRequestBody, authorization *string, token *string) *order.PickupOrder {
 	v := &order.PickupOrder{
 		RequestedPickupAt: *body.RequestedPickupAt,
 		Type:              *body.Type,
@@ -780,24 +1923,346 @@ func NewCreatePickupOrderPickupOrder(body *CreatePickupOrderRequestBody) *order.
 		v.Items[i] = unmarshalItemRequestBodyToOrderItem(val)
 	}
 	v.Address = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.Address)
+	v.Authorization = authorization
+	v.Token = token
 
 	return v
 }
 
-// NewGetInboundOrderGetOrder builds a order service get_inbound_order endpoint
-// payload.
-func NewGetInboundOrderGetOrder(clientOrderID string) *order.GetOrder {
+// NewBatchQueryInboundOrderGetOrder builds a order service
+// batch_query_inbound_order endpoint payload.
+func NewBatchQueryInboundOrderGetOrder(orderNumbers []string, status *int, current *int, pageSize *int, authorization *string, token *string) *order.GetOrder {
 	v := &order.GetOrder{}
-	v.ClientOrderID = clientOrderID
+	v.OrderNumbers = orderNumbers
+	v.Status = status
+	v.Current = current
+	v.PageSize = pageSize
+	v.Authorization = authorization
+	v.Token = token
 
 	return v
 }
 
-// NewGetOutboundOrderGetOrder builds a order service get_outbound_order
+// NewGetInboundOrderQueryOrder builds a order service get_inbound_order
 // endpoint payload.
-func NewGetOutboundOrderGetOrder(clientOrderID string) *order.GetOrder {
+func NewGetInboundOrderQueryOrder(orderNumber string, authorization *string, token *string) *order.QueryOrder {
+	v := &order.QueryOrder{}
+	v.OrderNumber = orderNumber
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewCreateOutboundOrderOutboundOrder builds a order service
+// create_outbound_order endpoint payload.
+func NewCreateOutboundOrderOutboundOrder(body *CreateOutboundOrderRequestBody, authorization *string, token *string) *order.OutboundOrder {
+	v := &order.OutboundOrder{
+		CustomerOrderID:      *body.CustomerOrderID,
+		CustomerCode:         *body.CustomerCode,
+		TotalPrice:           *body.TotalPrice,
+		Currency:             *body.Currency,
+		CustomerTariffNumber: body.CustomerTariffNumber,
+		CountryCode:          body.CountryCode,
+		EnablePrepayTariff:   *body.EnablePrepayTariff,
+		ShippingType:         *body.ShippingType,
+		ChannelID:            *body.ChannelID,
+		Description:          body.Description,
+		InboundOrderNumber:   body.InboundOrderNumber,
+		Type:                 *body.Type,
+		ID:                   body.ID,
+		PackageID:            body.PackageID,
+		StoreID:              body.StoreID,
+		EstimatedWeight:      body.EstimatedWeight,
+		PlatformOrderNo:      body.PlatformOrderNo,
+		PlatformCreatedAt:    body.PlatformCreatedAt,
+		RequestShippingAt:    body.RequestShippingAt,
+		Remark:               body.Remark,
+		VatNumber:            body.VatNumber,
+	}
+	v.ReceiverInfo = unmarshalShippingAddressRequestBodyToOrderShippingAddress(body.ReceiverInfo)
+	v.Items = make([]*order.OutboundOrderItem, len(body.Items))
+	for i, val := range body.Items {
+		v.Items[i] = unmarshalOutboundOrderItemRequestBodyToOrderOutboundOrderItem(val)
+	}
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewUpdateOutboundOrderOutboundOrderUpdateRequest builds a order service
+// update_outbound_order endpoint payload.
+func NewUpdateOutboundOrderOutboundOrderUpdateRequest(body *UpdateOutboundOrderRequestBody, id int32, authorization *string, token *string) *order.OutboundOrderUpdateRequest {
+	v := &order.OutboundOrderUpdateRequest{
+		WarehouseID:               body.WarehouseID,
+		Offline:                   body.Offline,
+		EnablePrepayTariff:        body.EnablePrepayTariff,
+		CustomerTariffNumberType:  body.CustomerTariffNumberType,
+		CustomerTariffCountryCode: body.CustomerTariffCountryCode,
+		CustomerTariffNumber:      body.CustomerTariffNumber,
+		Description:               body.Description,
+	}
+	if body.ReceiverInfo != nil {
+		v.ReceiverInfo = unmarshalAddressRequestBodyToOrderAddress(body.ReceiverInfo)
+	}
+	if body.Items != nil {
+		v.Items = make([]*order.OutboundOrderItemUpdateRequest, len(body.Items))
+		for i, val := range body.Items {
+			v.Items[i] = unmarshalOutboundOrderItemUpdateRequestRequestBodyToOrderOutboundOrderItemUpdateRequest(val)
+		}
+	}
+	v.ID = id
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewBatchUpdateOutboundOrderBatchUpdateOrderRequest builds a order service
+// batch_update_outbound_order endpoint payload.
+func NewBatchUpdateOutboundOrderBatchUpdateOrderRequest(body *BatchUpdateOutboundOrderRequestBody, authorization *string, token *string) *order.BatchUpdateOrderRequest {
+	v := &order.BatchUpdateOrderRequest{}
+	if body.Orders != nil {
+		v.Orders = make([]*order.OutboundOrderUpdateRequest, len(body.Orders))
+		for i, val := range body.Orders {
+			v.Orders[i] = unmarshalOutboundOrderUpdateRequestRequestBodyToOrderOutboundOrderUpdateRequest(val)
+		}
+	}
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewCreateOutboundOrderItemOutboundOrderItemCreateRequest builds a order
+// service create_outbound_order_item endpoint payload.
+func NewCreateOutboundOrderItemOutboundOrderItemCreateRequest(body *CreateOutboundOrderItemRequestBody, authorization *string, token *string) *order.OutboundOrderItemCreateRequest {
+	v := &order.OutboundOrderItemCreateRequest{
+		OutboundOrderID:    *body.OutboundOrderID,
+		ProductSku:         body.ProductSku,
+		ExtOrderItemID:     body.ExtOrderItemID,
+		ProductName:        body.ProductName,
+		ProductPrice:       body.ProductPrice,
+		Barcode:            body.Barcode,
+		Qty:                body.Qty,
+		HsCode:             body.HsCode,
+		DeclaredCnName:     body.DeclaredCnName,
+		DeclaredEnName:     body.DeclaredEnName,
+		DeclaredValueInUsd: body.DeclaredValueInUsd,
+		DeclaredValueInEur: body.DeclaredValueInEur,
+		ProductWeight:      body.ProductWeight,
+		CustomerCode:       body.CustomerCode,
+		Material:           body.Material,
+		Purpose:            body.Purpose,
+		RequiresShipping:   body.RequiresShipping,
+		ProductLength:      body.ProductLength,
+		ProductWidth:       body.ProductWidth,
+		ProductHeight:      body.ProductHeight,
+	}
+	if body.ProductAttributes != nil {
+		v.ProductAttributes = make([]string, len(body.ProductAttributes))
+		for i, val := range body.ProductAttributes {
+			v.ProductAttributes[i] = val
+		}
+	}
+	if body.Images != nil {
+		v.Images = make([]string, len(body.Images))
+		for i, val := range body.Images {
+			v.Images[i] = val
+		}
+	}
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewUpdateOutboundOrderItemOutboundOrderItemUpdateRequest builds a order
+// service update_outbound_order_item endpoint payload.
+func NewUpdateOutboundOrderItemOutboundOrderItemUpdateRequest(body *UpdateOutboundOrderItemRequestBody, id int64, authorization *string, token *string) *order.OutboundOrderItemUpdateRequest {
+	v := &order.OutboundOrderItemUpdateRequest{
+		OutboundOrderID:    body.OutboundOrderID,
+		ProductSku:         body.ProductSku,
+		ExtOrderItemID:     body.ExtOrderItemID,
+		ProductName:        body.ProductName,
+		ProductPrice:       body.ProductPrice,
+		Barcode:            body.Barcode,
+		Qty:                body.Qty,
+		HsCode:             body.HsCode,
+		DeclaredCnName:     body.DeclaredCnName,
+		DeclaredEnName:     body.DeclaredEnName,
+		DeclaredValueInUsd: body.DeclaredValueInUsd,
+		DeclaredValueInEur: body.DeclaredValueInEur,
+		ProductWeight:      body.ProductWeight,
+		CustomerCode:       body.CustomerCode,
+		Material:           body.Material,
+		Purpose:            body.Purpose,
+		RequiresShipping:   body.RequiresShipping,
+		ProductLength:      body.ProductLength,
+		ProductWidth:       body.ProductWidth,
+		ProductHeight:      body.ProductHeight,
+		ExtProductID:       body.ExtProductID,
+		PlatformProductID:  body.PlatformProductID,
+	}
+	if body.ProductAttributes != nil {
+		v.ProductAttributes = make([]string, len(body.ProductAttributes))
+		for i, val := range body.ProductAttributes {
+			v.ProductAttributes[i] = val
+		}
+	}
+	if body.Images != nil {
+		v.Images = make([]string, len(body.Images))
+		for i, val := range body.Images {
+			v.Images[i] = val
+		}
+	}
+	v.ID = &id
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewDeleteOutboundOrderItemDeleteOutboundItemRequest builds a order service
+// delete_outbound_order_item endpoint payload.
+func NewDeleteOutboundOrderItemDeleteOutboundItemRequest(id int64, authorization *string, token *string) *order.DeleteOutboundItemRequest {
+	v := &order.DeleteOutboundItemRequest{}
+	v.ID = id
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewBatchQueryOutboundOrderGetOrder builds a order service
+// batch_query_outbound_order endpoint payload.
+func NewBatchQueryOutboundOrderGetOrder(orderNumbers []string, status *int, current *int, pageSize *int, authorization *string, token *string) *order.GetOrder {
 	v := &order.GetOrder{}
-	v.ClientOrderID = clientOrderID
+	v.OrderNumbers = orderNumbers
+	v.Status = status
+	v.Current = current
+	v.PageSize = pageSize
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewGetOutboundOrderQueryOutOrder builds a order service get_outbound_order
+// endpoint payload.
+func NewGetOutboundOrderQueryOutOrder(id string, authorization *string, token *string) *order.QueryOutOrder {
+	v := &order.QueryOutOrder{}
+	v.ID = id
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewGetOutboundOrderListFiltersAuthToken builds a order service
+// get_outbound_order_list_filters endpoint payload.
+func NewGetOutboundOrderListFiltersAuthToken(authorization *string, token *string) *order.AuthToken {
+	v := &order.AuthToken{}
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewGetOutboundOrderCountOrderQueryPayload builds a order service
+// get_outbound_order_count endpoint payload.
+func NewGetOutboundOrderCountOrderQueryPayload(id []string, platformOrderNo *string, listingSku *string, sku *string, nssTrackingNumber *string, shippingName *string, platform *string, status []string, storeID *string, warehouseID *string, countryCode *string, createdAtStart *string, createdAtEnd *string, shipDateStart *string, shipDateEnd *string, offlineOrder *string, page *string, pageSize *string, authorization *string, token *string) *order.OrderQueryPayload {
+	v := &order.OrderQueryPayload{}
+	v.ID = id
+	v.PlatformOrderNo = platformOrderNo
+	v.ListingSku = listingSku
+	v.Sku = sku
+	v.NssTrackingNumber = nssTrackingNumber
+	v.ShippingName = shippingName
+	v.Platform = platform
+	v.Status = status
+	v.StoreID = storeID
+	v.WarehouseID = warehouseID
+	v.CountryCode = countryCode
+	v.CreatedAtStart = createdAtStart
+	v.CreatedAtEnd = createdAtEnd
+	v.ShipDateStart = shipDateStart
+	v.ShipDateEnd = shipDateEnd
+	v.OfflineOrder = offlineOrder
+	v.Page = page
+	v.PageSize = pageSize
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewGetOutboundOrderListOrderQueryPayload builds a order service
+// get_outbound_order_list endpoint payload.
+func NewGetOutboundOrderListOrderQueryPayload(id []string, platformOrderNo *string, listingSku *string, sku *string, nssTrackingNumber *string, shippingName *string, platform *string, status []string, storeID *string, warehouseID *string, countryCode *string, createdAtStart *string, createdAtEnd *string, shipDateStart *string, shipDateEnd *string, offlineOrder *string, page *string, pageSize *string, authorization *string, token *string) *order.OrderQueryPayload {
+	v := &order.OrderQueryPayload{}
+	v.ID = id
+	v.PlatformOrderNo = platformOrderNo
+	v.ListingSku = listingSku
+	v.Sku = sku
+	v.NssTrackingNumber = nssTrackingNumber
+	v.ShippingName = shippingName
+	v.Platform = platform
+	v.Status = status
+	v.StoreID = storeID
+	v.WarehouseID = warehouseID
+	v.CountryCode = countryCode
+	v.CreatedAtStart = createdAtStart
+	v.CreatedAtEnd = createdAtEnd
+	v.ShipDateStart = shipDateStart
+	v.ShipDateEnd = shipDateEnd
+	v.OfflineOrder = offlineOrder
+	v.Page = page
+	v.PageSize = pageSize
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewUploadOutboundOrdersUploadOrdersPayload builds a order service
+// upload_outbound_orders endpoint payload.
+func NewUploadOutboundOrdersUploadOrdersPayload(body *UploadOutboundOrdersRequestBody, authorization *string, token *string) *order.UploadOrdersPayload {
+	v := &order.UploadOrdersPayload{
+		File:     body.File,
+		FileName: *body.FileName,
+	}
+	v.Authorization = authorization
+	v.Token = token
+
+	return v
+}
+
+// NewExportOutboundOrdersOrderQueryPayload builds a order service
+// export_outbound_orders endpoint payload.
+func NewExportOutboundOrdersOrderQueryPayload(id []string, platformOrderNo *string, listingSku *string, sku *string, nssTrackingNumber *string, shippingName *string, platform *string, status []string, storeID *string, warehouseID *string, countryCode *string, createdAtStart *string, createdAtEnd *string, shipDateStart *string, shipDateEnd *string, offlineOrder *string, page *string, pageSize *string, authorization *string, token *string) *order.OrderQueryPayload {
+	v := &order.OrderQueryPayload{}
+	v.ID = id
+	v.PlatformOrderNo = platformOrderNo
+	v.ListingSku = listingSku
+	v.Sku = sku
+	v.NssTrackingNumber = nssTrackingNumber
+	v.ShippingName = shippingName
+	v.Platform = platform
+	v.Status = status
+	v.StoreID = storeID
+	v.WarehouseID = warehouseID
+	v.CountryCode = countryCode
+	v.CreatedAtStart = createdAtStart
+	v.CreatedAtEnd = createdAtEnd
+	v.ShipDateStart = shipDateStart
+	v.ShipDateEnd = shipDateEnd
+	v.OfflineOrder = offlineOrder
+	v.Page = page
+	v.PageSize = pageSize
+	v.Authorization = authorization
+	v.Token = token
 
 	return v
 }
@@ -814,38 +2279,18 @@ func ValidateCreateInboundOrderRequestBody(body *CreateInboundOrderRequestBody) 
 	if body.CustomerCode == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("customer_code", "body"))
 	}
-	if body.TrackingNumber == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("tracking_number", "body"))
-	}
-	if body.RequestedPickupAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("requested_pickup_at", "body"))
-	}
-	if body.EstimatedArrivalAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("estimated_arrival_at", "body"))
-	}
 	if body.Items == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("items", "body"))
 	}
 	if body.Type == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("type", "body"))
 	}
-	if body.Address == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("address", "body"))
-	}
 	if body.IsPickup == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("is_pickup", "body"))
 	}
-	if body.Description == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("description", "body"))
-	}
 	if body.CustomerOrderID != nil {
-		if utf8.RuneCountInString(*body.CustomerOrderID) < 1 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_order_id", *body.CustomerOrderID, utf8.RuneCountInString(*body.CustomerOrderID), 1, true))
-		}
-	}
-	if body.CustomerOrderID != nil {
-		if utf8.RuneCountInString(*body.CustomerOrderID) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_order_id", *body.CustomerOrderID, utf8.RuneCountInString(*body.CustomerOrderID), 50, false))
+		if utf8.RuneCountInString(*body.CustomerOrderID) > 100 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_order_id", *body.CustomerOrderID, utf8.RuneCountInString(*body.CustomerOrderID), 100, false))
 		}
 	}
 	if body.WarehouseID != nil {
@@ -886,8 +2331,8 @@ func ValidateCreateInboundOrderRequestBody(body *CreateInboundOrderRequestBody) 
 		}
 	}
 	if body.Type != nil {
-		if !(*body.Type == 1 || *body.Type == 2) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []interface{}{1, 2}))
+		if !(*body.Type == 1 || *body.Type == 2 || *body.Type == 3) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []interface{}{1, 2, 3}))
 		}
 	}
 	if body.Address != nil {
@@ -910,38 +2355,18 @@ func ValidateUpdateInboundOrderRequestBody(body *UpdateInboundOrderRequestBody) 
 	if body.CustomerCode == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("customer_code", "body"))
 	}
-	if body.TrackingNumber == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("tracking_number", "body"))
-	}
-	if body.RequestedPickupAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("requested_pickup_at", "body"))
-	}
-	if body.EstimatedArrivalAt == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("estimated_arrival_at", "body"))
-	}
 	if body.Items == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("items", "body"))
 	}
 	if body.Type == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("type", "body"))
 	}
-	if body.Address == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("address", "body"))
-	}
 	if body.IsPickup == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("is_pickup", "body"))
 	}
-	if body.Description == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("description", "body"))
-	}
 	if body.CustomerOrderID != nil {
-		if utf8.RuneCountInString(*body.CustomerOrderID) < 1 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_order_id", *body.CustomerOrderID, utf8.RuneCountInString(*body.CustomerOrderID), 1, true))
-		}
-	}
-	if body.CustomerOrderID != nil {
-		if utf8.RuneCountInString(*body.CustomerOrderID) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_order_id", *body.CustomerOrderID, utf8.RuneCountInString(*body.CustomerOrderID), 50, false))
+		if utf8.RuneCountInString(*body.CustomerOrderID) > 100 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_order_id", *body.CustomerOrderID, utf8.RuneCountInString(*body.CustomerOrderID), 100, false))
 		}
 	}
 	if body.WarehouseID != nil {
@@ -982,179 +2407,13 @@ func ValidateUpdateInboundOrderRequestBody(body *UpdateInboundOrderRequestBody) 
 		}
 	}
 	if body.Type != nil {
-		if !(*body.Type == 1 || *body.Type == 2) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []interface{}{1, 2}))
+		if !(*body.Type == 1 || *body.Type == 2 || *body.Type == 3) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []interface{}{1, 2, 3}))
 		}
 	}
 	if body.Address != nil {
 		if err2 := ValidateShippingAddressRequestBody(body.Address); err2 != nil {
 			err = goa.MergeErrors(err, err2)
-		}
-	}
-	return
-}
-
-// ValidateCreateOutboundOrderRequestBody runs the validations defined on
-// create_outbound_order_request_body
-func ValidateCreateOutboundOrderRequestBody(body *CreateOutboundOrderRequestBody) (err error) {
-	if body.CustomerOrderID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_order_id", "body"))
-	}
-	if body.CustomerCode == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_code", "body"))
-	}
-	if body.TotalPrice == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("total_price", "body"))
-	}
-	if body.Currency == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("currency", "body"))
-	}
-	if body.CustomerTariffNumber == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_tariff_number", "body"))
-	}
-	if body.CustomerTariffNumberType == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_tariff_number_type", "body"))
-	}
-	if body.EnablePrepayTariff == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("enable_prepay_tariff", "body"))
-	}
-	if body.ShippingType == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("shipping_type", "body"))
-	}
-	if body.ReceiverInfo == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("receiver_info", "body"))
-	}
-	if body.Items == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("items", "body"))
-	}
-	if body.ChannelID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("channel_id", "body"))
-	}
-	if body.Description == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("description", "body"))
-	}
-	if body.InboundOrderID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("inbound_order_id", "body"))
-	}
-	if body.Type == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("type", "body"))
-	}
-	if body.CustomerCode != nil {
-		if utf8.RuneCountInString(*body.CustomerCode) < 1 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_code", *body.CustomerCode, utf8.RuneCountInString(*body.CustomerCode), 1, true))
-		}
-	}
-	if body.CustomerCode != nil {
-		if utf8.RuneCountInString(*body.CustomerCode) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_code", *body.CustomerCode, utf8.RuneCountInString(*body.CustomerCode), 50, false))
-		}
-	}
-	if body.ShippingType != nil {
-		if !(*body.ShippingType == 1 || *body.ShippingType == 2 || *body.ShippingType == 3) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.shipping_type", *body.ShippingType, []interface{}{1, 2, 3}))
-		}
-	}
-	if body.ReceiverInfo != nil {
-		if err2 := ValidateShippingAddressRequestBody(body.ReceiverInfo); err2 != nil {
-			err = goa.MergeErrors(err, err2)
-		}
-	}
-	if len(body.Items) < 1 {
-		err = goa.MergeErrors(err, goa.InvalidLengthError("body.items", body.Items, len(body.Items), 1, true))
-	}
-	for _, e := range body.Items {
-		if e != nil {
-			if err2 := ValidateOutboundOrderItemRequestBody(e); err2 != nil {
-				err = goa.MergeErrors(err, err2)
-			}
-		}
-	}
-	if body.Type != nil {
-		if !(*body.Type == 1 || *body.Type == 2) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []interface{}{1, 2}))
-		}
-	}
-	return
-}
-
-// ValidateUpdateOutboundOrderRequestBody runs the validations defined on
-// update_outbound_order_request_body
-func ValidateUpdateOutboundOrderRequestBody(body *UpdateOutboundOrderRequestBody) (err error) {
-	if body.CustomerOrderID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_order_id", "body"))
-	}
-	if body.CustomerCode == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_code", "body"))
-	}
-	if body.TotalPrice == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("total_price", "body"))
-	}
-	if body.Currency == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("currency", "body"))
-	}
-	if body.CustomerTariffNumber == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_tariff_number", "body"))
-	}
-	if body.CustomerTariffNumberType == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("customer_tariff_number_type", "body"))
-	}
-	if body.EnablePrepayTariff == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("enable_prepay_tariff", "body"))
-	}
-	if body.ShippingType == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("shipping_type", "body"))
-	}
-	if body.ReceiverInfo == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("receiver_info", "body"))
-	}
-	if body.Items == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("items", "body"))
-	}
-	if body.ChannelID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("channel_id", "body"))
-	}
-	if body.Description == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("description", "body"))
-	}
-	if body.InboundOrderID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("inbound_order_id", "body"))
-	}
-	if body.Type == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("type", "body"))
-	}
-	if body.CustomerCode != nil {
-		if utf8.RuneCountInString(*body.CustomerCode) < 1 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_code", *body.CustomerCode, utf8.RuneCountInString(*body.CustomerCode), 1, true))
-		}
-	}
-	if body.CustomerCode != nil {
-		if utf8.RuneCountInString(*body.CustomerCode) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_code", *body.CustomerCode, utf8.RuneCountInString(*body.CustomerCode), 50, false))
-		}
-	}
-	if body.ShippingType != nil {
-		if !(*body.ShippingType == 1 || *body.ShippingType == 2 || *body.ShippingType == 3) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.shipping_type", *body.ShippingType, []interface{}{1, 2, 3}))
-		}
-	}
-	if body.ReceiverInfo != nil {
-		if err2 := ValidateShippingAddressRequestBody(body.ReceiverInfo); err2 != nil {
-			err = goa.MergeErrors(err, err2)
-		}
-	}
-	if len(body.Items) < 1 {
-		err = goa.MergeErrors(err, goa.InvalidLengthError("body.items", body.Items, len(body.Items), 1, true))
-	}
-	for _, e := range body.Items {
-		if e != nil {
-			if err2 := ValidateOutboundOrderItemRequestBody(e); err2 != nil {
-				err = goa.MergeErrors(err, err2)
-			}
-		}
-	}
-	if body.Type != nil {
-		if !(*body.Type == 1 || *body.Type == 2) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []interface{}{1, 2}))
 		}
 	}
 	return
@@ -1211,6 +2470,163 @@ func ValidateCreatePickupOrderRequestBody(body *CreatePickupOrderRequestBody) (e
 	return
 }
 
+// ValidateCreateOutboundOrderRequestBody runs the validations defined on
+// create_outbound_order_request_body
+func ValidateCreateOutboundOrderRequestBody(body *CreateOutboundOrderRequestBody) (err error) {
+	if body.CustomerOrderID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("customer_order_id", "body"))
+	}
+	if body.CustomerCode == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("customer_code", "body"))
+	}
+	if body.TotalPrice == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("total_price", "body"))
+	}
+	if body.Currency == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("currency", "body"))
+	}
+	if body.EnablePrepayTariff == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("enable_prepay_tariff", "body"))
+	}
+	if body.ShippingType == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("shipping_type", "body"))
+	}
+	if body.ReceiverInfo == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("receiver_info", "body"))
+	}
+	if body.Items == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("items", "body"))
+	}
+	if body.ChannelID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("channel_id", "body"))
+	}
+	if body.Type == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("type", "body"))
+	}
+	if body.CustomerCode != nil {
+		if utf8.RuneCountInString(*body.CustomerCode) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_code", *body.CustomerCode, utf8.RuneCountInString(*body.CustomerCode), 1, true))
+		}
+	}
+	if body.CustomerCode != nil {
+		if utf8.RuneCountInString(*body.CustomerCode) > 50 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.customer_code", *body.CustomerCode, utf8.RuneCountInString(*body.CustomerCode), 50, false))
+		}
+	}
+	if body.ShippingType != nil {
+		if !(*body.ShippingType == 1 || *body.ShippingType == 2 || *body.ShippingType == 3) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.shipping_type", *body.ShippingType, []interface{}{1, 2, 3}))
+		}
+	}
+	if body.ReceiverInfo != nil {
+		if err2 := ValidateShippingAddressRequestBody(body.ReceiverInfo); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	if len(body.Items) < 1 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError("body.items", body.Items, len(body.Items), 1, true))
+	}
+	for _, e := range body.Items {
+		if e != nil {
+			if err2 := ValidateOutboundOrderItemRequestBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	if body.Type != nil {
+		if !(*body.Type == 1 || *body.Type == 2 || *body.Type == 3) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.type", *body.Type, []interface{}{1, 2, 3}))
+		}
+	}
+	return
+}
+
+// ValidateUpdateOutboundOrderRequestBody runs the validations defined on
+// update_outbound_order_request_body
+func ValidateUpdateOutboundOrderRequestBody(body *UpdateOutboundOrderRequestBody) (err error) {
+	if body.ReceiverInfo != nil {
+		if err2 := ValidateAddressRequestBody(body.ReceiverInfo); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	for _, e := range body.Items {
+		if e != nil {
+			if err2 := ValidateOutboundOrderItemUpdateRequestRequestBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// ValidateBatchUpdateOutboundOrderRequestBody runs the validations defined on
+// batch_update_outbound_order_request_body
+func ValidateBatchUpdateOutboundOrderRequestBody(body *BatchUpdateOutboundOrderRequestBody) (err error) {
+	for _, e := range body.Orders {
+		if e != nil {
+			if err2 := ValidateOutboundOrderUpdateRequestRequestBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// ValidateCreateOutboundOrderItemRequestBody runs the validations defined on
+// create_outbound_order_item_request_body
+func ValidateCreateOutboundOrderItemRequestBody(body *CreateOutboundOrderItemRequestBody) (err error) {
+	if body.OutboundOrderID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("outbound_order_id", "body"))
+	}
+	if body.DeclaredValueInUsd != nil {
+		if *body.DeclaredValueInUsd < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.declared_value_in_usd", *body.DeclaredValueInUsd, 0, true))
+		}
+	}
+	if body.DeclaredValueInEur != nil {
+		if *body.DeclaredValueInEur < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.declared_value_in_eur", *body.DeclaredValueInEur, 0, true))
+		}
+	}
+	return
+}
+
+// ValidateUpdateOutboundOrderItemRequestBody runs the validations defined on
+// update_outbound_order_item_request_body
+func ValidateUpdateOutboundOrderItemRequestBody(body *UpdateOutboundOrderItemRequestBody) (err error) {
+	if body.DeclaredValueInUsd != nil {
+		if *body.DeclaredValueInUsd < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.declared_value_in_usd", *body.DeclaredValueInUsd, 0, true))
+		}
+	}
+	if body.DeclaredValueInEur != nil {
+		if *body.DeclaredValueInEur < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.declared_value_in_eur", *body.DeclaredValueInEur, 0, true))
+		}
+	}
+	return
+}
+
+// ValidateUploadOutboundOrdersRequestBody runs the validations defined on
+// upload_outbound_orders_request_body
+func ValidateUploadOutboundOrdersRequestBody(body *UploadOutboundOrdersRequestBody) (err error) {
+	if body.File == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("file", "body"))
+	}
+	if body.FileName == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("file_name", "body"))
+	}
+	if len(body.File) > 864000 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError("body.file", body.File, len(body.File), 864000, false))
+	}
+	if body.FileName != nil {
+		if utf8.RuneCountInString(*body.FileName) > 50 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.file_name", *body.FileName, utf8.RuneCountInString(*body.FileName), 50, false))
+		}
+	}
+	return
+}
+
 // ValidateItemRequestBody runs the validations defined on ItemRequestBody
 func ValidateItemRequestBody(body *ItemRequestBody) (err error) {
 	if body.ProductName == nil {
@@ -1219,36 +2635,11 @@ func ValidateItemRequestBody(body *ItemRequestBody) (err error) {
 	if body.ProductSku == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("product_sku", "body"))
 	}
-	if body.Barcode == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("barcode", "body"))
+	if body.ProductBarcode == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("product_barcode", "body"))
 	}
 	if body.Qty == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("qty", "body"))
-	}
-	if body.ProductName != nil {
-		if utf8.RuneCountInString(*body.ProductName) < 1 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_name", *body.ProductName, utf8.RuneCountInString(*body.ProductName), 1, true))
-		}
-	}
-	if body.ProductName != nil {
-		if utf8.RuneCountInString(*body.ProductName) > 100 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_name", *body.ProductName, utf8.RuneCountInString(*body.ProductName), 100, false))
-		}
-	}
-	if body.ProductSku != nil {
-		if utf8.RuneCountInString(*body.ProductSku) < 1 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_sku", *body.ProductSku, utf8.RuneCountInString(*body.ProductSku), 1, true))
-		}
-	}
-	if body.ProductSku != nil {
-		if utf8.RuneCountInString(*body.ProductSku) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_sku", *body.ProductSku, utf8.RuneCountInString(*body.ProductSku), 50, false))
-		}
-	}
-	if body.Barcode != nil {
-		if utf8.RuneCountInString(*body.Barcode) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.barcode", *body.Barcode, utf8.RuneCountInString(*body.Barcode), 50, false))
-		}
 	}
 	return
 }
@@ -1288,6 +2679,11 @@ func ValidateShippingAddressRequestBody(body *ShippingAddressRequestBody) (err e
 	}
 	if body.ZipCode == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("zip_code", "body"))
+	}
+	if body.CertificateType != nil {
+		if !(*body.CertificateType == "ID" || *body.CertificateType == "PP") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.certificate_type", *body.CertificateType, []interface{}{"ID", "PP"}))
+		}
 	}
 	return
 }
@@ -1334,8 +2730,8 @@ func ValidateOutboundOrderItemRequestBody(body *OutboundOrderItemRequestBody) (e
 	if body.ProductAttributes == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("product_attributes", "body"))
 	}
-	if body.Barcode == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("barcode", "body"))
+	if body.ProductBarcode == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("product_barcode", "body"))
 	}
 	if body.DeclaredValueInEur == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("declared_value_in_eur", "body"))
@@ -1348,6 +2744,53 @@ func ValidateOutboundOrderItemRequestBody(body *OutboundOrderItemRequestBody) (e
 	if body.DeclaredValueInEur != nil {
 		if *body.DeclaredValueInEur < 0 {
 			err = goa.MergeErrors(err, goa.InvalidRangeError("body.declared_value_in_eur", *body.DeclaredValueInEur, 0, true))
+		}
+	}
+	return
+}
+
+// ValidateAddressRequestBody runs the validations defined on AddressRequestBody
+func ValidateAddressRequestBody(body *AddressRequestBody) (err error) {
+	if body.CertificateType != nil {
+		if !(*body.CertificateType == "ID" || *body.CertificateType == "PP") {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.certificate_type", *body.CertificateType, []interface{}{"ID", "PP"}))
+		}
+	}
+	return
+}
+
+// ValidateOutboundOrderItemUpdateRequestRequestBody runs the validations
+// defined on OutboundOrderItemUpdateRequestRequestBody
+func ValidateOutboundOrderItemUpdateRequestRequestBody(body *OutboundOrderItemUpdateRequestRequestBody) (err error) {
+	if body.DeclaredValueInUsd != nil {
+		if *body.DeclaredValueInUsd < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.declared_value_in_usd", *body.DeclaredValueInUsd, 0, true))
+		}
+	}
+	if body.DeclaredValueInEur != nil {
+		if *body.DeclaredValueInEur < 0 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.declared_value_in_eur", *body.DeclaredValueInEur, 0, true))
+		}
+	}
+	return
+}
+
+// ValidateOutboundOrderUpdateRequestRequestBody runs the validations defined
+// on OutboundOrderUpdateRequestRequestBody
+func ValidateOutboundOrderUpdateRequestRequestBody(body *OutboundOrderUpdateRequestRequestBody) (err error) {
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.ReceiverInfo != nil {
+		if err2 := ValidateAddressRequestBody(body.ReceiverInfo); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	for _, e := range body.Items {
+		if e != nil {
+			if err2 := ValidateOutboundOrderItemUpdateRequestRequestBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
 		}
 	}
 	return

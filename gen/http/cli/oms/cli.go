@@ -10,12 +10,20 @@ package cli
 import (
 	"flag"
 	"fmt"
+	authc "goa/gen/http/auth/client"
 	filec "goa/gen/http/file/client"
 	healthyc "goa/gen/http/healthy/client"
+	integrationsc "goa/gen/http/integrations/client"
 	orderc "goa/gen/http/order/client"
+	platformproductc "goa/gen/http/platform_product/client"
 	productc "goa/gen/http/product/client"
 	quotec "goa/gen/http/quote/client"
+	tenantc "goa/gen/http/tenant/client"
 	trackc "goa/gen/http/track/client"
+	userc "goa/gen/http/user/client"
+	wixc "goa/gen/http/wix/client"
+	wixredirectc "goa/gen/http/wix_redirect/client"
+	woocommercec "goa/gen/http/woocommerce/client"
 	"net/http"
 	"os"
 
@@ -29,11 +37,19 @@ import (
 //
 func UsageCommands() string {
 	return `healthy get
-quote get
-track get
-order (create-inbound-order|update-inbound-order|create-outbound-order|update-outbound-order|create-pickup-order|get-inbound-order|get-outbound-order)
-product (batches-create-product|update-product|generate-barcode|generate-token)
+quote (get|post)
+track (batch-query-track-info|get-track)
+order (create-inbound-order|update-inbound-order|create-pickup-order|batch-query-inbound-order|get-inbound-order|create-outbound-order|update-outbound-order|batch-update-outbound-order|create-outbound-order-item|update-outbound-order-item|delete-outbound-order-item|batch-query-outbound-order|get-outbound-order|get-outbound-order-list-filters|get-outbound-order-count|get-outbound-order-list|upload-outbound-orders|export-outbound-orders)
+product (batches-create-product|update-product|export-product|download-templates|upload-product|upload-product-update|generate-barcode|products-query|product-detail)
+integrations (list|authorize)
+auth generate-token
 file upload-image
+user (user-signup|user-login|user-modify-password|user-forget-password|user-validate|user-logout|get-user-info|update-user-info|permissions)
+woocommerce (return-woocommerce|callback-woocommerce|retrieve-orders|retrieve-products)
+tenant (integrations|get-tenant-info|update-tenant-info)
+platform-product (platform-product|convert|mappings)
+wix (callback-wix|webhooks-products-wix|products-list|orders-list)
+wix-redirect return-wix
 `
 }
 
@@ -45,15 +61,24 @@ func UsageExamples() string {
       "cosmetic",
       "liquid",
       "magnetic"
-   ]' --factory "xxx" --date "2022-02-14"` + "\n" +
-		os.Args[0] + ` track get --tracking-number "Nesciunt architecto quam." --type 1` + "\n" +
+   ]' --factory "xxx" --date "2022-02-14" --authorization "Aut consequatur." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"` + "\n" +
+		os.Args[0] + ` track batch-query-track-info --tracking-numbers '[
+      "Quia porro quis.",
+      "Cum sit laudantium.",
+      "Explicabo et qui autem eligendi voluptate deserunt."
+   ]'` + "\n" +
 		os.Args[0] + ` order create-inbound-order --body '{
       "address": {
          "address1": "address1",
          "address2": "address2",
+         "certificate_code": "3455233",
+         "certificate_period": "2028-01-01",
+         "certificate_type": "ID",
          "city_name": "SZ",
+         "company": "China",
          "country_code": "US",
          "country_name": "US",
+         "email": "123@test.com",
          "first_name": "He",
          "last_name": "John",
          "name": "He",
@@ -70,25 +95,13 @@ func UsageExamples() string {
       "is_pickup": true,
       "items": [
          {
-            "barcode": "YCrankshaft",
+            "product_barcode": "YCrankshaft",
             "product_name": "NSS Mate 40E",
             "product_sku": "YCrankshaft",
             "qty": 3
          },
          {
-            "barcode": "YCrankshaft",
-            "product_name": "NSS Mate 40E",
-            "product_sku": "YCrankshaft",
-            "qty": 3
-         },
-         {
-            "barcode": "YCrankshaft",
-            "product_name": "NSS Mate 40E",
-            "product_sku": "YCrankshaft",
-            "qty": 3
-         },
-         {
-            "barcode": "YCrankshaft",
+            "product_barcode": "YCrankshaft",
             "product_name": "NSS Mate 40E",
             "product_sku": "YCrankshaft",
             "qty": 3
@@ -98,10 +111,18 @@ func UsageExamples() string {
       "tracking_number": "YT000001",
       "type": 1,
       "warehouse_id": 1
-   }'` + "\n" +
+   }' --authorization "Quo ipsam molestias." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"` + "\n" +
 		os.Args[0] + ` product batches-create-product --body '{
       "products": [
          {
+            "Authorization": "Consequatur vel omnis rerum ut dolorum.",
+            "attributes": [
+               "liquid",
+               "battery",
+               "cosmetic",
+               "magnetic"
+            ],
+            "barcode": "xxx",
             "barcode_service": false,
             "customer_code": "xxx",
             "declared_cn_name": "xxx",
@@ -109,28 +130,91 @@ func UsageExamples() string {
             "declared_value_in_eur": 50,
             "declared_value_in_usd": 50,
             "enabled_nss_barcode": false,
+            "error_message": "Error ratione commodi explicabo temporibus accusantium cupiditate.",
+            "height": 2,
             "hs_code": "xxx",
             "id": 1,
-            "product_attributes": [
+            "images": [
+               "url"
+            ],
+            "length": 1,
+            "material": "Perspiciatis animi consequuntur occaecati quia impedit.",
+            "name": "xxx",
+            "purpose": "Voluptatibus et quae provident sit doloribus consequatur.",
+            "qty": 1,
+            "sku": "xxx",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "weight": 10,
+            "width": 1
+         },
+         {
+            "Authorization": "Consequatur vel omnis rerum ut dolorum.",
+            "attributes": [
                "liquid",
                "battery",
                "cosmetic",
                "magnetic"
             ],
-            "product_barcode": "xxx",
-            "product_height": 2,
-            "product_image": [
+            "barcode": "xxx",
+            "barcode_service": false,
+            "customer_code": "xxx",
+            "declared_cn_name": "xxx",
+            "declared_en_name": "xxx",
+            "declared_value_in_eur": 50,
+            "declared_value_in_usd": 50,
+            "enabled_nss_barcode": false,
+            "error_message": "Error ratione commodi explicabo temporibus accusantium cupiditate.",
+            "height": 2,
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
                "url"
             ],
-            "product_length": 1,
-            "product_name": "xxx",
-            "product_sku": "xxx",
-            "product_weight": 10,
-            "product_width": 1,
-            "qty": 1
+            "length": 1,
+            "material": "Perspiciatis animi consequuntur occaecati quia impedit.",
+            "name": "xxx",
+            "purpose": "Voluptatibus et quae provident sit doloribus consequatur.",
+            "qty": 1,
+            "sku": "xxx",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "weight": 10,
+            "width": 1
+         },
+         {
+            "Authorization": "Consequatur vel omnis rerum ut dolorum.",
+            "attributes": [
+               "liquid",
+               "battery",
+               "cosmetic",
+               "magnetic"
+            ],
+            "barcode": "xxx",
+            "barcode_service": false,
+            "customer_code": "xxx",
+            "declared_cn_name": "xxx",
+            "declared_en_name": "xxx",
+            "declared_value_in_eur": 50,
+            "declared_value_in_usd": 50,
+            "enabled_nss_barcode": false,
+            "error_message": "Error ratione commodi explicabo temporibus accusantium cupiditate.",
+            "height": 2,
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
+               "url"
+            ],
+            "length": 1,
+            "material": "Perspiciatis animi consequuntur occaecati quia impedit.",
+            "name": "xxx",
+            "purpose": "Voluptatibus et quae provident sit doloribus consequatur.",
+            "qty": 1,
+            "sku": "xxx",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "weight": 10,
+            "width": 1
          }
       ]
-   }'` + "\n" +
+   }' --authorization "Est ducimus saepe nam voluptas dolor earum." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"` + "\n" +
 		""
 }
 
@@ -142,6 +226,9 @@ func ParseEndpoint(
 	enc func(*http.Request) goahttp.Encoder,
 	dec func(*http.Response) goahttp.Decoder,
 	restore bool,
+	orderUploadOutboundOrdersEncoderFn orderc.OrderUploadOutboundOrdersEncoderFunc,
+	productUploadProductEncoderFn productc.ProductUploadProductEncoderFunc,
+	productUploadProductUpdateEncoderFn productc.ProductUploadProductUpdateEncoderFunc,
 	fileUploadImageEncoderFn filec.FileUploadImageEncoderFunc,
 ) (goa.Endpoint, interface{}, error) {
 	var (
@@ -160,83 +247,461 @@ func ParseEndpoint(
 		quoteGetLengthFlag            = quoteGetFlags.String("length", "REQUIRED", "")
 		quoteGetWidthFlag             = quoteGetFlags.String("width", "REQUIRED", "")
 		quoteGetHeightFlag            = quoteGetFlags.String("height", "REQUIRED", "")
-		quoteGetProductAttributesFlag = quoteGetFlags.String("product-attributes", "REQUIRED", "")
+		quoteGetProductAttributesFlag = quoteGetFlags.String("product-attributes", "", "")
 		quoteGetFactoryFlag           = quoteGetFlags.String("factory", "", "")
 		quoteGetDateFlag              = quoteGetFlags.String("date", "", "")
+		quoteGetAuthorizationFlag     = quoteGetFlags.String("authorization", "", "")
+		quoteGetTokenFlag             = quoteGetFlags.String("token", "", "")
+
+		quotePostFlags             = flag.NewFlagSet("post", flag.ExitOnError)
+		quotePostBodyFlag          = quotePostFlags.String("body", "REQUIRED", "")
+		quotePostAuthorizationFlag = quotePostFlags.String("authorization", "", "")
+		quotePostTokenFlag         = quotePostFlags.String("token", "", "")
 
 		trackFlags = flag.NewFlagSet("track", flag.ContinueOnError)
 
-		trackGetFlags              = flag.NewFlagSet("get", flag.ExitOnError)
-		trackGetTrackingNumberFlag = trackGetFlags.String("tracking-number", "REQUIRED", "")
-		trackGetTypeFlag           = trackGetFlags.String("type", "REQUIRED", "")
+		trackBatchQueryTrackInfoFlags               = flag.NewFlagSet("batch-query-track-info", flag.ExitOnError)
+		trackBatchQueryTrackInfoTrackingNumbersFlag = trackBatchQueryTrackInfoFlags.String("tracking-numbers", "REQUIRED", "")
+
+		trackGetTrackFlags              = flag.NewFlagSet("get-track", flag.ExitOnError)
+		trackGetTrackTrackingNumberFlag = trackGetTrackFlags.String("tracking-number", "REQUIRED", "tracking number")
 
 		orderFlags = flag.NewFlagSet("order", flag.ContinueOnError)
 
-		orderCreateInboundOrderFlags    = flag.NewFlagSet("create-inbound-order", flag.ExitOnError)
-		orderCreateInboundOrderBodyFlag = orderCreateInboundOrderFlags.String("body", "REQUIRED", "")
+		orderCreateInboundOrderFlags             = flag.NewFlagSet("create-inbound-order", flag.ExitOnError)
+		orderCreateInboundOrderBodyFlag          = orderCreateInboundOrderFlags.String("body", "REQUIRED", "")
+		orderCreateInboundOrderAuthorizationFlag = orderCreateInboundOrderFlags.String("authorization", "", "")
+		orderCreateInboundOrderTokenFlag         = orderCreateInboundOrderFlags.String("token", "", "")
 
-		orderUpdateInboundOrderFlags    = flag.NewFlagSet("update-inbound-order", flag.ExitOnError)
-		orderUpdateInboundOrderBodyFlag = orderUpdateInboundOrderFlags.String("body", "REQUIRED", "")
+		orderUpdateInboundOrderFlags             = flag.NewFlagSet("update-inbound-order", flag.ExitOnError)
+		orderUpdateInboundOrderBodyFlag          = orderUpdateInboundOrderFlags.String("body", "REQUIRED", "")
+		orderUpdateInboundOrderAuthorizationFlag = orderUpdateInboundOrderFlags.String("authorization", "", "")
+		orderUpdateInboundOrderTokenFlag         = orderUpdateInboundOrderFlags.String("token", "", "")
 
-		orderCreateOutboundOrderFlags    = flag.NewFlagSet("create-outbound-order", flag.ExitOnError)
-		orderCreateOutboundOrderBodyFlag = orderCreateOutboundOrderFlags.String("body", "REQUIRED", "")
+		orderCreatePickupOrderFlags             = flag.NewFlagSet("create-pickup-order", flag.ExitOnError)
+		orderCreatePickupOrderBodyFlag          = orderCreatePickupOrderFlags.String("body", "REQUIRED", "")
+		orderCreatePickupOrderAuthorizationFlag = orderCreatePickupOrderFlags.String("authorization", "", "")
+		orderCreatePickupOrderTokenFlag         = orderCreatePickupOrderFlags.String("token", "", "")
 
-		orderUpdateOutboundOrderFlags    = flag.NewFlagSet("update-outbound-order", flag.ExitOnError)
-		orderUpdateOutboundOrderBodyFlag = orderUpdateOutboundOrderFlags.String("body", "REQUIRED", "")
-
-		orderCreatePickupOrderFlags    = flag.NewFlagSet("create-pickup-order", flag.ExitOnError)
-		orderCreatePickupOrderBodyFlag = orderCreatePickupOrderFlags.String("body", "REQUIRED", "")
+		orderBatchQueryInboundOrderFlags             = flag.NewFlagSet("batch-query-inbound-order", flag.ExitOnError)
+		orderBatchQueryInboundOrderOrderNumbersFlag  = orderBatchQueryInboundOrderFlags.String("order-numbers", "", "")
+		orderBatchQueryInboundOrderStatusFlag        = orderBatchQueryInboundOrderFlags.String("status", "", "")
+		orderBatchQueryInboundOrderCurrentFlag       = orderBatchQueryInboundOrderFlags.String("current", "", "")
+		orderBatchQueryInboundOrderPageSizeFlag      = orderBatchQueryInboundOrderFlags.String("page-size", "", "")
+		orderBatchQueryInboundOrderAuthorizationFlag = orderBatchQueryInboundOrderFlags.String("authorization", "", "")
+		orderBatchQueryInboundOrderTokenFlag         = orderBatchQueryInboundOrderFlags.String("token", "", "")
 
 		orderGetInboundOrderFlags             = flag.NewFlagSet("get-inbound-order", flag.ExitOnError)
-		orderGetInboundOrderClientOrderIDFlag = orderGetInboundOrderFlags.String("client-order-id", "REQUIRED", "")
+		orderGetInboundOrderOrderNumberFlag   = orderGetInboundOrderFlags.String("order-number", "REQUIRED", "inbound order number")
+		orderGetInboundOrderAuthorizationFlag = orderGetInboundOrderFlags.String("authorization", "", "")
+		orderGetInboundOrderTokenFlag         = orderGetInboundOrderFlags.String("token", "", "")
+
+		orderCreateOutboundOrderFlags             = flag.NewFlagSet("create-outbound-order", flag.ExitOnError)
+		orderCreateOutboundOrderBodyFlag          = orderCreateOutboundOrderFlags.String("body", "REQUIRED", "")
+		orderCreateOutboundOrderAuthorizationFlag = orderCreateOutboundOrderFlags.String("authorization", "", "")
+		orderCreateOutboundOrderTokenFlag         = orderCreateOutboundOrderFlags.String("token", "", "")
+
+		orderUpdateOutboundOrderFlags             = flag.NewFlagSet("update-outbound-order", flag.ExitOnError)
+		orderUpdateOutboundOrderBodyFlag          = orderUpdateOutboundOrderFlags.String("body", "REQUIRED", "")
+		orderUpdateOutboundOrderIDFlag            = orderUpdateOutboundOrderFlags.String("id", "REQUIRED", "outbound order id")
+		orderUpdateOutboundOrderAuthorizationFlag = orderUpdateOutboundOrderFlags.String("authorization", "", "")
+		orderUpdateOutboundOrderTokenFlag         = orderUpdateOutboundOrderFlags.String("token", "", "")
+
+		orderBatchUpdateOutboundOrderFlags             = flag.NewFlagSet("batch-update-outbound-order", flag.ExitOnError)
+		orderBatchUpdateOutboundOrderBodyFlag          = orderBatchUpdateOutboundOrderFlags.String("body", "REQUIRED", "")
+		orderBatchUpdateOutboundOrderAuthorizationFlag = orderBatchUpdateOutboundOrderFlags.String("authorization", "", "")
+		orderBatchUpdateOutboundOrderTokenFlag         = orderBatchUpdateOutboundOrderFlags.String("token", "", "")
+
+		orderCreateOutboundOrderItemFlags             = flag.NewFlagSet("create-outbound-order-item", flag.ExitOnError)
+		orderCreateOutboundOrderItemBodyFlag          = orderCreateOutboundOrderItemFlags.String("body", "REQUIRED", "")
+		orderCreateOutboundOrderItemAuthorizationFlag = orderCreateOutboundOrderItemFlags.String("authorization", "", "")
+		orderCreateOutboundOrderItemTokenFlag         = orderCreateOutboundOrderItemFlags.String("token", "", "")
+
+		orderUpdateOutboundOrderItemFlags             = flag.NewFlagSet("update-outbound-order-item", flag.ExitOnError)
+		orderUpdateOutboundOrderItemBodyFlag          = orderUpdateOutboundOrderItemFlags.String("body", "REQUIRED", "")
+		orderUpdateOutboundOrderItemIDFlag            = orderUpdateOutboundOrderItemFlags.String("id", "REQUIRED", "outbound order item id")
+		orderUpdateOutboundOrderItemAuthorizationFlag = orderUpdateOutboundOrderItemFlags.String("authorization", "", "")
+		orderUpdateOutboundOrderItemTokenFlag         = orderUpdateOutboundOrderItemFlags.String("token", "", "")
+
+		orderDeleteOutboundOrderItemFlags             = flag.NewFlagSet("delete-outbound-order-item", flag.ExitOnError)
+		orderDeleteOutboundOrderItemIDFlag            = orderDeleteOutboundOrderItemFlags.String("id", "REQUIRED", "id")
+		orderDeleteOutboundOrderItemAuthorizationFlag = orderDeleteOutboundOrderItemFlags.String("authorization", "", "")
+		orderDeleteOutboundOrderItemTokenFlag         = orderDeleteOutboundOrderItemFlags.String("token", "", "")
+
+		orderBatchQueryOutboundOrderFlags             = flag.NewFlagSet("batch-query-outbound-order", flag.ExitOnError)
+		orderBatchQueryOutboundOrderOrderNumbersFlag  = orderBatchQueryOutboundOrderFlags.String("order-numbers", "", "")
+		orderBatchQueryOutboundOrderStatusFlag        = orderBatchQueryOutboundOrderFlags.String("status", "", "")
+		orderBatchQueryOutboundOrderCurrentFlag       = orderBatchQueryOutboundOrderFlags.String("current", "", "")
+		orderBatchQueryOutboundOrderPageSizeFlag      = orderBatchQueryOutboundOrderFlags.String("page-size", "", "")
+		orderBatchQueryOutboundOrderAuthorizationFlag = orderBatchQueryOutboundOrderFlags.String("authorization", "", "")
+		orderBatchQueryOutboundOrderTokenFlag         = orderBatchQueryOutboundOrderFlags.String("token", "", "")
 
 		orderGetOutboundOrderFlags             = flag.NewFlagSet("get-outbound-order", flag.ExitOnError)
-		orderGetOutboundOrderClientOrderIDFlag = orderGetOutboundOrderFlags.String("client-order-id", "REQUIRED", "")
+		orderGetOutboundOrderIDFlag            = orderGetOutboundOrderFlags.String("id", "REQUIRED", "outbound order number")
+		orderGetOutboundOrderAuthorizationFlag = orderGetOutboundOrderFlags.String("authorization", "", "")
+		orderGetOutboundOrderTokenFlag         = orderGetOutboundOrderFlags.String("token", "", "")
+
+		orderGetOutboundOrderListFiltersFlags             = flag.NewFlagSet("get-outbound-order-list-filters", flag.ExitOnError)
+		orderGetOutboundOrderListFiltersAuthorizationFlag = orderGetOutboundOrderListFiltersFlags.String("authorization", "", "")
+		orderGetOutboundOrderListFiltersTokenFlag         = orderGetOutboundOrderListFiltersFlags.String("token", "", "")
+
+		orderGetOutboundOrderCountFlags                 = flag.NewFlagSet("get-outbound-order-count", flag.ExitOnError)
+		orderGetOutboundOrderCountIDFlag                = orderGetOutboundOrderCountFlags.String("id", "", "")
+		orderGetOutboundOrderCountPlatformOrderNoFlag   = orderGetOutboundOrderCountFlags.String("platform-order-no", "", "")
+		orderGetOutboundOrderCountListingSkuFlag        = orderGetOutboundOrderCountFlags.String("listing-sku", "", "")
+		orderGetOutboundOrderCountSkuFlag               = orderGetOutboundOrderCountFlags.String("sku", "", "")
+		orderGetOutboundOrderCountNssTrackingNumberFlag = orderGetOutboundOrderCountFlags.String("nss-tracking-number", "", "")
+		orderGetOutboundOrderCountShippingNameFlag      = orderGetOutboundOrderCountFlags.String("shipping-name", "", "")
+		orderGetOutboundOrderCountPlatformFlag          = orderGetOutboundOrderCountFlags.String("platform", "", "")
+		orderGetOutboundOrderCountStatusFlag            = orderGetOutboundOrderCountFlags.String("status", "", "")
+		orderGetOutboundOrderCountStoreIDFlag           = orderGetOutboundOrderCountFlags.String("store-id", "", "")
+		orderGetOutboundOrderCountWarehouseIDFlag       = orderGetOutboundOrderCountFlags.String("warehouse-id", "", "")
+		orderGetOutboundOrderCountCountryCodeFlag       = orderGetOutboundOrderCountFlags.String("country-code", "", "")
+		orderGetOutboundOrderCountCreatedAtStartFlag    = orderGetOutboundOrderCountFlags.String("created-at-start", "", "")
+		orderGetOutboundOrderCountCreatedAtEndFlag      = orderGetOutboundOrderCountFlags.String("created-at-end", "", "")
+		orderGetOutboundOrderCountShipDateStartFlag     = orderGetOutboundOrderCountFlags.String("ship-date-start", "", "")
+		orderGetOutboundOrderCountShipDateEndFlag       = orderGetOutboundOrderCountFlags.String("ship-date-end", "", "")
+		orderGetOutboundOrderCountOfflineOrderFlag      = orderGetOutboundOrderCountFlags.String("offline-order", "", "")
+		orderGetOutboundOrderCountPageFlag              = orderGetOutboundOrderCountFlags.String("page", "", "")
+		orderGetOutboundOrderCountPageSizeFlag          = orderGetOutboundOrderCountFlags.String("page-size", "", "")
+		orderGetOutboundOrderCountAuthorizationFlag     = orderGetOutboundOrderCountFlags.String("authorization", "", "")
+		orderGetOutboundOrderCountTokenFlag             = orderGetOutboundOrderCountFlags.String("token", "", "")
+
+		orderGetOutboundOrderListFlags                 = flag.NewFlagSet("get-outbound-order-list", flag.ExitOnError)
+		orderGetOutboundOrderListIDFlag                = orderGetOutboundOrderListFlags.String("id", "", "")
+		orderGetOutboundOrderListPlatformOrderNoFlag   = orderGetOutboundOrderListFlags.String("platform-order-no", "", "")
+		orderGetOutboundOrderListListingSkuFlag        = orderGetOutboundOrderListFlags.String("listing-sku", "", "")
+		orderGetOutboundOrderListSkuFlag               = orderGetOutboundOrderListFlags.String("sku", "", "")
+		orderGetOutboundOrderListNssTrackingNumberFlag = orderGetOutboundOrderListFlags.String("nss-tracking-number", "", "")
+		orderGetOutboundOrderListShippingNameFlag      = orderGetOutboundOrderListFlags.String("shipping-name", "", "")
+		orderGetOutboundOrderListPlatformFlag          = orderGetOutboundOrderListFlags.String("platform", "", "")
+		orderGetOutboundOrderListStatusFlag            = orderGetOutboundOrderListFlags.String("status", "", "")
+		orderGetOutboundOrderListStoreIDFlag           = orderGetOutboundOrderListFlags.String("store-id", "", "")
+		orderGetOutboundOrderListWarehouseIDFlag       = orderGetOutboundOrderListFlags.String("warehouse-id", "", "")
+		orderGetOutboundOrderListCountryCodeFlag       = orderGetOutboundOrderListFlags.String("country-code", "", "")
+		orderGetOutboundOrderListCreatedAtStartFlag    = orderGetOutboundOrderListFlags.String("created-at-start", "", "")
+		orderGetOutboundOrderListCreatedAtEndFlag      = orderGetOutboundOrderListFlags.String("created-at-end", "", "")
+		orderGetOutboundOrderListShipDateStartFlag     = orderGetOutboundOrderListFlags.String("ship-date-start", "", "")
+		orderGetOutboundOrderListShipDateEndFlag       = orderGetOutboundOrderListFlags.String("ship-date-end", "", "")
+		orderGetOutboundOrderListOfflineOrderFlag      = orderGetOutboundOrderListFlags.String("offline-order", "", "")
+		orderGetOutboundOrderListPageFlag              = orderGetOutboundOrderListFlags.String("page", "", "")
+		orderGetOutboundOrderListPageSizeFlag          = orderGetOutboundOrderListFlags.String("page-size", "", "")
+		orderGetOutboundOrderListAuthorizationFlag     = orderGetOutboundOrderListFlags.String("authorization", "", "")
+		orderGetOutboundOrderListTokenFlag             = orderGetOutboundOrderListFlags.String("token", "", "")
+
+		orderUploadOutboundOrdersFlags             = flag.NewFlagSet("upload-outbound-orders", flag.ExitOnError)
+		orderUploadOutboundOrdersBodyFlag          = orderUploadOutboundOrdersFlags.String("body", "REQUIRED", "")
+		orderUploadOutboundOrdersAuthorizationFlag = orderUploadOutboundOrdersFlags.String("authorization", "", "")
+		orderUploadOutboundOrdersTokenFlag         = orderUploadOutboundOrdersFlags.String("token", "", "")
+
+		orderExportOutboundOrdersFlags                 = flag.NewFlagSet("export-outbound-orders", flag.ExitOnError)
+		orderExportOutboundOrdersIDFlag                = orderExportOutboundOrdersFlags.String("id", "", "")
+		orderExportOutboundOrdersPlatformOrderNoFlag   = orderExportOutboundOrdersFlags.String("platform-order-no", "", "")
+		orderExportOutboundOrdersListingSkuFlag        = orderExportOutboundOrdersFlags.String("listing-sku", "", "")
+		orderExportOutboundOrdersSkuFlag               = orderExportOutboundOrdersFlags.String("sku", "", "")
+		orderExportOutboundOrdersNssTrackingNumberFlag = orderExportOutboundOrdersFlags.String("nss-tracking-number", "", "")
+		orderExportOutboundOrdersShippingNameFlag      = orderExportOutboundOrdersFlags.String("shipping-name", "", "")
+		orderExportOutboundOrdersPlatformFlag          = orderExportOutboundOrdersFlags.String("platform", "", "")
+		orderExportOutboundOrdersStatusFlag            = orderExportOutboundOrdersFlags.String("status", "", "")
+		orderExportOutboundOrdersStoreIDFlag           = orderExportOutboundOrdersFlags.String("store-id", "", "")
+		orderExportOutboundOrdersWarehouseIDFlag       = orderExportOutboundOrdersFlags.String("warehouse-id", "", "")
+		orderExportOutboundOrdersCountryCodeFlag       = orderExportOutboundOrdersFlags.String("country-code", "", "")
+		orderExportOutboundOrdersCreatedAtStartFlag    = orderExportOutboundOrdersFlags.String("created-at-start", "", "")
+		orderExportOutboundOrdersCreatedAtEndFlag      = orderExportOutboundOrdersFlags.String("created-at-end", "", "")
+		orderExportOutboundOrdersShipDateStartFlag     = orderExportOutboundOrdersFlags.String("ship-date-start", "", "")
+		orderExportOutboundOrdersShipDateEndFlag       = orderExportOutboundOrdersFlags.String("ship-date-end", "", "")
+		orderExportOutboundOrdersOfflineOrderFlag      = orderExportOutboundOrdersFlags.String("offline-order", "", "")
+		orderExportOutboundOrdersPageFlag              = orderExportOutboundOrdersFlags.String("page", "", "")
+		orderExportOutboundOrdersPageSizeFlag          = orderExportOutboundOrdersFlags.String("page-size", "", "")
+		orderExportOutboundOrdersAuthorizationFlag     = orderExportOutboundOrdersFlags.String("authorization", "", "")
+		orderExportOutboundOrdersTokenFlag             = orderExportOutboundOrdersFlags.String("token", "", "")
 
 		productFlags = flag.NewFlagSet("product", flag.ContinueOnError)
 
-		productBatchesCreateProductFlags    = flag.NewFlagSet("batches-create-product", flag.ExitOnError)
-		productBatchesCreateProductBodyFlag = productBatchesCreateProductFlags.String("body", "REQUIRED", "")
+		productBatchesCreateProductFlags             = flag.NewFlagSet("batches-create-product", flag.ExitOnError)
+		productBatchesCreateProductBodyFlag          = productBatchesCreateProductFlags.String("body", "REQUIRED", "")
+		productBatchesCreateProductAuthorizationFlag = productBatchesCreateProductFlags.String("authorization", "", "")
+		productBatchesCreateProductTokenFlag         = productBatchesCreateProductFlags.String("token", "", "")
 
-		productUpdateProductFlags    = flag.NewFlagSet("update-product", flag.ExitOnError)
-		productUpdateProductBodyFlag = productUpdateProductFlags.String("body", "REQUIRED", "")
+		productUpdateProductFlags             = flag.NewFlagSet("update-product", flag.ExitOnError)
+		productUpdateProductBodyFlag          = productUpdateProductFlags.String("body", "REQUIRED", "")
+		productUpdateProductAuthorizationFlag = productUpdateProductFlags.String("authorization", "", "")
+		productUpdateProductTokenFlag         = productUpdateProductFlags.String("token", "", "")
 
-		productGenerateBarcodeFlags = flag.NewFlagSet("generate-barcode", flag.ExitOnError)
+		productExportProductFlags             = flag.NewFlagSet("export-product", flag.ExitOnError)
+		productExportProductIDFlag            = productExportProductFlags.String("id", "", "")
+		productExportProductSkuFlag           = productExportProductFlags.String("sku", "", "")
+		productExportProductBarcodeFlag       = productExportProductFlags.String("barcode", "", "")
+		productExportProductStatusFlag        = productExportProductFlags.String("status", "", "")
+		productExportProductAttributesFlag    = productExportProductFlags.String("attributes", "", "")
+		productExportProductNameFlag          = productExportProductFlags.String("name", "", "")
+		productExportProductInventoryFlag     = productExportProductFlags.String("inventory", "", "")
+		productExportProductCurrentFlag       = productExportProductFlags.String("current", "", "")
+		productExportProductPageSizeFlag      = productExportProductFlags.String("page-size", "", "")
+		productExportProductAuthorizationFlag = productExportProductFlags.String("authorization", "", "")
+		productExportProductTokenFlag         = productExportProductFlags.String("token", "", "")
 
-		productGenerateTokenFlags    = flag.NewFlagSet("generate-token", flag.ExitOnError)
-		productGenerateTokenBodyFlag = productGenerateTokenFlags.String("body", "REQUIRED", "")
+		productDownloadTemplatesFlags             = flag.NewFlagSet("download-templates", flag.ExitOnError)
+		productDownloadTemplatesTemplateFlag      = productDownloadTemplatesFlags.String("template", "REQUIRED", "template")
+		productDownloadTemplatesAuthorizationFlag = productDownloadTemplatesFlags.String("authorization", "", "")
+		productDownloadTemplatesTokenFlag         = productDownloadTemplatesFlags.String("token", "", "")
+
+		productUploadProductFlags             = flag.NewFlagSet("upload-product", flag.ExitOnError)
+		productUploadProductBodyFlag          = productUploadProductFlags.String("body", "REQUIRED", "")
+		productUploadProductAuthorizationFlag = productUploadProductFlags.String("authorization", "", "")
+		productUploadProductTokenFlag         = productUploadProductFlags.String("token", "", "")
+
+		productUploadProductUpdateFlags             = flag.NewFlagSet("upload-product-update", flag.ExitOnError)
+		productUploadProductUpdateBodyFlag          = productUploadProductUpdateFlags.String("body", "REQUIRED", "")
+		productUploadProductUpdateAuthorizationFlag = productUploadProductUpdateFlags.String("authorization", "", "")
+		productUploadProductUpdateTokenFlag         = productUploadProductUpdateFlags.String("token", "", "")
+
+		productGenerateBarcodeFlags             = flag.NewFlagSet("generate-barcode", flag.ExitOnError)
+		productGenerateBarcodeAuthorizationFlag = productGenerateBarcodeFlags.String("authorization", "", "")
+		productGenerateBarcodeTokenFlag         = productGenerateBarcodeFlags.String("token", "", "")
+
+		productProductsQueryFlags             = flag.NewFlagSet("products-query", flag.ExitOnError)
+		productProductsQueryNameFlag          = productProductsQueryFlags.String("name", "", "")
+		productProductsQuerySkuFlag           = productProductsQueryFlags.String("sku", "", "")
+		productProductsQueryBarcodeFlag       = productProductsQueryFlags.String("barcode", "", "")
+		productProductsQueryStatusFlag        = productProductsQueryFlags.String("status", "", "")
+		productProductsQueryAttributesFlag    = productProductsQueryFlags.String("attributes", "", "")
+		productProductsQueryInventoryFlag     = productProductsQueryFlags.String("inventory", "", "")
+		productProductsQueryCurrentFlag       = productProductsQueryFlags.String("current", "", "")
+		productProductsQueryPageSizeFlag      = productProductsQueryFlags.String("page-size", "", "")
+		productProductsQueryAuthorizationFlag = productProductsQueryFlags.String("authorization", "", "")
+		productProductsQueryTokenFlag         = productProductsQueryFlags.String("token", "", "")
+
+		productProductDetailFlags             = flag.NewFlagSet("product-detail", flag.ExitOnError)
+		productProductDetailIDFlag            = productProductDetailFlags.String("id", "REQUIRED", "id")
+		productProductDetailAuthorizationFlag = productProductDetailFlags.String("authorization", "", "")
+		productProductDetailTokenFlag         = productProductDetailFlags.String("token", "", "")
+
+		integrationsFlags = flag.NewFlagSet("integrations", flag.ContinueOnError)
+
+		integrationsListFlags             = flag.NewFlagSet("list", flag.ExitOnError)
+		integrationsListAuthorizationFlag = integrationsListFlags.String("authorization", "", "")
+		integrationsListTokenFlag         = integrationsListFlags.String("token", "", "")
+
+		integrationsAuthorizeFlags             = flag.NewFlagSet("authorize", flag.ExitOnError)
+		integrationsAuthorizeBodyFlag          = integrationsAuthorizeFlags.String("body", "REQUIRED", "")
+		integrationsAuthorizeAuthorizationFlag = integrationsAuthorizeFlags.String("authorization", "", "")
+		integrationsAuthorizeTokenFlag         = integrationsAuthorizeFlags.String("token", "", "")
+
+		authFlags = flag.NewFlagSet("auth", flag.ContinueOnError)
+
+		authGenerateTokenFlags    = flag.NewFlagSet("generate-token", flag.ExitOnError)
+		authGenerateTokenBodyFlag = authGenerateTokenFlags.String("body", "REQUIRED", "")
 
 		fileFlags = flag.NewFlagSet("file", flag.ContinueOnError)
 
-		fileUploadImageFlags    = flag.NewFlagSet("upload-image", flag.ExitOnError)
-		fileUploadImageBodyFlag = fileUploadImageFlags.String("body", "REQUIRED", "")
+		fileUploadImageFlags             = flag.NewFlagSet("upload-image", flag.ExitOnError)
+		fileUploadImageBodyFlag          = fileUploadImageFlags.String("body", "REQUIRED", "")
+		fileUploadImageAuthorizationFlag = fileUploadImageFlags.String("authorization", "", "")
+		fileUploadImageTokenFlag         = fileUploadImageFlags.String("token", "", "")
+
+		userFlags = flag.NewFlagSet("user", flag.ContinueOnError)
+
+		userUserSignupFlags    = flag.NewFlagSet("user-signup", flag.ExitOnError)
+		userUserSignupBodyFlag = userUserSignupFlags.String("body", "REQUIRED", "")
+
+		userUserLoginFlags    = flag.NewFlagSet("user-login", flag.ExitOnError)
+		userUserLoginBodyFlag = userUserLoginFlags.String("body", "REQUIRED", "")
+
+		userUserModifyPasswordFlags             = flag.NewFlagSet("user-modify-password", flag.ExitOnError)
+		userUserModifyPasswordBodyFlag          = userUserModifyPasswordFlags.String("body", "REQUIRED", "")
+		userUserModifyPasswordAuthorizationFlag = userUserModifyPasswordFlags.String("authorization", "", "")
+		userUserModifyPasswordTokenFlag         = userUserModifyPasswordFlags.String("token", "", "")
+
+		userUserForgetPasswordFlags    = flag.NewFlagSet("user-forget-password", flag.ExitOnError)
+		userUserForgetPasswordBodyFlag = userUserForgetPasswordFlags.String("body", "REQUIRED", "")
+
+		userUserValidateFlags    = flag.NewFlagSet("user-validate", flag.ExitOnError)
+		userUserValidateBodyFlag = userUserValidateFlags.String("body", "REQUIRED", "")
+
+		userUserLogoutFlags             = flag.NewFlagSet("user-logout", flag.ExitOnError)
+		userUserLogoutAuthorizationFlag = userUserLogoutFlags.String("authorization", "", "")
+		userUserLogoutTokenFlag         = userUserLogoutFlags.String("token", "", "")
+
+		userGetUserInfoFlags             = flag.NewFlagSet("get-user-info", flag.ExitOnError)
+		userGetUserInfoAuthorizationFlag = userGetUserInfoFlags.String("authorization", "", "")
+		userGetUserInfoTokenFlag         = userGetUserInfoFlags.String("token", "", "")
+
+		userUpdateUserInfoFlags             = flag.NewFlagSet("update-user-info", flag.ExitOnError)
+		userUpdateUserInfoBodyFlag          = userUpdateUserInfoFlags.String("body", "REQUIRED", "")
+		userUpdateUserInfoAuthorizationFlag = userUpdateUserInfoFlags.String("authorization", "", "")
+		userUpdateUserInfoTokenFlag         = userUpdateUserInfoFlags.String("token", "", "")
+
+		userPermissionsFlags             = flag.NewFlagSet("permissions", flag.ExitOnError)
+		userPermissionsAuthorizationFlag = userPermissionsFlags.String("authorization", "", "")
+		userPermissionsTokenFlag         = userPermissionsFlags.String("token", "", "")
+
+		woocommerceFlags = flag.NewFlagSet("woocommerce", flag.ContinueOnError)
+
+		woocommerceReturnWoocommerceFlags    = flag.NewFlagSet("return-woocommerce", flag.ExitOnError)
+		woocommerceReturnWoocommerceBodyFlag = woocommerceReturnWoocommerceFlags.String("body", "REQUIRED", "")
+
+		woocommerceCallbackWoocommerceFlags    = flag.NewFlagSet("callback-woocommerce", flag.ExitOnError)
+		woocommerceCallbackWoocommerceBodyFlag = woocommerceCallbackWoocommerceFlags.String("body", "REQUIRED", "")
+
+		woocommerceRetrieveOrdersFlags              = flag.NewFlagSet("retrieve-orders", flag.ExitOnError)
+		woocommerceRetrieveOrdersStoreIDFlag        = woocommerceRetrieveOrdersFlags.String("store-id", "", "")
+		woocommerceRetrieveOrdersPlatformRefIdsFlag = woocommerceRetrieveOrdersFlags.String("platform-ref-ids", "", "")
+		woocommerceRetrieveOrdersAuthorizationFlag  = woocommerceRetrieveOrdersFlags.String("authorization", "", "")
+		woocommerceRetrieveOrdersTokenFlag          = woocommerceRetrieveOrdersFlags.String("token", "", "")
+
+		woocommerceRetrieveProductsFlags              = flag.NewFlagSet("retrieve-products", flag.ExitOnError)
+		woocommerceRetrieveProductsStoreIDFlag        = woocommerceRetrieveProductsFlags.String("store-id", "", "")
+		woocommerceRetrieveProductsPlatformRefIdsFlag = woocommerceRetrieveProductsFlags.String("platform-ref-ids", "", "")
+		woocommerceRetrieveProductsAuthorizationFlag  = woocommerceRetrieveProductsFlags.String("authorization", "", "")
+		woocommerceRetrieveProductsTokenFlag          = woocommerceRetrieveProductsFlags.String("token", "", "")
+
+		tenantFlags = flag.NewFlagSet("tenant", flag.ContinueOnError)
+
+		tenantIntegrationsFlags             = flag.NewFlagSet("integrations", flag.ExitOnError)
+		tenantIntegrationsAuthorizationFlag = tenantIntegrationsFlags.String("authorization", "", "")
+		tenantIntegrationsTokenFlag         = tenantIntegrationsFlags.String("token", "", "")
+
+		tenantGetTenantInfoFlags             = flag.NewFlagSet("get-tenant-info", flag.ExitOnError)
+		tenantGetTenantInfoAuthorizationFlag = tenantGetTenantInfoFlags.String("authorization", "", "")
+		tenantGetTenantInfoTokenFlag         = tenantGetTenantInfoFlags.String("token", "", "")
+
+		tenantUpdateTenantInfoFlags             = flag.NewFlagSet("update-tenant-info", flag.ExitOnError)
+		tenantUpdateTenantInfoBodyFlag          = tenantUpdateTenantInfoFlags.String("body", "REQUIRED", "")
+		tenantUpdateTenantInfoAuthorizationFlag = tenantUpdateTenantInfoFlags.String("authorization", "", "")
+		tenantUpdateTenantInfoTokenFlag         = tenantUpdateTenantInfoFlags.String("token", "", "")
+
+		platformProductFlags = flag.NewFlagSet("platform-product", flag.ContinueOnError)
+
+		platformProductPlatformProductFlags              = flag.NewFlagSet("platform-product", flag.ExitOnError)
+		platformProductPlatformProductPlatformStatusFlag = platformProductPlatformProductFlags.String("platform-status", "", "")
+		platformProductPlatformProductNameFlag           = platformProductPlatformProductFlags.String("name", "", "")
+		platformProductPlatformProductPageSizeFlag       = platformProductPlatformProductFlags.String("page-size", "", "")
+		platformProductPlatformProductCurrentFlag        = platformProductPlatformProductFlags.String("current", "", "")
+		platformProductPlatformProductIDFlag             = platformProductPlatformProductFlags.String("id", "", "")
+		platformProductPlatformProductListingSkuFlag     = platformProductPlatformProductFlags.String("listing-sku", "", "")
+		platformProductPlatformProductSkuFlag            = platformProductPlatformProductFlags.String("sku", "", "")
+		platformProductPlatformProductIsMappingFlag      = platformProductPlatformProductFlags.String("is-mapping", "", "")
+		platformProductPlatformProductAuthorizationFlag  = platformProductPlatformProductFlags.String("authorization", "", "")
+		platformProductPlatformProductTokenFlag          = platformProductPlatformProductFlags.String("token", "", "")
+
+		platformProductConvertFlags             = flag.NewFlagSet("convert", flag.ExitOnError)
+		platformProductConvertBodyFlag          = platformProductConvertFlags.String("body", "REQUIRED", "")
+		platformProductConvertAuthorizationFlag = platformProductConvertFlags.String("authorization", "", "")
+		platformProductConvertTokenFlag         = platformProductConvertFlags.String("token", "", "")
+
+		platformProductMappingsFlags             = flag.NewFlagSet("mappings", flag.ExitOnError)
+		platformProductMappingsBodyFlag          = platformProductMappingsFlags.String("body", "REQUIRED", "")
+		platformProductMappingsAuthorizationFlag = platformProductMappingsFlags.String("authorization", "", "")
+		platformProductMappingsTokenFlag         = platformProductMappingsFlags.String("token", "", "")
+
+		wixFlags = flag.NewFlagSet("wix", flag.ContinueOnError)
+
+		wixCallbackWixFlags          = flag.NewFlagSet("callback-wix", flag.ExitOnError)
+		wixCallbackWixCodeFlag       = wixCallbackWixFlags.String("code", "REQUIRED", "")
+		wixCallbackWixStateFlag      = wixCallbackWixFlags.String("state", "", "")
+		wixCallbackWixInstanceIDFlag = wixCallbackWixFlags.String("instance-id", "REQUIRED", "")
+
+		wixWebhooksProductsWixFlags    = flag.NewFlagSet("webhooks-products-wix", flag.ExitOnError)
+		wixWebhooksProductsWixBodyFlag = wixWebhooksProductsWixFlags.String("body", "REQUIRED", "")
+
+		wixProductsListFlags    = flag.NewFlagSet("products-list", flag.ExitOnError)
+		wixProductsListBodyFlag = wixProductsListFlags.String("body", "REQUIRED", "")
+
+		wixOrdersListFlags    = flag.NewFlagSet("orders-list", flag.ExitOnError)
+		wixOrdersListBodyFlag = wixOrdersListFlags.String("body", "REQUIRED", "")
+
+		wixRedirectFlags = flag.NewFlagSet("wix-redirect", flag.ContinueOnError)
+
+		wixRedirectReturnWixFlags = flag.NewFlagSet("return-wix", flag.ExitOnError)
 	)
 	healthyFlags.Usage = healthyUsage
 	healthyGetFlags.Usage = healthyGetUsage
 
 	quoteFlags.Usage = quoteUsage
 	quoteGetFlags.Usage = quoteGetUsage
+	quotePostFlags.Usage = quotePostUsage
 
 	trackFlags.Usage = trackUsage
-	trackGetFlags.Usage = trackGetUsage
+	trackBatchQueryTrackInfoFlags.Usage = trackBatchQueryTrackInfoUsage
+	trackGetTrackFlags.Usage = trackGetTrackUsage
 
 	orderFlags.Usage = orderUsage
 	orderCreateInboundOrderFlags.Usage = orderCreateInboundOrderUsage
 	orderUpdateInboundOrderFlags.Usage = orderUpdateInboundOrderUsage
+	orderCreatePickupOrderFlags.Usage = orderCreatePickupOrderUsage
+	orderBatchQueryInboundOrderFlags.Usage = orderBatchQueryInboundOrderUsage
+	orderGetInboundOrderFlags.Usage = orderGetInboundOrderUsage
 	orderCreateOutboundOrderFlags.Usage = orderCreateOutboundOrderUsage
 	orderUpdateOutboundOrderFlags.Usage = orderUpdateOutboundOrderUsage
-	orderCreatePickupOrderFlags.Usage = orderCreatePickupOrderUsage
-	orderGetInboundOrderFlags.Usage = orderGetInboundOrderUsage
+	orderBatchUpdateOutboundOrderFlags.Usage = orderBatchUpdateOutboundOrderUsage
+	orderCreateOutboundOrderItemFlags.Usage = orderCreateOutboundOrderItemUsage
+	orderUpdateOutboundOrderItemFlags.Usage = orderUpdateOutboundOrderItemUsage
+	orderDeleteOutboundOrderItemFlags.Usage = orderDeleteOutboundOrderItemUsage
+	orderBatchQueryOutboundOrderFlags.Usage = orderBatchQueryOutboundOrderUsage
 	orderGetOutboundOrderFlags.Usage = orderGetOutboundOrderUsage
+	orderGetOutboundOrderListFiltersFlags.Usage = orderGetOutboundOrderListFiltersUsage
+	orderGetOutboundOrderCountFlags.Usage = orderGetOutboundOrderCountUsage
+	orderGetOutboundOrderListFlags.Usage = orderGetOutboundOrderListUsage
+	orderUploadOutboundOrdersFlags.Usage = orderUploadOutboundOrdersUsage
+	orderExportOutboundOrdersFlags.Usage = orderExportOutboundOrdersUsage
 
 	productFlags.Usage = productUsage
 	productBatchesCreateProductFlags.Usage = productBatchesCreateProductUsage
 	productUpdateProductFlags.Usage = productUpdateProductUsage
+	productExportProductFlags.Usage = productExportProductUsage
+	productDownloadTemplatesFlags.Usage = productDownloadTemplatesUsage
+	productUploadProductFlags.Usage = productUploadProductUsage
+	productUploadProductUpdateFlags.Usage = productUploadProductUpdateUsage
 	productGenerateBarcodeFlags.Usage = productGenerateBarcodeUsage
-	productGenerateTokenFlags.Usage = productGenerateTokenUsage
+	productProductsQueryFlags.Usage = productProductsQueryUsage
+	productProductDetailFlags.Usage = productProductDetailUsage
+
+	integrationsFlags.Usage = integrationsUsage
+	integrationsListFlags.Usage = integrationsListUsage
+	integrationsAuthorizeFlags.Usage = integrationsAuthorizeUsage
+
+	authFlags.Usage = authUsage
+	authGenerateTokenFlags.Usage = authGenerateTokenUsage
 
 	fileFlags.Usage = fileUsage
 	fileUploadImageFlags.Usage = fileUploadImageUsage
+
+	userFlags.Usage = userUsage
+	userUserSignupFlags.Usage = userUserSignupUsage
+	userUserLoginFlags.Usage = userUserLoginUsage
+	userUserModifyPasswordFlags.Usage = userUserModifyPasswordUsage
+	userUserForgetPasswordFlags.Usage = userUserForgetPasswordUsage
+	userUserValidateFlags.Usage = userUserValidateUsage
+	userUserLogoutFlags.Usage = userUserLogoutUsage
+	userGetUserInfoFlags.Usage = userGetUserInfoUsage
+	userUpdateUserInfoFlags.Usage = userUpdateUserInfoUsage
+	userPermissionsFlags.Usage = userPermissionsUsage
+
+	woocommerceFlags.Usage = woocommerceUsage
+	woocommerceReturnWoocommerceFlags.Usage = woocommerceReturnWoocommerceUsage
+	woocommerceCallbackWoocommerceFlags.Usage = woocommerceCallbackWoocommerceUsage
+	woocommerceRetrieveOrdersFlags.Usage = woocommerceRetrieveOrdersUsage
+	woocommerceRetrieveProductsFlags.Usage = woocommerceRetrieveProductsUsage
+
+	tenantFlags.Usage = tenantUsage
+	tenantIntegrationsFlags.Usage = tenantIntegrationsUsage
+	tenantGetTenantInfoFlags.Usage = tenantGetTenantInfoUsage
+	tenantUpdateTenantInfoFlags.Usage = tenantUpdateTenantInfoUsage
+
+	platformProductFlags.Usage = platformProductUsage
+	platformProductPlatformProductFlags.Usage = platformProductPlatformProductUsage
+	platformProductConvertFlags.Usage = platformProductConvertUsage
+	platformProductMappingsFlags.Usage = platformProductMappingsUsage
+
+	wixFlags.Usage = wixUsage
+	wixCallbackWixFlags.Usage = wixCallbackWixUsage
+	wixWebhooksProductsWixFlags.Usage = wixWebhooksProductsWixUsage
+	wixProductsListFlags.Usage = wixProductsListUsage
+	wixOrdersListFlags.Usage = wixOrdersListUsage
+
+	wixRedirectFlags.Usage = wixRedirectUsage
+	wixRedirectReturnWixFlags.Usage = wixRedirectReturnWixUsage
 
 	if err := flag.CommandLine.Parse(os.Args[1:]); err != nil {
 		return nil, nil, err
@@ -263,8 +728,24 @@ func ParseEndpoint(
 			svcf = orderFlags
 		case "product":
 			svcf = productFlags
+		case "integrations":
+			svcf = integrationsFlags
+		case "auth":
+			svcf = authFlags
 		case "file":
 			svcf = fileFlags
+		case "user":
+			svcf = userFlags
+		case "woocommerce":
+			svcf = woocommerceFlags
+		case "tenant":
+			svcf = tenantFlags
+		case "platform-product":
+			svcf = platformProductFlags
+		case "wix":
+			svcf = wixFlags
+		case "wix-redirect":
+			svcf = wixRedirectFlags
 		default:
 			return nil, nil, fmt.Errorf("unknown service %q", svcn)
 		}
@@ -292,12 +773,18 @@ func ParseEndpoint(
 			case "get":
 				epf = quoteGetFlags
 
+			case "post":
+				epf = quotePostFlags
+
 			}
 
 		case "track":
 			switch epn {
-			case "get":
-				epf = trackGetFlags
+			case "batch-query-track-info":
+				epf = trackBatchQueryTrackInfoFlags
+
+			case "get-track":
+				epf = trackGetTrackFlags
 
 			}
 
@@ -309,20 +796,53 @@ func ParseEndpoint(
 			case "update-inbound-order":
 				epf = orderUpdateInboundOrderFlags
 
+			case "create-pickup-order":
+				epf = orderCreatePickupOrderFlags
+
+			case "batch-query-inbound-order":
+				epf = orderBatchQueryInboundOrderFlags
+
+			case "get-inbound-order":
+				epf = orderGetInboundOrderFlags
+
 			case "create-outbound-order":
 				epf = orderCreateOutboundOrderFlags
 
 			case "update-outbound-order":
 				epf = orderUpdateOutboundOrderFlags
 
-			case "create-pickup-order":
-				epf = orderCreatePickupOrderFlags
+			case "batch-update-outbound-order":
+				epf = orderBatchUpdateOutboundOrderFlags
 
-			case "get-inbound-order":
-				epf = orderGetInboundOrderFlags
+			case "create-outbound-order-item":
+				epf = orderCreateOutboundOrderItemFlags
+
+			case "update-outbound-order-item":
+				epf = orderUpdateOutboundOrderItemFlags
+
+			case "delete-outbound-order-item":
+				epf = orderDeleteOutboundOrderItemFlags
+
+			case "batch-query-outbound-order":
+				epf = orderBatchQueryOutboundOrderFlags
 
 			case "get-outbound-order":
 				epf = orderGetOutboundOrderFlags
+
+			case "get-outbound-order-list-filters":
+				epf = orderGetOutboundOrderListFiltersFlags
+
+			case "get-outbound-order-count":
+				epf = orderGetOutboundOrderCountFlags
+
+			case "get-outbound-order-list":
+				epf = orderGetOutboundOrderListFlags
+
+			case "upload-outbound-orders":
+				epf = orderUploadOutboundOrdersFlags
+
+			case "export-outbound-orders":
+				epf = orderExportOutboundOrdersFlags
 
 			}
 
@@ -334,11 +854,43 @@ func ParseEndpoint(
 			case "update-product":
 				epf = productUpdateProductFlags
 
+			case "export-product":
+				epf = productExportProductFlags
+
+			case "download-templates":
+				epf = productDownloadTemplatesFlags
+
+			case "upload-product":
+				epf = productUploadProductFlags
+
+			case "upload-product-update":
+				epf = productUploadProductUpdateFlags
+
 			case "generate-barcode":
 				epf = productGenerateBarcodeFlags
 
+			case "products-query":
+				epf = productProductsQueryFlags
+
+			case "product-detail":
+				epf = productProductDetailFlags
+
+			}
+
+		case "integrations":
+			switch epn {
+			case "list":
+				epf = integrationsListFlags
+
+			case "authorize":
+				epf = integrationsAuthorizeFlags
+
+			}
+
+		case "auth":
+			switch epn {
 			case "generate-token":
-				epf = productGenerateTokenFlags
+				epf = authGenerateTokenFlags
 
 			}
 
@@ -346,6 +898,102 @@ func ParseEndpoint(
 			switch epn {
 			case "upload-image":
 				epf = fileUploadImageFlags
+
+			}
+
+		case "user":
+			switch epn {
+			case "user-signup":
+				epf = userUserSignupFlags
+
+			case "user-login":
+				epf = userUserLoginFlags
+
+			case "user-modify-password":
+				epf = userUserModifyPasswordFlags
+
+			case "user-forget-password":
+				epf = userUserForgetPasswordFlags
+
+			case "user-validate":
+				epf = userUserValidateFlags
+
+			case "user-logout":
+				epf = userUserLogoutFlags
+
+			case "get-user-info":
+				epf = userGetUserInfoFlags
+
+			case "update-user-info":
+				epf = userUpdateUserInfoFlags
+
+			case "permissions":
+				epf = userPermissionsFlags
+
+			}
+
+		case "woocommerce":
+			switch epn {
+			case "return-woocommerce":
+				epf = woocommerceReturnWoocommerceFlags
+
+			case "callback-woocommerce":
+				epf = woocommerceCallbackWoocommerceFlags
+
+			case "retrieve-orders":
+				epf = woocommerceRetrieveOrdersFlags
+
+			case "retrieve-products":
+				epf = woocommerceRetrieveProductsFlags
+
+			}
+
+		case "tenant":
+			switch epn {
+			case "integrations":
+				epf = tenantIntegrationsFlags
+
+			case "get-tenant-info":
+				epf = tenantGetTenantInfoFlags
+
+			case "update-tenant-info":
+				epf = tenantUpdateTenantInfoFlags
+
+			}
+
+		case "platform-product":
+			switch epn {
+			case "platform-product":
+				epf = platformProductPlatformProductFlags
+
+			case "convert":
+				epf = platformProductConvertFlags
+
+			case "mappings":
+				epf = platformProductMappingsFlags
+
+			}
+
+		case "wix":
+			switch epn {
+			case "callback-wix":
+				epf = wixCallbackWixFlags
+
+			case "webhooks-products-wix":
+				epf = wixWebhooksProductsWixFlags
+
+			case "products-list":
+				epf = wixProductsListFlags
+
+			case "orders-list":
+				epf = wixOrdersListFlags
+
+			}
+
+		case "wix-redirect":
+			switch epn {
+			case "return-wix":
+				epf = wixRedirectReturnWixFlags
 
 			}
 
@@ -381,62 +1029,229 @@ func ParseEndpoint(
 			switch epn {
 			case "get":
 				endpoint = c.Get()
-				data, err = quotec.BuildGetPayload(*quoteGetOriginCountryFlag, *quoteGetDestCountryFlag, *quoteGetDestStateFlag, *quoteGetDestZipCodeFlag, *quoteGetWeightFlag, *quoteGetLengthFlag, *quoteGetWidthFlag, *quoteGetHeightFlag, *quoteGetProductAttributesFlag, *quoteGetFactoryFlag, *quoteGetDateFlag)
+				data, err = quotec.BuildGetPayload(*quoteGetOriginCountryFlag, *quoteGetDestCountryFlag, *quoteGetDestStateFlag, *quoteGetDestZipCodeFlag, *quoteGetWeightFlag, *quoteGetLengthFlag, *quoteGetWidthFlag, *quoteGetHeightFlag, *quoteGetProductAttributesFlag, *quoteGetFactoryFlag, *quoteGetDateFlag, *quoteGetAuthorizationFlag, *quoteGetTokenFlag)
+			case "post":
+				endpoint = c.Post()
+				data, err = quotec.BuildPostPayload(*quotePostBodyFlag, *quotePostAuthorizationFlag, *quotePostTokenFlag)
 			}
 		case "track":
 			c := trackc.NewClient(scheme, host, doer, enc, dec, restore)
 			switch epn {
-			case "get":
-				endpoint = c.Get()
-				data, err = trackc.BuildGetPayload(*trackGetTrackingNumberFlag, *trackGetTypeFlag)
+			case "batch-query-track-info":
+				endpoint = c.BatchQueryTrackInfo()
+				data, err = trackc.BuildBatchQueryTrackInfoPayload(*trackBatchQueryTrackInfoTrackingNumbersFlag)
+			case "get-track":
+				endpoint = c.GetTrack()
+				data, err = trackc.BuildGetTrackPayload(*trackGetTrackTrackingNumberFlag)
 			}
 		case "order":
 			c := orderc.NewClient(scheme, host, doer, enc, dec, restore)
 			switch epn {
 			case "create-inbound-order":
 				endpoint = c.CreateInboundOrder()
-				data, err = orderc.BuildCreateInboundOrderPayload(*orderCreateInboundOrderBodyFlag)
+				data, err = orderc.BuildCreateInboundOrderPayload(*orderCreateInboundOrderBodyFlag, *orderCreateInboundOrderAuthorizationFlag, *orderCreateInboundOrderTokenFlag)
 			case "update-inbound-order":
 				endpoint = c.UpdateInboundOrder()
-				data, err = orderc.BuildUpdateInboundOrderPayload(*orderUpdateInboundOrderBodyFlag)
-			case "create-outbound-order":
-				endpoint = c.CreateOutboundOrder()
-				data, err = orderc.BuildCreateOutboundOrderPayload(*orderCreateOutboundOrderBodyFlag)
-			case "update-outbound-order":
-				endpoint = c.UpdateOutboundOrder()
-				data, err = orderc.BuildUpdateOutboundOrderPayload(*orderUpdateOutboundOrderBodyFlag)
+				data, err = orderc.BuildUpdateInboundOrderPayload(*orderUpdateInboundOrderBodyFlag, *orderUpdateInboundOrderAuthorizationFlag, *orderUpdateInboundOrderTokenFlag)
 			case "create-pickup-order":
 				endpoint = c.CreatePickupOrder()
-				data, err = orderc.BuildCreatePickupOrderPayload(*orderCreatePickupOrderBodyFlag)
+				data, err = orderc.BuildCreatePickupOrderPayload(*orderCreatePickupOrderBodyFlag, *orderCreatePickupOrderAuthorizationFlag, *orderCreatePickupOrderTokenFlag)
+			case "batch-query-inbound-order":
+				endpoint = c.BatchQueryInboundOrder()
+				data, err = orderc.BuildBatchQueryInboundOrderPayload(*orderBatchQueryInboundOrderOrderNumbersFlag, *orderBatchQueryInboundOrderStatusFlag, *orderBatchQueryInboundOrderCurrentFlag, *orderBatchQueryInboundOrderPageSizeFlag, *orderBatchQueryInboundOrderAuthorizationFlag, *orderBatchQueryInboundOrderTokenFlag)
 			case "get-inbound-order":
 				endpoint = c.GetInboundOrder()
-				data, err = orderc.BuildGetInboundOrderPayload(*orderGetInboundOrderClientOrderIDFlag)
+				data, err = orderc.BuildGetInboundOrderPayload(*orderGetInboundOrderOrderNumberFlag, *orderGetInboundOrderAuthorizationFlag, *orderGetInboundOrderTokenFlag)
+			case "create-outbound-order":
+				endpoint = c.CreateOutboundOrder()
+				data, err = orderc.BuildCreateOutboundOrderPayload(*orderCreateOutboundOrderBodyFlag, *orderCreateOutboundOrderAuthorizationFlag, *orderCreateOutboundOrderTokenFlag)
+			case "update-outbound-order":
+				endpoint = c.UpdateOutboundOrder()
+				data, err = orderc.BuildUpdateOutboundOrderPayload(*orderUpdateOutboundOrderBodyFlag, *orderUpdateOutboundOrderIDFlag, *orderUpdateOutboundOrderAuthorizationFlag, *orderUpdateOutboundOrderTokenFlag)
+			case "batch-update-outbound-order":
+				endpoint = c.BatchUpdateOutboundOrder()
+				data, err = orderc.BuildBatchUpdateOutboundOrderPayload(*orderBatchUpdateOutboundOrderBodyFlag, *orderBatchUpdateOutboundOrderAuthorizationFlag, *orderBatchUpdateOutboundOrderTokenFlag)
+			case "create-outbound-order-item":
+				endpoint = c.CreateOutboundOrderItem()
+				data, err = orderc.BuildCreateOutboundOrderItemPayload(*orderCreateOutboundOrderItemBodyFlag, *orderCreateOutboundOrderItemAuthorizationFlag, *orderCreateOutboundOrderItemTokenFlag)
+			case "update-outbound-order-item":
+				endpoint = c.UpdateOutboundOrderItem()
+				data, err = orderc.BuildUpdateOutboundOrderItemPayload(*orderUpdateOutboundOrderItemBodyFlag, *orderUpdateOutboundOrderItemIDFlag, *orderUpdateOutboundOrderItemAuthorizationFlag, *orderUpdateOutboundOrderItemTokenFlag)
+			case "delete-outbound-order-item":
+				endpoint = c.DeleteOutboundOrderItem()
+				data, err = orderc.BuildDeleteOutboundOrderItemPayload(*orderDeleteOutboundOrderItemIDFlag, *orderDeleteOutboundOrderItemAuthorizationFlag, *orderDeleteOutboundOrderItemTokenFlag)
+			case "batch-query-outbound-order":
+				endpoint = c.BatchQueryOutboundOrder()
+				data, err = orderc.BuildBatchQueryOutboundOrderPayload(*orderBatchQueryOutboundOrderOrderNumbersFlag, *orderBatchQueryOutboundOrderStatusFlag, *orderBatchQueryOutboundOrderCurrentFlag, *orderBatchQueryOutboundOrderPageSizeFlag, *orderBatchQueryOutboundOrderAuthorizationFlag, *orderBatchQueryOutboundOrderTokenFlag)
 			case "get-outbound-order":
 				endpoint = c.GetOutboundOrder()
-				data, err = orderc.BuildGetOutboundOrderPayload(*orderGetOutboundOrderClientOrderIDFlag)
+				data, err = orderc.BuildGetOutboundOrderPayload(*orderGetOutboundOrderIDFlag, *orderGetOutboundOrderAuthorizationFlag, *orderGetOutboundOrderTokenFlag)
+			case "get-outbound-order-list-filters":
+				endpoint = c.GetOutboundOrderListFilters()
+				data, err = orderc.BuildGetOutboundOrderListFiltersPayload(*orderGetOutboundOrderListFiltersAuthorizationFlag, *orderGetOutboundOrderListFiltersTokenFlag)
+			case "get-outbound-order-count":
+				endpoint = c.GetOutboundOrderCount()
+				data, err = orderc.BuildGetOutboundOrderCountPayload(*orderGetOutboundOrderCountIDFlag, *orderGetOutboundOrderCountPlatformOrderNoFlag, *orderGetOutboundOrderCountListingSkuFlag, *orderGetOutboundOrderCountSkuFlag, *orderGetOutboundOrderCountNssTrackingNumberFlag, *orderGetOutboundOrderCountShippingNameFlag, *orderGetOutboundOrderCountPlatformFlag, *orderGetOutboundOrderCountStatusFlag, *orderGetOutboundOrderCountStoreIDFlag, *orderGetOutboundOrderCountWarehouseIDFlag, *orderGetOutboundOrderCountCountryCodeFlag, *orderGetOutboundOrderCountCreatedAtStartFlag, *orderGetOutboundOrderCountCreatedAtEndFlag, *orderGetOutboundOrderCountShipDateStartFlag, *orderGetOutboundOrderCountShipDateEndFlag, *orderGetOutboundOrderCountOfflineOrderFlag, *orderGetOutboundOrderCountPageFlag, *orderGetOutboundOrderCountPageSizeFlag, *orderGetOutboundOrderCountAuthorizationFlag, *orderGetOutboundOrderCountTokenFlag)
+			case "get-outbound-order-list":
+				endpoint = c.GetOutboundOrderList()
+				data, err = orderc.BuildGetOutboundOrderListPayload(*orderGetOutboundOrderListIDFlag, *orderGetOutboundOrderListPlatformOrderNoFlag, *orderGetOutboundOrderListListingSkuFlag, *orderGetOutboundOrderListSkuFlag, *orderGetOutboundOrderListNssTrackingNumberFlag, *orderGetOutboundOrderListShippingNameFlag, *orderGetOutboundOrderListPlatformFlag, *orderGetOutboundOrderListStatusFlag, *orderGetOutboundOrderListStoreIDFlag, *orderGetOutboundOrderListWarehouseIDFlag, *orderGetOutboundOrderListCountryCodeFlag, *orderGetOutboundOrderListCreatedAtStartFlag, *orderGetOutboundOrderListCreatedAtEndFlag, *orderGetOutboundOrderListShipDateStartFlag, *orderGetOutboundOrderListShipDateEndFlag, *orderGetOutboundOrderListOfflineOrderFlag, *orderGetOutboundOrderListPageFlag, *orderGetOutboundOrderListPageSizeFlag, *orderGetOutboundOrderListAuthorizationFlag, *orderGetOutboundOrderListTokenFlag)
+			case "upload-outbound-orders":
+				endpoint = c.UploadOutboundOrders(orderUploadOutboundOrdersEncoderFn)
+				data, err = orderc.BuildUploadOutboundOrdersPayload(*orderUploadOutboundOrdersBodyFlag, *orderUploadOutboundOrdersAuthorizationFlag, *orderUploadOutboundOrdersTokenFlag)
+			case "export-outbound-orders":
+				endpoint = c.ExportOutboundOrders()
+				data, err = orderc.BuildExportOutboundOrdersPayload(*orderExportOutboundOrdersIDFlag, *orderExportOutboundOrdersPlatformOrderNoFlag, *orderExportOutboundOrdersListingSkuFlag, *orderExportOutboundOrdersSkuFlag, *orderExportOutboundOrdersNssTrackingNumberFlag, *orderExportOutboundOrdersShippingNameFlag, *orderExportOutboundOrdersPlatformFlag, *orderExportOutboundOrdersStatusFlag, *orderExportOutboundOrdersStoreIDFlag, *orderExportOutboundOrdersWarehouseIDFlag, *orderExportOutboundOrdersCountryCodeFlag, *orderExportOutboundOrdersCreatedAtStartFlag, *orderExportOutboundOrdersCreatedAtEndFlag, *orderExportOutboundOrdersShipDateStartFlag, *orderExportOutboundOrdersShipDateEndFlag, *orderExportOutboundOrdersOfflineOrderFlag, *orderExportOutboundOrdersPageFlag, *orderExportOutboundOrdersPageSizeFlag, *orderExportOutboundOrdersAuthorizationFlag, *orderExportOutboundOrdersTokenFlag)
 			}
 		case "product":
 			c := productc.NewClient(scheme, host, doer, enc, dec, restore)
 			switch epn {
 			case "batches-create-product":
 				endpoint = c.BatchesCreateProduct()
-				data, err = productc.BuildBatchesCreateProductPayload(*productBatchesCreateProductBodyFlag)
+				data, err = productc.BuildBatchesCreateProductPayload(*productBatchesCreateProductBodyFlag, *productBatchesCreateProductAuthorizationFlag, *productBatchesCreateProductTokenFlag)
 			case "update-product":
 				endpoint = c.UpdateProduct()
-				data, err = productc.BuildUpdateProductPayload(*productUpdateProductBodyFlag)
+				data, err = productc.BuildUpdateProductPayload(*productUpdateProductBodyFlag, *productUpdateProductAuthorizationFlag, *productUpdateProductTokenFlag)
+			case "export-product":
+				endpoint = c.ExportProduct()
+				data, err = productc.BuildExportProductPayload(*productExportProductIDFlag, *productExportProductSkuFlag, *productExportProductBarcodeFlag, *productExportProductStatusFlag, *productExportProductAttributesFlag, *productExportProductNameFlag, *productExportProductInventoryFlag, *productExportProductCurrentFlag, *productExportProductPageSizeFlag, *productExportProductAuthorizationFlag, *productExportProductTokenFlag)
+			case "download-templates":
+				endpoint = c.DownloadTemplates()
+				data, err = productc.BuildDownloadTemplatesPayload(*productDownloadTemplatesTemplateFlag, *productDownloadTemplatesAuthorizationFlag, *productDownloadTemplatesTokenFlag)
+			case "upload-product":
+				endpoint = c.UploadProduct(productUploadProductEncoderFn)
+				data, err = productc.BuildUploadProductPayload(*productUploadProductBodyFlag, *productUploadProductAuthorizationFlag, *productUploadProductTokenFlag)
+			case "upload-product-update":
+				endpoint = c.UploadProductUpdate(productUploadProductUpdateEncoderFn)
+				data, err = productc.BuildUploadProductUpdatePayload(*productUploadProductUpdateBodyFlag, *productUploadProductUpdateAuthorizationFlag, *productUploadProductUpdateTokenFlag)
 			case "generate-barcode":
 				endpoint = c.GenerateBarcode()
-				data, err = productc.BuildGenerateBarcodePayload()
+				data, err = productc.BuildGenerateBarcodePayload(*productGenerateBarcodeAuthorizationFlag, *productGenerateBarcodeTokenFlag)
+			case "products-query":
+				endpoint = c.ProductsQuery()
+				data, err = productc.BuildProductsQueryPayload(*productProductsQueryNameFlag, *productProductsQuerySkuFlag, *productProductsQueryBarcodeFlag, *productProductsQueryStatusFlag, *productProductsQueryAttributesFlag, *productProductsQueryInventoryFlag, *productProductsQueryCurrentFlag, *productProductsQueryPageSizeFlag, *productProductsQueryAuthorizationFlag, *productProductsQueryTokenFlag)
+			case "product-detail":
+				endpoint = c.ProductDetail()
+				data, err = productc.BuildProductDetailPayload(*productProductDetailIDFlag, *productProductDetailAuthorizationFlag, *productProductDetailTokenFlag)
+			}
+		case "integrations":
+			c := integrationsc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "list":
+				endpoint = c.List()
+				data, err = integrationsc.BuildListPayload(*integrationsListAuthorizationFlag, *integrationsListTokenFlag)
+			case "authorize":
+				endpoint = c.Authorize()
+				data, err = integrationsc.BuildAuthorizePayload(*integrationsAuthorizeBodyFlag, *integrationsAuthorizeAuthorizationFlag, *integrationsAuthorizeTokenFlag)
+			}
+		case "auth":
+			c := authc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
 			case "generate-token":
 				endpoint = c.GenerateToken()
-				data, err = productc.BuildGenerateTokenPayload(*productGenerateTokenBodyFlag)
+				data, err = authc.BuildGenerateTokenPayload(*authGenerateTokenBodyFlag)
 			}
 		case "file":
 			c := filec.NewClient(scheme, host, doer, enc, dec, restore)
 			switch epn {
 			case "upload-image":
 				endpoint = c.UploadImage(fileUploadImageEncoderFn)
-				data, err = filec.BuildUploadImagePayload(*fileUploadImageBodyFlag)
+				data, err = filec.BuildUploadImagePayload(*fileUploadImageBodyFlag, *fileUploadImageAuthorizationFlag, *fileUploadImageTokenFlag)
+			}
+		case "user":
+			c := userc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "user-signup":
+				endpoint = c.UserSignup()
+				data, err = userc.BuildUserSignupPayload(*userUserSignupBodyFlag)
+			case "user-login":
+				endpoint = c.UserLogin()
+				data, err = userc.BuildUserLoginPayload(*userUserLoginBodyFlag)
+			case "user-modify-password":
+				endpoint = c.UserModifyPassword()
+				data, err = userc.BuildUserModifyPasswordPayload(*userUserModifyPasswordBodyFlag, *userUserModifyPasswordAuthorizationFlag, *userUserModifyPasswordTokenFlag)
+			case "user-forget-password":
+				endpoint = c.UserForgetPassword()
+				data, err = userc.BuildUserForgetPasswordPayload(*userUserForgetPasswordBodyFlag)
+			case "user-validate":
+				endpoint = c.UserValidate()
+				data, err = userc.BuildUserValidatePayload(*userUserValidateBodyFlag)
+			case "user-logout":
+				endpoint = c.UserLogout()
+				data, err = userc.BuildUserLogoutPayload(*userUserLogoutAuthorizationFlag, *userUserLogoutTokenFlag)
+			case "get-user-info":
+				endpoint = c.GetUserInfo()
+				data, err = userc.BuildGetUserInfoPayload(*userGetUserInfoAuthorizationFlag, *userGetUserInfoTokenFlag)
+			case "update-user-info":
+				endpoint = c.UpdateUserInfo()
+				data, err = userc.BuildUpdateUserInfoPayload(*userUpdateUserInfoBodyFlag, *userUpdateUserInfoAuthorizationFlag, *userUpdateUserInfoTokenFlag)
+			case "permissions":
+				endpoint = c.Permissions()
+				data, err = userc.BuildPermissionsPayload(*userPermissionsAuthorizationFlag, *userPermissionsTokenFlag)
+			}
+		case "woocommerce":
+			c := woocommercec.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "return-woocommerce":
+				endpoint = c.ReturnWoocommerce()
+				data, err = woocommercec.BuildReturnWoocommercePayload(*woocommerceReturnWoocommerceBodyFlag)
+			case "callback-woocommerce":
+				endpoint = c.CallbackWoocommerce()
+				data, err = woocommercec.BuildCallbackWoocommercePayload(*woocommerceCallbackWoocommerceBodyFlag)
+			case "retrieve-orders":
+				endpoint = c.RetrieveOrders()
+				data, err = woocommercec.BuildRetrieveOrdersPayload(*woocommerceRetrieveOrdersStoreIDFlag, *woocommerceRetrieveOrdersPlatformRefIdsFlag, *woocommerceRetrieveOrdersAuthorizationFlag, *woocommerceRetrieveOrdersTokenFlag)
+			case "retrieve-products":
+				endpoint = c.RetrieveProducts()
+				data, err = woocommercec.BuildRetrieveProductsPayload(*woocommerceRetrieveProductsStoreIDFlag, *woocommerceRetrieveProductsPlatformRefIdsFlag, *woocommerceRetrieveProductsAuthorizationFlag, *woocommerceRetrieveProductsTokenFlag)
+			}
+		case "tenant":
+			c := tenantc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "integrations":
+				endpoint = c.Integrations()
+				data, err = tenantc.BuildIntegrationsPayload(*tenantIntegrationsAuthorizationFlag, *tenantIntegrationsTokenFlag)
+			case "get-tenant-info":
+				endpoint = c.GetTenantInfo()
+				data, err = tenantc.BuildGetTenantInfoPayload(*tenantGetTenantInfoAuthorizationFlag, *tenantGetTenantInfoTokenFlag)
+			case "update-tenant-info":
+				endpoint = c.UpdateTenantInfo()
+				data, err = tenantc.BuildUpdateTenantInfoPayload(*tenantUpdateTenantInfoBodyFlag, *tenantUpdateTenantInfoAuthorizationFlag, *tenantUpdateTenantInfoTokenFlag)
+			}
+		case "platform-product":
+			c := platformproductc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "platform-product":
+				endpoint = c.PlatformProduct()
+				data, err = platformproductc.BuildPlatformProductPayload(*platformProductPlatformProductPlatformStatusFlag, *platformProductPlatformProductNameFlag, *platformProductPlatformProductPageSizeFlag, *platformProductPlatformProductCurrentFlag, *platformProductPlatformProductIDFlag, *platformProductPlatformProductListingSkuFlag, *platformProductPlatformProductSkuFlag, *platformProductPlatformProductIsMappingFlag, *platformProductPlatformProductAuthorizationFlag, *platformProductPlatformProductTokenFlag)
+			case "convert":
+				endpoint = c.Convert()
+				data, err = platformproductc.BuildConvertPayload(*platformProductConvertBodyFlag, *platformProductConvertAuthorizationFlag, *platformProductConvertTokenFlag)
+			case "mappings":
+				endpoint = c.Mappings()
+				data, err = platformproductc.BuildMappingsPayload(*platformProductMappingsBodyFlag, *platformProductMappingsAuthorizationFlag, *platformProductMappingsTokenFlag)
+			}
+		case "wix":
+			c := wixc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "callback-wix":
+				endpoint = c.CallbackWix()
+				data, err = wixc.BuildCallbackWixPayload(*wixCallbackWixCodeFlag, *wixCallbackWixStateFlag, *wixCallbackWixInstanceIDFlag)
+			case "webhooks-products-wix":
+				endpoint = c.WebhooksProductsWix()
+				data, err = wixc.BuildWebhooksProductsWixPayload(*wixWebhooksProductsWixBodyFlag)
+			case "products-list":
+				endpoint = c.ProductsList()
+				data, err = wixc.BuildProductsListPayload(*wixProductsListBodyFlag)
+			case "orders-list":
+				endpoint = c.OrdersList()
+				data, err = wixc.BuildOrdersListPayload(*wixOrdersListBodyFlag)
+			}
+		case "wix-redirect":
+			c := wixredirectc.NewClient(scheme, host, doer, enc, dec, restore)
+			switch epn {
+			case "return-wix":
+				endpoint = c.ReturnWix()
+				data = nil
 			}
 		}
 	}
@@ -478,13 +1293,14 @@ Usage:
 
 COMMAND:
     get: Get implements get.
+    post: Post implements post.
 
 Additional help:
     %[1]s quote COMMAND --help
 `, os.Args[0])
 }
 func quoteGetUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] quote get -origin-country STRING -dest-country STRING -dest-state STRING -dest-zip-code STRING -weight INT -length INT -width INT -height INT -product-attributes JSON -factory STRING -date STRING
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] quote get -origin-country STRING -dest-country STRING -dest-state STRING -dest-zip-code STRING -weight INT -length INT -width INT -height INT -product-attributes JSON -factory STRING -date STRING -authorization STRING -token STRING
 
 Get implements get.
     -origin-country STRING: 
@@ -498,6 +1314,8 @@ Get implements get.
     -product-attributes JSON: 
     -factory STRING: 
     -date STRING: 
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
     %[1]s quote get --origin-country "CN" --dest-country "US" --dest-state "NY" --dest-zip-code "10016" --weight 3000 --length 100 --width 200 --height 300 --product-attributes '[
@@ -505,7 +1323,36 @@ Example:
       "cosmetic",
       "liquid",
       "magnetic"
-   ]' --factory "xxx" --date "2022-02-14"
+   ]' --factory "xxx" --date "2022-02-14" --authorization "Aut consequatur." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func quotePostUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] quote post -body JSON -authorization STRING -token STRING
+
+Post implements post.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s quote post --body '{
+      "delivery_area": 4558231424970667987,
+      "delivery_city_code": "Ut adipisci sint.",
+      "delivery_city_name": "Iusto aut aut ut velit sequi nemo.",
+      "delivery_country_code": "Consequatur optio rerum amet.",
+      "delivery_country_name": "Consequatur illum ipsam aut eos natus.",
+      "delivery_province_code": "Cupiditate aspernatur qui.",
+      "delivery_province_name": "Modi corporis.",
+      "dest_area": 5670275367545471786,
+      "dest_city_code": "Ratione alias sunt nulla excepturi.",
+      "dest_city_name": "Quidem est iusto consequuntur excepturi dolores.",
+      "dest_country_code": "In laudantium enim enim perspiciatis at.",
+      "dest_country_name": "Vitae facilis at quasi error.",
+      "dest_province_code": "Qui voluptatem est.",
+      "dest_province_name": "Aliquid aperiam eius velit.",
+      "id": 1343392620
+   }' --authorization "Qui nihil repudiandae culpa vel eos consectetur." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
@@ -516,21 +1363,36 @@ Usage:
     %[1]s [globalflags] track COMMAND [flags]
 
 COMMAND:
-    get: Get implements get.
+    batch-query-track-info: BatchQueryTrackInfo implements batch_query_track_info.
+    get-track: GetTrack implements get_track.
 
 Additional help:
     %[1]s track COMMAND --help
 `, os.Args[0])
 }
-func trackGetUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] track get -tracking-number STRING -type INT
+func trackBatchQueryTrackInfoUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] track batch-query-track-info -tracking-numbers JSON
 
-Get implements get.
-    -tracking-number STRING: 
-    -type INT: 
+BatchQueryTrackInfo implements batch_query_track_info.
+    -tracking-numbers JSON: 
 
 Example:
-    %[1]s track get --tracking-number "Nesciunt architecto quam." --type 1
+    %[1]s track batch-query-track-info --tracking-numbers '[
+      "Quia porro quis.",
+      "Cum sit laudantium.",
+      "Explicabo et qui autem eligendi voluptate deserunt."
+   ]'
+`, os.Args[0])
+}
+
+func trackGetTrackUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] track get-track -tracking-number STRING
+
+GetTrack implements get_track.
+    -tracking-number STRING: tracking number
+
+Example:
+    %[1]s track get-track --tracking-number "41"
 `, os.Args[0])
 }
 
@@ -543,30 +1405,48 @@ Usage:
 COMMAND:
     create-inbound-order: CreateInboundOrder implements create_inbound_order.
     update-inbound-order: UpdateInboundOrder implements update_inbound_order.
+    create-pickup-order: CreatePickupOrder implements create_pickup_order.
+    batch-query-inbound-order: BatchQueryInboundOrder implements batch_query_inbound_order.
+    get-inbound-order: GetInboundOrder implements get_inbound_order.
     create-outbound-order: CreateOutboundOrder implements create_outbound_order.
     update-outbound-order: UpdateOutboundOrder implements update_outbound_order.
-    create-pickup-order: CreatePickupOrder implements create_pickup_order.
-    get-inbound-order: GetInboundOrder implements get_inbound_order.
+    batch-update-outbound-order: BatchUpdateOutboundOrder implements batch_update_outbound_order.
+    create-outbound-order-item: CreateOutboundOrderItem implements create_outbound_order_item.
+    update-outbound-order-item: UpdateOutboundOrderItem implements update_outbound_order_item.
+    delete-outbound-order-item: DeleteOutboundOrderItem implements delete_outbound_order_item.
+    batch-query-outbound-order: BatchQueryOutboundOrder implements batch_query_outbound_order.
     get-outbound-order: GetOutboundOrder implements get_outbound_order.
+    get-outbound-order-list-filters: GetOutboundOrderListFilters implements get_outbound_order_list_filters.
+    get-outbound-order-count: GetOutboundOrderCount implements get_outbound_order_count.
+    get-outbound-order-list: GetOutboundOrderList implements get_outbound_order_list.
+    upload-outbound-orders: UploadOutboundOrders implements upload_outbound_orders.
+    export-outbound-orders: ExportOutboundOrders implements export_outbound_orders.
 
 Additional help:
     %[1]s order COMMAND --help
 `, os.Args[0])
 }
 func orderCreateInboundOrderUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] order create-inbound-order -body JSON
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order create-inbound-order -body JSON -authorization STRING -token STRING
 
 CreateInboundOrder implements create_inbound_order.
     -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
     %[1]s order create-inbound-order --body '{
       "address": {
          "address1": "address1",
          "address2": "address2",
+         "certificate_code": "3455233",
+         "certificate_period": "2028-01-01",
+         "certificate_type": "ID",
          "city_name": "SZ",
+         "company": "China",
          "country_code": "US",
          "country_name": "US",
+         "email": "123@test.com",
          "first_name": "He",
          "last_name": "John",
          "name": "He",
@@ -583,25 +1463,13 @@ Example:
       "is_pickup": true,
       "items": [
          {
-            "barcode": "YCrankshaft",
+            "product_barcode": "YCrankshaft",
             "product_name": "NSS Mate 40E",
             "product_sku": "YCrankshaft",
             "qty": 3
          },
          {
-            "barcode": "YCrankshaft",
-            "product_name": "NSS Mate 40E",
-            "product_sku": "YCrankshaft",
-            "qty": 3
-         },
-         {
-            "barcode": "YCrankshaft",
-            "product_name": "NSS Mate 40E",
-            "product_sku": "YCrankshaft",
-            "qty": 3
-         },
-         {
-            "barcode": "YCrankshaft",
+            "product_barcode": "YCrankshaft",
             "product_name": "NSS Mate 40E",
             "product_sku": "YCrankshaft",
             "qty": 3
@@ -611,24 +1479,31 @@ Example:
       "tracking_number": "YT000001",
       "type": 1,
       "warehouse_id": 1
-   }'
+   }' --authorization "Quo ipsam molestias." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
 func orderUpdateInboundOrderUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] order update-inbound-order -body JSON
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order update-inbound-order -body JSON -authorization STRING -token STRING
 
 UpdateInboundOrder implements update_inbound_order.
     -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
     %[1]s order update-inbound-order --body '{
       "address": {
          "address1": "address1",
          "address2": "address2",
+         "certificate_code": "3455233",
+         "certificate_period": "2028-01-01",
+         "certificate_type": "ID",
          "city_name": "SZ",
+         "company": "China",
          "country_code": "US",
          "country_name": "US",
+         "email": "123@test.com",
          "first_name": "He",
          "last_name": "John",
          "name": "He",
@@ -645,25 +1520,13 @@ Example:
       "is_pickup": true,
       "items": [
          {
-            "barcode": "YCrankshaft",
+            "product_barcode": "YCrankshaft",
             "product_name": "NSS Mate 40E",
             "product_sku": "YCrankshaft",
             "qty": 3
          },
          {
-            "barcode": "YCrankshaft",
-            "product_name": "NSS Mate 40E",
-            "product_sku": "YCrankshaft",
-            "qty": 3
-         },
-         {
-            "barcode": "YCrankshaft",
-            "product_name": "NSS Mate 40E",
-            "product_sku": "YCrankshaft",
-            "qty": 3
-         },
-         {
-            "barcode": "YCrankshaft",
+            "product_barcode": "YCrankshaft",
             "product_name": "NSS Mate 40E",
             "product_sku": "YCrankshaft",
             "qty": 3
@@ -673,218 +1536,31 @@ Example:
       "tracking_number": "YT000001",
       "type": 1,
       "warehouse_id": 1
-   }'
-`, os.Args[0])
-}
-
-func orderCreateOutboundOrderUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] order create-outbound-order -body JSON
-
-CreateOutboundOrder implements create_outbound_order.
-    -body JSON: 
-
-Example:
-    %[1]s order create-outbound-order --body '{
-      "channel_id": 1,
-      "currency": "USD",
-      "customer_code": "YT",
-      "customer_order_id": "YT000001",
-      "customer_tariff_number": "xxx",
-      "customer_tariff_number_type": 0,
-      "description": "description",
-      "enable_prepay_tariff": false,
-      "id": 1,
-      "inbound_order_id": 1,
-      "items": [
-         {
-            "barcode": "xxx",
-            "declared_cn_name": "NSS",
-            "declared_en_name": "NSS",
-            "declared_value_in_eur": 10.07,
-            "declared_value_in_usd": 10.07,
-            "hs_code": "xxx",
-            "product_attributes": [
-               "battery",
-               "cosmetic",
-               "liquid",
-               "magnetic"
-            ],
-            "product_height": 10,
-            "product_length": 10,
-            "product_name": "NSS mate40",
-            "product_price": 10.3,
-            "product_sku": "xxxx",
-            "product_weight": 10,
-            "product_width": 10,
-            "qty": 1
-         },
-         {
-            "barcode": "xxx",
-            "declared_cn_name": "NSS",
-            "declared_en_name": "NSS",
-            "declared_value_in_eur": 10.07,
-            "declared_value_in_usd": 10.07,
-            "hs_code": "xxx",
-            "product_attributes": [
-               "battery",
-               "cosmetic",
-               "liquid",
-               "magnetic"
-            ],
-            "product_height": 10,
-            "product_length": 10,
-            "product_name": "NSS mate40",
-            "product_price": 10.3,
-            "product_sku": "xxxx",
-            "product_weight": 10,
-            "product_width": 10,
-            "qty": 1
-         }
-      ],
-      "package_id": 1,
-      "receiver_info": {
-         "address1": "address1",
-         "address2": "address2",
-         "city_name": "SZ",
-         "country_code": "US",
-         "country_name": "US",
-         "first_name": "He",
-         "last_name": "John",
-         "name": "He",
-         "phone_number": "150xxxxxxxx",
-         "state_code": "S",
-         "state_name": "U",
-         "zip_code": "10016"
-      },
-      "shipping_type": 1,
-      "total_price": 980.67,
-      "type": 1
-   }'
-`, os.Args[0])
-}
-
-func orderUpdateOutboundOrderUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] order update-outbound-order -body JSON
-
-UpdateOutboundOrder implements update_outbound_order.
-    -body JSON: 
-
-Example:
-    %[1]s order update-outbound-order --body '{
-      "channel_id": 1,
-      "currency": "USD",
-      "customer_code": "YT",
-      "customer_order_id": "YT000001",
-      "customer_tariff_number": "xxx",
-      "customer_tariff_number_type": 0,
-      "description": "description",
-      "enable_prepay_tariff": false,
-      "id": 1,
-      "inbound_order_id": 1,
-      "items": [
-         {
-            "barcode": "xxx",
-            "declared_cn_name": "NSS",
-            "declared_en_name": "NSS",
-            "declared_value_in_eur": 10.07,
-            "declared_value_in_usd": 10.07,
-            "hs_code": "xxx",
-            "product_attributes": [
-               "battery",
-               "cosmetic",
-               "liquid",
-               "magnetic"
-            ],
-            "product_height": 10,
-            "product_length": 10,
-            "product_name": "NSS mate40",
-            "product_price": 10.3,
-            "product_sku": "xxxx",
-            "product_weight": 10,
-            "product_width": 10,
-            "qty": 1
-         },
-         {
-            "barcode": "xxx",
-            "declared_cn_name": "NSS",
-            "declared_en_name": "NSS",
-            "declared_value_in_eur": 10.07,
-            "declared_value_in_usd": 10.07,
-            "hs_code": "xxx",
-            "product_attributes": [
-               "battery",
-               "cosmetic",
-               "liquid",
-               "magnetic"
-            ],
-            "product_height": 10,
-            "product_length": 10,
-            "product_name": "NSS mate40",
-            "product_price": 10.3,
-            "product_sku": "xxxx",
-            "product_weight": 10,
-            "product_width": 10,
-            "qty": 1
-         },
-         {
-            "barcode": "xxx",
-            "declared_cn_name": "NSS",
-            "declared_en_name": "NSS",
-            "declared_value_in_eur": 10.07,
-            "declared_value_in_usd": 10.07,
-            "hs_code": "xxx",
-            "product_attributes": [
-               "battery",
-               "cosmetic",
-               "liquid",
-               "magnetic"
-            ],
-            "product_height": 10,
-            "product_length": 10,
-            "product_name": "NSS mate40",
-            "product_price": 10.3,
-            "product_sku": "xxxx",
-            "product_weight": 10,
-            "product_width": 10,
-            "qty": 1
-         }
-      ],
-      "package_id": 1,
-      "receiver_info": {
-         "address1": "address1",
-         "address2": "address2",
-         "city_name": "SZ",
-         "country_code": "US",
-         "country_name": "US",
-         "first_name": "He",
-         "last_name": "John",
-         "name": "He",
-         "phone_number": "150xxxxxxxx",
-         "state_code": "S",
-         "state_name": "U",
-         "zip_code": "10016"
-      },
-      "shipping_type": 1,
-      "total_price": 980.67,
-      "type": 1
-   }'
+   }' --authorization "Sit tempora sunt." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
 func orderCreatePickupOrderUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] order create-pickup-order -body JSON
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order create-pickup-order -body JSON -authorization STRING -token STRING
 
 CreatePickupOrder implements create_pickup_order.
     -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
     %[1]s order create-pickup-order --body '{
       "address": {
          "address1": "address1",
          "address2": "address2",
+         "certificate_code": "3455233",
+         "certificate_period": "2028-01-01",
+         "certificate_type": "ID",
          "city_name": "SZ",
+         "company": "China",
          "country_code": "US",
          "country_name": "US",
+         "email": "123@test.com",
          "first_name": "He",
          "last_name": "John",
          "name": "He",
@@ -896,13 +1572,7 @@ Example:
       "customer_code": "1013",
       "items": [
          {
-            "barcode": "YCrankshaft",
-            "product_name": "NSS Mate 40E",
-            "product_sku": "YCrankshaft",
-            "qty": 3
-         },
-         {
-            "barcode": "YCrankshaft",
+            "product_barcode": "YCrankshaft",
             "product_name": "NSS Mate 40E",
             "product_sku": "YCrankshaft",
             "qty": 3
@@ -910,29 +1580,1018 @@ Example:
       ],
       "requested_pickup_at": "2021-01-12 09:34:09",
       "type": 1
-   }'
+   }' --authorization "Maxime nisi ipsa." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderBatchQueryInboundOrderUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order batch-query-inbound-order -order-numbers JSON -status INT -current INT -page-size INT -authorization STRING -token STRING
+
+BatchQueryInboundOrder implements batch_query_inbound_order.
+    -order-numbers JSON: 
+    -status INT: 
+    -current INT: 
+    -page-size INT: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order batch-query-inbound-order --order-numbers '[
+      "xxx1234"
+   ]' --status 1 --current 1 --page-size 1 --authorization "Blanditiis expedita molestiae quam aut." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
 func orderGetInboundOrderUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] order get-inbound-order -client-order-id STRING
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order get-inbound-order -order-number STRING -authorization STRING -token STRING
 
 GetInboundOrder implements get_inbound_order.
-    -client-order-id STRING: 
+    -order-number STRING: inbound order number
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
-    %[1]s order get-inbound-order --client-order-id "xxx1234"
+    %[1]s order get-inbound-order --order-number "xxx1234" --authorization "A voluptatem labore sint laboriosam corrupti." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderCreateOutboundOrderUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order create-outbound-order -body JSON -authorization STRING -token STRING
+
+CreateOutboundOrder implements create_outbound_order.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order create-outbound-order --body '{
+      "channel_id": 1,
+      "country_code": "US",
+      "currency": "USD",
+      "customer_code": "YT",
+      "customer_order_id": "YT000001",
+      "customer_tariff_number": "xxx",
+      "description": "description",
+      "enable_prepay_tariff": false,
+      "estimated_weight": 100,
+      "id": 1,
+      "inbound_order_number": "246938764",
+      "items": [
+         {
+            "declared_cn_name": "NSS",
+            "declared_en_name": "NSS",
+            "declared_value_in_eur": 10.07,
+            "declared_value_in_usd": 10.07,
+            "ext_order_item_id": "Nisi voluptate.",
+            "ext_product_id": "Saepe ipsum sint eos praesentium ut.",
+            "hs_code": "xxx",
+            "material": "",
+            "platform_product_id": 1717737989,
+            "product_attributes": [
+               "battery",
+               "cosmetic",
+               "liquid",
+               "magnetic"
+            ],
+            "product_barcode": "xxx",
+            "product_height": 10,
+            "product_length": 10,
+            "product_name": "NSS mate40",
+            "product_price": 10.3,
+            "product_sku": "xxxx",
+            "product_weight": 10,
+            "product_width": 10,
+            "purpose": "",
+            "qty": 1,
+            "requires_shipping": true
+         },
+         {
+            "declared_cn_name": "NSS",
+            "declared_en_name": "NSS",
+            "declared_value_in_eur": 10.07,
+            "declared_value_in_usd": 10.07,
+            "ext_order_item_id": "Nisi voluptate.",
+            "ext_product_id": "Saepe ipsum sint eos praesentium ut.",
+            "hs_code": "xxx",
+            "material": "",
+            "platform_product_id": 1717737989,
+            "product_attributes": [
+               "battery",
+               "cosmetic",
+               "liquid",
+               "magnetic"
+            ],
+            "product_barcode": "xxx",
+            "product_height": 10,
+            "product_length": 10,
+            "product_name": "NSS mate40",
+            "product_price": 10.3,
+            "product_sku": "xxxx",
+            "product_weight": 10,
+            "product_width": 10,
+            "purpose": "",
+            "qty": 1,
+            "requires_shipping": true
+         },
+         {
+            "declared_cn_name": "NSS",
+            "declared_en_name": "NSS",
+            "declared_value_in_eur": 10.07,
+            "declared_value_in_usd": 10.07,
+            "ext_order_item_id": "Nisi voluptate.",
+            "ext_product_id": "Saepe ipsum sint eos praesentium ut.",
+            "hs_code": "xxx",
+            "material": "",
+            "platform_product_id": 1717737989,
+            "product_attributes": [
+               "battery",
+               "cosmetic",
+               "liquid",
+               "magnetic"
+            ],
+            "product_barcode": "xxx",
+            "product_height": 10,
+            "product_length": 10,
+            "product_name": "NSS mate40",
+            "product_price": 10.3,
+            "product_sku": "xxxx",
+            "product_weight": 10,
+            "product_width": 10,
+            "purpose": "",
+            "qty": 1,
+            "requires_shipping": true
+         }
+      ],
+      "package_id": "xxx",
+      "platform_created_at": "2022-03-10T06:35:33",
+      "platform_order_no": "00001",
+      "receiver_info": {
+         "address1": "address1",
+         "address2": "address2",
+         "certificate_code": "3455233",
+         "certificate_period": "2028-01-01",
+         "certificate_type": "ID",
+         "city_name": "SZ",
+         "company": "China",
+         "country_code": "US",
+         "country_name": "US",
+         "email": "123@test.com",
+         "first_name": "He",
+         "last_name": "John",
+         "name": "He",
+         "phone_number": "150xxxxxxxx",
+         "state_code": "S",
+         "state_name": "U",
+         "zip_code": "10016"
+      },
+      "remark": "remark",
+      "request_shipping_at": "2022-03-10 06:35:33",
+      "shipping_type": 1,
+      "store_id": 0,
+      "total_price": 980.67,
+      "type": 1,
+      "vat_number": "var number"
+   }' --authorization "Corporis aperiam est." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderUpdateOutboundOrderUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order update-outbound-order -body JSON -id INT32 -authorization STRING -token STRING
+
+UpdateOutboundOrder implements update_outbound_order.
+    -body JSON: 
+    -id INT32: outbound order id
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order update-outbound-order --body '{
+      "customer_tariff_country_code": "US",
+      "customer_tariff_number": "xxx",
+      "customer_tariff_number_type": 0,
+      "description": "description",
+      "enable_prepay_tariff": false,
+      "items": [
+         {
+            "Authorization": "Eius accusantium possimus.",
+            "barcode": "xxx",
+            "customer_code": "xxx",
+            "declared_cn_name": "NSS",
+            "declared_en_name": "NSS",
+            "declared_value_in_eur": 9.8,
+            "declared_value_in_usd": 10.07,
+            "ext_order_item_id": "xxxx",
+            "ext_product_id": "xxxx",
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
+               "url1",
+               "url2"
+            ],
+            "material": "xxx",
+            "outbound_order_id": 1,
+            "platform_product_id": 0,
+            "product_attributes": [
+               "battery",
+               "cosmetic",
+               "liquid",
+               "magnetic"
+            ],
+            "product_height": 10,
+            "product_length": 10,
+            "product_name": "NSS mate40",
+            "product_price": 10.3,
+            "product_sku": "xxxx",
+            "product_weight": 10,
+            "product_width": 10,
+            "purpose": "xxx",
+            "qty": 1,
+            "requires_shipping": true,
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+         },
+         {
+            "Authorization": "Eius accusantium possimus.",
+            "barcode": "xxx",
+            "customer_code": "xxx",
+            "declared_cn_name": "NSS",
+            "declared_en_name": "NSS",
+            "declared_value_in_eur": 9.8,
+            "declared_value_in_usd": 10.07,
+            "ext_order_item_id": "xxxx",
+            "ext_product_id": "xxxx",
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
+               "url1",
+               "url2"
+            ],
+            "material": "xxx",
+            "outbound_order_id": 1,
+            "platform_product_id": 0,
+            "product_attributes": [
+               "battery",
+               "cosmetic",
+               "liquid",
+               "magnetic"
+            ],
+            "product_height": 10,
+            "product_length": 10,
+            "product_name": "NSS mate40",
+            "product_price": 10.3,
+            "product_sku": "xxxx",
+            "product_weight": 10,
+            "product_width": 10,
+            "purpose": "xxx",
+            "qty": 1,
+            "requires_shipping": true,
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+         },
+         {
+            "Authorization": "Eius accusantium possimus.",
+            "barcode": "xxx",
+            "customer_code": "xxx",
+            "declared_cn_name": "NSS",
+            "declared_en_name": "NSS",
+            "declared_value_in_eur": 9.8,
+            "declared_value_in_usd": 10.07,
+            "ext_order_item_id": "xxxx",
+            "ext_product_id": "xxxx",
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
+               "url1",
+               "url2"
+            ],
+            "material": "xxx",
+            "outbound_order_id": 1,
+            "platform_product_id": 0,
+            "product_attributes": [
+               "battery",
+               "cosmetic",
+               "liquid",
+               "magnetic"
+            ],
+            "product_height": 10,
+            "product_length": 10,
+            "product_name": "NSS mate40",
+            "product_price": 10.3,
+            "product_sku": "xxxx",
+            "product_weight": 10,
+            "product_width": 10,
+            "purpose": "xxx",
+            "qty": 1,
+            "requires_shipping": true,
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+         },
+         {
+            "Authorization": "Eius accusantium possimus.",
+            "barcode": "xxx",
+            "customer_code": "xxx",
+            "declared_cn_name": "NSS",
+            "declared_en_name": "NSS",
+            "declared_value_in_eur": 9.8,
+            "declared_value_in_usd": 10.07,
+            "ext_order_item_id": "xxxx",
+            "ext_product_id": "xxxx",
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
+               "url1",
+               "url2"
+            ],
+            "material": "xxx",
+            "outbound_order_id": 1,
+            "platform_product_id": 0,
+            "product_attributes": [
+               "battery",
+               "cosmetic",
+               "liquid",
+               "magnetic"
+            ],
+            "product_height": 10,
+            "product_length": 10,
+            "product_name": "NSS mate40",
+            "product_price": 10.3,
+            "product_sku": "xxxx",
+            "product_weight": 10,
+            "product_width": 10,
+            "purpose": "xxx",
+            "qty": 1,
+            "requires_shipping": true,
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+         }
+      ],
+      "offline": true,
+      "receiver_info": {
+         "address1": "address1",
+         "address2": "address2",
+         "certificate_code": "3455233",
+         "certificate_period": "2028-01-01",
+         "certificate_type": "ID",
+         "city_name": "SZ",
+         "company": "China",
+         "country_code": "US",
+         "country_name": "US",
+         "email": "123@test.com",
+         "first_name": "He",
+         "last_name": "John",
+         "name": "He",
+         "phone_number": "150xxxxxxxx",
+         "state_code": "S",
+         "state_name": "U",
+         "zip_code": "10016"
+      },
+      "warehouse_id": 1
+   }' --id 1 --authorization "Cumque in fuga deserunt saepe." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderBatchUpdateOutboundOrderUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order batch-update-outbound-order -body JSON -authorization STRING -token STRING
+
+BatchUpdateOutboundOrder implements batch_update_outbound_order.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order batch-update-outbound-order --body '{
+      "orders": [
+         {
+            "Authorization": "Sunt tempora qui quo in ad in.",
+            "customer_tariff_country_code": "US",
+            "customer_tariff_number": "xxx",
+            "customer_tariff_number_type": 0,
+            "description": "description",
+            "enable_prepay_tariff": false,
+            "id": 1,
+            "items": [
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               },
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               },
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               },
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               }
+            ],
+            "offline": true,
+            "receiver_info": {
+               "address1": "address1",
+               "address2": "address2",
+               "certificate_code": "3455233",
+               "certificate_period": "2028-01-01",
+               "certificate_type": "ID",
+               "city_name": "SZ",
+               "company": "China",
+               "country_code": "US",
+               "country_name": "US",
+               "email": "123@test.com",
+               "first_name": "He",
+               "last_name": "John",
+               "name": "He",
+               "phone_number": "150xxxxxxxx",
+               "state_code": "S",
+               "state_name": "U",
+               "zip_code": "10016"
+            },
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "warehouse_id": 1
+         },
+         {
+            "Authorization": "Sunt tempora qui quo in ad in.",
+            "customer_tariff_country_code": "US",
+            "customer_tariff_number": "xxx",
+            "customer_tariff_number_type": 0,
+            "description": "description",
+            "enable_prepay_tariff": false,
+            "id": 1,
+            "items": [
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               },
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               },
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               },
+               {
+                  "Authorization": "Eius accusantium possimus.",
+                  "barcode": "xxx",
+                  "customer_code": "xxx",
+                  "declared_cn_name": "NSS",
+                  "declared_en_name": "NSS",
+                  "declared_value_in_eur": 9.8,
+                  "declared_value_in_usd": 10.07,
+                  "ext_order_item_id": "xxxx",
+                  "ext_product_id": "xxxx",
+                  "hs_code": "xxx",
+                  "id": 1,
+                  "images": [
+                     "url1",
+                     "url2"
+                  ],
+                  "material": "xxx",
+                  "outbound_order_id": 1,
+                  "platform_product_id": 0,
+                  "product_attributes": [
+                     "battery",
+                     "cosmetic",
+                     "liquid",
+                     "magnetic"
+                  ],
+                  "product_height": 10,
+                  "product_length": 10,
+                  "product_name": "NSS mate40",
+                  "product_price": 10.3,
+                  "product_sku": "xxxx",
+                  "product_weight": 10,
+                  "product_width": 10,
+                  "purpose": "xxx",
+                  "qty": 1,
+                  "requires_shipping": true,
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+               }
+            ],
+            "offline": true,
+            "receiver_info": {
+               "address1": "address1",
+               "address2": "address2",
+               "certificate_code": "3455233",
+               "certificate_period": "2028-01-01",
+               "certificate_type": "ID",
+               "city_name": "SZ",
+               "company": "China",
+               "country_code": "US",
+               "country_name": "US",
+               "email": "123@test.com",
+               "first_name": "He",
+               "last_name": "John",
+               "name": "He",
+               "phone_number": "150xxxxxxxx",
+               "state_code": "S",
+               "state_name": "U",
+               "zip_code": "10016"
+            },
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "warehouse_id": 1
+         }
+      ]
+   }' --authorization "Occaecati id eligendi et ducimus molestias." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderCreateOutboundOrderItemUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order create-outbound-order-item -body JSON -authorization STRING -token STRING
+
+CreateOutboundOrderItem implements create_outbound_order_item.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order create-outbound-order-item --body '{
+      "barcode": "xxx",
+      "customer_code": "xxx",
+      "declared_cn_name": "NSS",
+      "declared_en_name": "NSS",
+      "declared_value_in_eur": 9.8,
+      "declared_value_in_usd": 10.07,
+      "ext_order_item_id": "xxxx",
+      "hs_code": "xxx",
+      "images": [
+         "url1",
+         "url2"
+      ],
+      "material": "xxx",
+      "outbound_order_id": 1,
+      "product_attributes": [
+         "battery",
+         "cosmetic",
+         "liquid",
+         "magnetic"
+      ],
+      "product_height": 10,
+      "product_length": 10,
+      "product_name": "NSS mate40",
+      "product_price": 10.3,
+      "product_sku": "xxxx",
+      "product_weight": 10,
+      "product_width": 10,
+      "purpose": "xxx",
+      "qty": 1,
+      "requires_shipping": true
+   }' --authorization "Ex cumque nihil labore sequi quam." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderUpdateOutboundOrderItemUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order update-outbound-order-item -body JSON -id INT64 -authorization STRING -token STRING
+
+UpdateOutboundOrderItem implements update_outbound_order_item.
+    -body JSON: 
+    -id INT64: outbound order item id
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order update-outbound-order-item --body '{
+      "barcode": "xxx",
+      "customer_code": "xxx",
+      "declared_cn_name": "NSS",
+      "declared_en_name": "NSS",
+      "declared_value_in_eur": 9.8,
+      "declared_value_in_usd": 10.07,
+      "ext_order_item_id": "xxxx",
+      "ext_product_id": "xxxx",
+      "hs_code": "xxx",
+      "images": [
+         "url1",
+         "url2"
+      ],
+      "material": "xxx",
+      "outbound_order_id": 1,
+      "platform_product_id": 0,
+      "product_attributes": [
+         "battery",
+         "cosmetic",
+         "liquid",
+         "magnetic"
+      ],
+      "product_height": 10,
+      "product_length": 10,
+      "product_name": "NSS mate40",
+      "product_price": 10.3,
+      "product_sku": "xxxx",
+      "product_weight": 10,
+      "product_width": 10,
+      "purpose": "xxx",
+      "qty": 1,
+      "requires_shipping": true
+   }' --id 1 --authorization "Et facilis aperiam delectus." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderDeleteOutboundOrderItemUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order delete-outbound-order-item -id INT64 -authorization STRING -token STRING
+
+DeleteOutboundOrderItem implements delete_outbound_order_item.
+    -id INT64: id
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order delete-outbound-order-item --id 1 --authorization "Illo dicta consectetur quo et consequatur quisquam." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderBatchQueryOutboundOrderUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order batch-query-outbound-order -order-numbers JSON -status INT -current INT -page-size INT -authorization STRING -token STRING
+
+BatchQueryOutboundOrder implements batch_query_outbound_order.
+    -order-numbers JSON: 
+    -status INT: 
+    -current INT: 
+    -page-size INT: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order batch-query-outbound-order --order-numbers '[
+      "xxx1234"
+   ]' --status 1 --current 1 --page-size 1 --authorization "Sapiente modi asperiores fugit eaque quod quos." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
 func orderGetOutboundOrderUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] order get-outbound-order -client-order-id STRING
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order get-outbound-order -id STRING -authorization STRING -token STRING
 
 GetOutboundOrder implements get_outbound_order.
-    -client-order-id STRING: 
+    -id STRING: outbound order number
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
-    %[1]s order get-outbound-order --client-order-id "xxx1234"
+    %[1]s order get-outbound-order --id "xxx1234" --authorization "Velit ad ex." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderGetOutboundOrderListFiltersUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order get-outbound-order-list-filters -authorization STRING -token STRING
+
+GetOutboundOrderListFilters implements get_outbound_order_list_filters.
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order get-outbound-order-list-filters --authorization "Autem velit enim similique nisi." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderGetOutboundOrderCountUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order get-outbound-order-count -id JSON -platform-order-no STRING -listing-sku STRING -sku STRING -nss-tracking-number STRING -shipping-name STRING -platform STRING -status JSON -store-id STRING -warehouse-id STRING -country-code STRING -created-at-start STRING -created-at-end STRING -ship-date-start STRING -ship-date-end STRING -offline-order STRING -page STRING -page-size STRING -authorization STRING -token STRING
+
+GetOutboundOrderCount implements get_outbound_order_count.
+    -id JSON: 
+    -platform-order-no STRING: 
+    -listing-sku STRING: 
+    -sku STRING: 
+    -nss-tracking-number STRING: 
+    -shipping-name STRING: 
+    -platform STRING: 
+    -status JSON: 
+    -store-id STRING: 
+    -warehouse-id STRING: 
+    -country-code STRING: 
+    -created-at-start STRING: 
+    -created-at-end STRING: 
+    -ship-date-start STRING: 
+    -ship-date-end STRING: 
+    -offline-order STRING: 
+    -page STRING: 
+    -page-size STRING: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order get-outbound-order-count --id '[
+      "1",
+      "2"
+   ]' --platform-order-no "Alias rerum odit quos et eum saepe." --listing-sku "Sed eum porro deleniti deleniti quibusdam molestiae." --sku "Cupiditate et." --nss-tracking-number "Alias tempore aut veritatis magni." --shipping-name "Dolor vel." --platform "shopify" --status '[
+      "1",
+      "2"
+   ]' --store-id "1" --warehouse-id "1" --country-code "CN" --created-at-start "2022-01-01" --created-at-end "2022-01-02" --ship-date-start "2022-01-01" --ship-date-end "2022-01-02" --offline-order "1" --page "1" --page-size "10" --authorization "Est ipsum provident repudiandae." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderGetOutboundOrderListUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order get-outbound-order-list -id JSON -platform-order-no STRING -listing-sku STRING -sku STRING -nss-tracking-number STRING -shipping-name STRING -platform STRING -status JSON -store-id STRING -warehouse-id STRING -country-code STRING -created-at-start STRING -created-at-end STRING -ship-date-start STRING -ship-date-end STRING -offline-order STRING -page STRING -page-size STRING -authorization STRING -token STRING
+
+GetOutboundOrderList implements get_outbound_order_list.
+    -id JSON: 
+    -platform-order-no STRING: 
+    -listing-sku STRING: 
+    -sku STRING: 
+    -nss-tracking-number STRING: 
+    -shipping-name STRING: 
+    -platform STRING: 
+    -status JSON: 
+    -store-id STRING: 
+    -warehouse-id STRING: 
+    -country-code STRING: 
+    -created-at-start STRING: 
+    -created-at-end STRING: 
+    -ship-date-start STRING: 
+    -ship-date-end STRING: 
+    -offline-order STRING: 
+    -page STRING: 
+    -page-size STRING: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order get-outbound-order-list --id '[
+      "1",
+      "2"
+   ]' --platform-order-no "Facilis voluptatum." --listing-sku "Soluta dolorem inventore rerum." --sku "Soluta non itaque id." --nss-tracking-number "Placeat reiciendis necessitatibus provident et ducimus natus." --shipping-name "Commodi voluptatem qui aut ut quisquam." --platform "shopify" --status '[
+      "1",
+      "2"
+   ]' --store-id "1" --warehouse-id "1" --country-code "CN" --created-at-start "2022-01-01" --created-at-end "2022-01-02" --ship-date-start "2022-01-01" --ship-date-end "2022-01-02" --offline-order "1" --page "1" --page-size "10" --authorization "Harum ipsum et animi." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderUploadOutboundOrdersUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order upload-outbound-orders -body JSON -authorization STRING -token STRING
+
+UploadOutboundOrders implements upload_outbound_orders.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order upload-outbound-orders --body '{
+      "file": "order.xlsx",
+      "file_name": "xxx"
+   }' --authorization "Similique modi ipsa." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func orderExportOutboundOrdersUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] order export-outbound-orders -id JSON -platform-order-no STRING -listing-sku STRING -sku STRING -nss-tracking-number STRING -shipping-name STRING -platform STRING -status JSON -store-id STRING -warehouse-id STRING -country-code STRING -created-at-start STRING -created-at-end STRING -ship-date-start STRING -ship-date-end STRING -offline-order STRING -page STRING -page-size STRING -authorization STRING -token STRING
+
+ExportOutboundOrders implements export_outbound_orders.
+    -id JSON: 
+    -platform-order-no STRING: 
+    -listing-sku STRING: 
+    -sku STRING: 
+    -nss-tracking-number STRING: 
+    -shipping-name STRING: 
+    -platform STRING: 
+    -status JSON: 
+    -store-id STRING: 
+    -warehouse-id STRING: 
+    -country-code STRING: 
+    -created-at-start STRING: 
+    -created-at-end STRING: 
+    -ship-date-start STRING: 
+    -ship-date-end STRING: 
+    -offline-order STRING: 
+    -page STRING: 
+    -page-size STRING: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s order export-outbound-orders --id '[
+      "1",
+      "2"
+   ]' --platform-order-no "Et saepe recusandae." --listing-sku "Aut sint dolor quis facere occaecati quas." --sku "Non omnis voluptas." --nss-tracking-number "Nemo minima optio rem perferendis ex." --shipping-name "Nobis reprehenderit pariatur minus autem rerum." --platform "shopify" --status '[
+      "1",
+      "2"
+   ]' --store-id "1" --warehouse-id "1" --country-code "CN" --created-at-start "2022-01-01" --created-at-end "2022-01-02" --ship-date-start "2022-01-01" --ship-date-end "2022-01-02" --offline-order "1" --page "1" --page-size "10" --authorization "Autem ipsum minus in." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
@@ -945,23 +2604,38 @@ Usage:
 COMMAND:
     batches-create-product: BatchesCreateProduct implements batches_create_product.
     update-product: UpdateProduct implements update_product.
+    export-product: ExportProduct implements export_product.
+    download-templates: DownloadTemplates implements download_templates.
+    upload-product: UploadProduct implements upload_product.
+    upload-product-update: UploadProductUpdate implements upload_product_update.
     generate-barcode: GenerateBarcode implements generate_barcode.
-    generate-token: GenerateToken implements generate_token.
+    products-query: ProductsQuery implements products_query.
+    product-detail: ProductDetail implements product_detail.
 
 Additional help:
     %[1]s product COMMAND --help
 `, os.Args[0])
 }
 func productBatchesCreateProductUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] product batches-create-product -body JSON
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product batches-create-product -body JSON -authorization STRING -token STRING
 
 BatchesCreateProduct implements batches_create_product.
     -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
     %[1]s product batches-create-product --body '{
       "products": [
          {
+            "Authorization": "Consequatur vel omnis rerum ut dolorum.",
+            "attributes": [
+               "liquid",
+               "battery",
+               "cosmetic",
+               "magnetic"
+            ],
+            "barcode": "xxx",
             "barcode_service": false,
             "customer_code": "xxx",
             "declared_cn_name": "xxx",
@@ -969,39 +2643,111 @@ Example:
             "declared_value_in_eur": 50,
             "declared_value_in_usd": 50,
             "enabled_nss_barcode": false,
+            "error_message": "Error ratione commodi explicabo temporibus accusantium cupiditate.",
+            "height": 2,
             "hs_code": "xxx",
             "id": 1,
-            "product_attributes": [
+            "images": [
+               "url"
+            ],
+            "length": 1,
+            "material": "Perspiciatis animi consequuntur occaecati quia impedit.",
+            "name": "xxx",
+            "purpose": "Voluptatibus et quae provident sit doloribus consequatur.",
+            "qty": 1,
+            "sku": "xxx",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "weight": 10,
+            "width": 1
+         },
+         {
+            "Authorization": "Consequatur vel omnis rerum ut dolorum.",
+            "attributes": [
                "liquid",
                "battery",
                "cosmetic",
                "magnetic"
             ],
-            "product_barcode": "xxx",
-            "product_height": 2,
-            "product_image": [
+            "barcode": "xxx",
+            "barcode_service": false,
+            "customer_code": "xxx",
+            "declared_cn_name": "xxx",
+            "declared_en_name": "xxx",
+            "declared_value_in_eur": 50,
+            "declared_value_in_usd": 50,
+            "enabled_nss_barcode": false,
+            "error_message": "Error ratione commodi explicabo temporibus accusantium cupiditate.",
+            "height": 2,
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
                "url"
             ],
-            "product_length": 1,
-            "product_name": "xxx",
-            "product_sku": "xxx",
-            "product_weight": 10,
-            "product_width": 1,
-            "qty": 1
+            "length": 1,
+            "material": "Perspiciatis animi consequuntur occaecati quia impedit.",
+            "name": "xxx",
+            "purpose": "Voluptatibus et quae provident sit doloribus consequatur.",
+            "qty": 1,
+            "sku": "xxx",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "weight": 10,
+            "width": 1
+         },
+         {
+            "Authorization": "Consequatur vel omnis rerum ut dolorum.",
+            "attributes": [
+               "liquid",
+               "battery",
+               "cosmetic",
+               "magnetic"
+            ],
+            "barcode": "xxx",
+            "barcode_service": false,
+            "customer_code": "xxx",
+            "declared_cn_name": "xxx",
+            "declared_en_name": "xxx",
+            "declared_value_in_eur": 50,
+            "declared_value_in_usd": 50,
+            "enabled_nss_barcode": false,
+            "error_message": "Error ratione commodi explicabo temporibus accusantium cupiditate.",
+            "height": 2,
+            "hs_code": "xxx",
+            "id": 1,
+            "images": [
+               "url"
+            ],
+            "length": 1,
+            "material": "Perspiciatis animi consequuntur occaecati quia impedit.",
+            "name": "xxx",
+            "purpose": "Voluptatibus et quae provident sit doloribus consequatur.",
+            "qty": 1,
+            "sku": "xxx",
+            "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ",
+            "weight": 10,
+            "width": 1
          }
       ]
-   }'
+   }' --authorization "Est ducimus saepe nam voluptas dolor earum." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
 func productUpdateProductUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] product update-product -body JSON
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product update-product -body JSON -authorization STRING -token STRING
 
 UpdateProduct implements update_product.
     -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
     %[1]s product update-product --body '{
+      "attributes": [
+         "liquid",
+         "battery",
+         "cosmetic",
+         "magnetic"
+      ],
+      "barcode": "xxx",
       "barcode_service": false,
       "customer_code": "xxx",
       "declared_cn_name": "xxx",
@@ -1009,47 +2755,213 @@ Example:
       "declared_value_in_eur": 50,
       "declared_value_in_usd": 50,
       "enabled_nss_barcode": false,
+      "error_message": "Adipisci facere vero nam sed deleniti rerum.",
+      "height": 2,
       "hs_code": "xxx",
       "id": 1,
-      "product_attributes": [
-         "liquid",
-         "battery",
-         "cosmetic",
-         "magnetic"
-      ],
-      "product_barcode": "xxx",
-      "product_height": 2,
-      "product_image": [
+      "images": [
          "url"
       ],
-      "product_length": 1,
-      "product_name": "xxx",
-      "product_sku": "xxx",
-      "product_weight": 10,
-      "product_width": 1,
-      "qty": 1
-   }'
+      "length": 1,
+      "material": "Doloremque id.",
+      "name": "xxx",
+      "purpose": "Aliquid aperiam amet id qui.",
+      "qty": 1,
+      "sku": "xxx",
+      "weight": 10,
+      "width": 1
+   }' --authorization "Assumenda non libero cupiditate sed quas amet." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func productExportProductUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product export-product -id JSON -sku STRING -barcode STRING -status STRING -attributes JSON -name STRING -inventory STRING -current INT -page-size INT -authorization STRING -token STRING
+
+ExportProduct implements export_product.
+    -id JSON: 
+    -sku STRING: 
+    -barcode STRING: 
+    -status STRING: 
+    -attributes JSON: 
+    -name STRING: 
+    -inventory STRING: 
+    -current INT: 
+    -page-size INT: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s product export-product --id '[
+      "1",
+      "2",
+      "3"
+   ]' --sku "xxx" --barcode "xxx" --status "1" --attributes '[
+      "liquid",
+      "battery",
+      "cosmetic",
+      "magnetic"
+   ]' --name "xxx" --inventory "with" --current 1 --page-size 1 --authorization "Est quo sequi illo." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func productDownloadTemplatesUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product download-templates -template STRING -authorization STRING -token STRING
+
+DownloadTemplates implements download_templates.
+    -template STRING: template
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s product download-templates --template "Qui et mollitia ab natus inventore commodi." --authorization "Aut perspiciatis." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func productUploadProductUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product upload-product -body JSON -authorization STRING -token STRING
+
+UploadProduct implements upload_product.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s product upload-product --body '{
+      "file": "1.xlsx"
+   }' --authorization "Non ex iste non." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func productUploadProductUpdateUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product upload-product-update -body JSON -authorization STRING -token STRING
+
+UploadProductUpdate implements upload_product_update.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s product upload-product-update --body '{
+      "file": "1.xlsx"
+   }' --authorization "At voluptates vero iure esse fugiat voluptatem." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
 func productGenerateBarcodeUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] product generate-barcode
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product generate-barcode -authorization STRING -token STRING
 
 GenerateBarcode implements generate_barcode.
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
-    %[1]s product generate-barcode
+    %[1]s product generate-barcode --authorization "Velit nulla debitis voluptatem." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
 `, os.Args[0])
 }
 
-func productGenerateTokenUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] product generate-token -body JSON
+func productProductsQueryUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product products-query -name STRING -sku STRING -barcode STRING -status INT -attributes JSON -inventory BOOL -current INT -page-size INT -authorization STRING -token STRING
+
+ProductsQuery implements products_query.
+    -name STRING: 
+    -sku STRING: 
+    -barcode STRING: 
+    -status INT: 
+    -attributes JSON: 
+    -inventory BOOL: 
+    -current INT: 
+    -page-size INT: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s product products-query --name "xxx" --sku "Omnis odit." --barcode "Corporis repudiandae inventore." --status 1 --attributes '[
+      "normal",
+      "liquid",
+      "electric",
+      "cosmetic",
+      "magnetic"
+   ]' --inventory false --current 1 --page-size 1 --authorization "Dolor nemo assumenda consequatur." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func productProductDetailUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] product product-detail -id INT32 -authorization STRING -token STRING
+
+ProductDetail implements product_detail.
+    -id INT32: id
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s product product-detail --id 1776729478 --authorization "Ut doloremque praesentium ea nesciunt." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+// integrationsUsage displays the usage of the integrations command and its
+// subcommands.
+func integrationsUsage() {
+	fmt.Fprintf(os.Stderr, `Integrations of other platforms
+Usage:
+    %[1]s [globalflags] integrations COMMAND [flags]
+
+COMMAND:
+    list: List implements list.
+    authorize: Authorize implements authorize.
+
+Additional help:
+    %[1]s integrations COMMAND --help
+`, os.Args[0])
+}
+func integrationsListUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] integrations list -authorization STRING -token STRING
+
+List implements list.
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s integrations list --authorization "Molestiae distinctio vel rerum repudiandae dolor." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func integrationsAuthorizeUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] integrations authorize -body JSON -authorization STRING -token STRING
+
+Authorize implements authorize.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s integrations authorize --body '{
+      "host": "127.0.0.1",
+      "platform": "woocommerce"
+   }' --authorization "Ea rem nisi nobis repellat in sed." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+// authUsage displays the usage of the auth command and its subcommands.
+func authUsage() {
+	fmt.Fprintf(os.Stderr, `The auth service
+Usage:
+    %[1]s [globalflags] auth COMMAND [flags]
+
+COMMAND:
+    generate-token: GenerateToken implements generate_token.
+
+Additional help:
+    %[1]s auth COMMAND --help
+`, os.Args[0])
+}
+func authGenerateTokenUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] auth generate-token -body JSON
 
 GenerateToken implements generate_token.
     -body JSON: 
 
 Example:
-    %[1]s product generate-token --body '{
+    %[1]s auth generate-token --body '{
       "id": 1,
       "tenant_id": 1
    }'
@@ -1070,15 +2982,490 @@ Additional help:
 `, os.Args[0])
 }
 func fileUploadImageUsage() {
-	fmt.Fprintf(os.Stderr, `%[1]s [flags] file upload-image -body JSON
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] file upload-image -body JSON -authorization STRING -token STRING
 
 UploadImage implements upload_image.
     -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
 
 Example:
     %[1]s file upload-image --body '{
       "file": "1.jpg",
       "file_name": "xxx"
+   }' --authorization "Nam laudantium labore dignissimos ut." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+// userUsage displays the usage of the user command and its subcommands.
+func userUsage() {
+	fmt.Fprintf(os.Stderr, `The user service performs operations on user
+Usage:
+    %[1]s [globalflags] user COMMAND [flags]
+
+COMMAND:
+    user-signup: UserSignup implements user_signup.
+    user-login: UserLogin implements user_login.
+    user-modify-password: UserModifyPassword implements user_modify_password.
+    user-forget-password: UserForgetPassword implements user_forget_password.
+    user-validate: UserValidate implements user_validate.
+    user-logout: UserLogout implements user_logout.
+    get-user-info: GetUserInfo implements get_user_info.
+    update-user-info: UpdateUserInfo implements update_user_info.
+    permissions: Permissions implements permissions.
+
+Additional help:
+    %[1]s user COMMAND --help
+`, os.Args[0])
+}
+func userUserSignupUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user user-signup -body JSON
+
+UserSignup implements user_signup.
+    -body JSON: 
+
+Example:
+    %[1]s user user-signup --body '{
+      "concerns": "xxx",
+      "email": "xxx@nextsmartship.com",
+      "inviter_id": 1,
+      "password": "xxx",
+      "phone": "139xxxxxxxx",
+      "platform": "xxx",
+      "source": "shopify",
+      "store_code": "xxx",
+      "user_name": "john",
+      "website": "xxx"
    }'
+`, os.Args[0])
+}
+
+func userUserLoginUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user user-login -body JSON
+
+UserLogin implements user_login.
+    -body JSON: 
+
+Example:
+    %[1]s user user-login --body '{
+      "email": "xxx@nextsmartship.com",
+      "password": "xxx",
+      "store_code": "xxx"
+   }'
+`, os.Args[0])
+}
+
+func userUserModifyPasswordUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user user-modify-password -body JSON -authorization STRING -token STRING
+
+UserModifyPassword implements user_modify_password.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s user user-modify-password --body '{
+      "email": "xxx@nextsmartship.com",
+      "old_password": "xxx",
+      "password": "xxx"
+   }' --authorization "Ut et qui." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func userUserForgetPasswordUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user user-forget-password -body JSON
+
+UserForgetPassword implements user_forget_password.
+    -body JSON: 
+
+Example:
+    %[1]s user user-forget-password --body '{
+      "action": "xxx",
+      "code": "xxx",
+      "email": "xxx@nextsmartship.com",
+      "password": "xxx"
+   }'
+`, os.Args[0])
+}
+
+func userUserValidateUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user user-validate -body JSON
+
+UserValidate implements user_validate.
+    -body JSON: 
+
+Example:
+    %[1]s user user-validate --body '{
+      "email": "xxx@nextsmartship.com"
+   }'
+`, os.Args[0])
+}
+
+func userUserLogoutUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user user-logout -authorization STRING -token STRING
+
+UserLogout implements user_logout.
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s user user-logout --authorization "Architecto rerum et velit aliquam." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func userGetUserInfoUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user get-user-info -authorization STRING -token STRING
+
+GetUserInfo implements get_user_info.
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s user get-user-info --authorization "Officiis molestias ad." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func userUpdateUserInfoUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user update-user-info -body JSON -authorization STRING -token STRING
+
+UpdateUserInfo implements update_user_info.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s user update-user-info --body '{
+      "user_name": "Rerum voluptatibus."
+   }' --authorization "Dicta tempora molestiae dolores nemo sit eum." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func userPermissionsUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] user permissions -authorization STRING -token STRING
+
+Permissions implements permissions.
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s user permissions --authorization "Aut beatae consectetur est voluptatem dolorem autem." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+// woocommerceUsage displays the usage of the woocommerce command and its
+// subcommands.
+func woocommerceUsage() {
+	fmt.Fprintf(os.Stderr, `integrations of Woocommerce service
+Usage:
+    %[1]s [globalflags] woocommerce COMMAND [flags]
+
+COMMAND:
+    return-woocommerce: ReturnWoocommerce implements return_woocommerce.
+    callback-woocommerce: CallbackWoocommerce implements callback_woocommerce.
+    retrieve-orders: RetrieveOrders implements retrieve_orders.
+    retrieve-products: RetrieveProducts implements retrieve_products.
+
+Additional help:
+    %[1]s woocommerce COMMAND --help
+`, os.Args[0])
+}
+func woocommerceReturnWoocommerceUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] woocommerce return-woocommerce -body JSON
+
+ReturnWoocommerce implements return_woocommerce.
+    -body JSON: 
+
+Example:
+    %[1]s woocommerce return-woocommerce --body '{
+      "success": "0",
+      "user_id": "1"
+   }'
+`, os.Args[0])
+}
+
+func woocommerceCallbackWoocommerceUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] woocommerce callback-woocommerce -body JSON
+
+CallbackWoocommerce implements callback_woocommerce.
+    -body JSON: 
+
+Example:
+    %[1]s woocommerce callback-woocommerce --body '{
+      "consumer_key": "Officiis quaerat aperiam aut ipsa esse culpa.",
+      "consumer_secret": "Aliquam doloribus quo consequatur.",
+      "key_id": 8991172639607242822,
+      "key_permissions": "Nisi deleniti placeat ut exercitationem est mollitia.",
+      "user_id": "Aperiam itaque impedit praesentium velit harum dolor."
+   }'
+`, os.Args[0])
+}
+
+func woocommerceRetrieveOrdersUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] woocommerce retrieve-orders -store-id INT32 -platform-ref-ids JSON -authorization STRING -token STRING
+
+RetrieveOrders implements retrieve_orders.
+    -store-id INT32: 
+    -platform-ref-ids JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s woocommerce retrieve-orders --store-id 792195240 --platform-ref-ids '[
+      "Tempore optio.",
+      "Non est illo."
+   ]' --authorization "Reiciendis cupiditate natus." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func woocommerceRetrieveProductsUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] woocommerce retrieve-products -store-id INT32 -platform-ref-ids JSON -authorization STRING -token STRING
+
+RetrieveProducts implements retrieve_products.
+    -store-id INT32: 
+    -platform-ref-ids JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s woocommerce retrieve-products --store-id 835820323 --platform-ref-ids '[
+      "Perspiciatis ut dolore corrupti occaecati accusamus.",
+      "Quae eos velit.",
+      "Iure voluptate expedita non consectetur.",
+      "Enim molestiae voluptas ipsa fuga."
+   ]' --authorization "Aut quia nihil." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+// tenantUsage displays the usage of the tenant command and its subcommands.
+func tenantUsage() {
+	fmt.Fprintf(os.Stderr, `The tenant service performs operations on tenant
+Usage:
+    %[1]s [globalflags] tenant COMMAND [flags]
+
+COMMAND:
+    integrations: Integrations implements integrations.
+    get-tenant-info: GetTenantInfo implements get_tenant_info.
+    update-tenant-info: UpdateTenantInfo implements update_tenant_info.
+
+Additional help:
+    %[1]s tenant COMMAND --help
+`, os.Args[0])
+}
+func tenantIntegrationsUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] tenant integrations -authorization STRING -token STRING
+
+Integrations implements integrations.
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s tenant integrations --authorization "Iste sit est." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func tenantGetTenantInfoUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] tenant get-tenant-info -authorization STRING -token STRING
+
+GetTenantInfo implements get_tenant_info.
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s tenant get-tenant-info --authorization "Modi eveniet magnam quae ea." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func tenantUpdateTenantInfoUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] tenant update-tenant-info -body JSON -authorization STRING -token STRING
+
+UpdateTenantInfo implements update_tenant_info.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s tenant update-tenant-info --body '{
+      "country_code": "Libero non temporibus dolore perferendis ut quia.",
+      "default_warehouse": 1626423020,
+      "prepay_tariff": true,
+      "shipping_option": 1172218393,
+      "uk_tariff_number": "Magni vitae qui.",
+      "us_tariff_number": "Maxime hic vero."
+   }' --authorization "Sint harum." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+// platform-productUsage displays the usage of the platform-product command and
+// its subcommands.
+func platformProductUsage() {
+	fmt.Fprintf(os.Stderr, `The platform_product service performs operations on platform product
+Usage:
+    %[1]s [globalflags] platform-product COMMAND [flags]
+
+COMMAND:
+    platform-product: PlatformProduct implements platform_product.
+    convert: Convert implements convert.
+    mappings: Mappings implements mappings.
+
+Additional help:
+    %[1]s platform-product COMMAND --help
+`, os.Args[0])
+}
+func platformProductPlatformProductUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] platform-product platform-product -platform-status INT -name STRING -page-size INT -current INT -id INT32 -listing-sku STRING -sku STRING -is-mapping INT -authorization STRING -token STRING
+
+PlatformProduct implements platform_product.
+    -platform-status INT: 
+    -name STRING: 
+    -page-size INT: 
+    -current INT: 
+    -id INT32: 
+    -listing-sku STRING: 
+    -sku STRING: 
+    -is-mapping INT: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s platform-product platform-product --platform-status 1 --name "xxx" --page-size 10 --current 1 --id 1 --listing-sku "xxx" --sku "xxx" --is-mapping 1 --authorization "Voluptas voluptatem accusantium unde et veritatis aut." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func platformProductConvertUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] platform-product convert -body JSON -authorization STRING -token STRING
+
+Convert implements convert.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s platform-product convert --body '{
+      "platform_product_ids": [
+         1
+      ]
+   }' --authorization "Quia animi vel amet ea." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+func platformProductMappingsUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] platform-product mappings -body JSON -authorization STRING -token STRING
+
+Mappings implements mappings.
+    -body JSON: 
+    -authorization STRING: 
+    -token STRING: 
+
+Example:
+    %[1]s platform-product mappings --body '{
+      "platform_product_ids": [
+         1
+      ],
+      "products": [
+         {
+            "product_id": 1,
+            "qty": 1
+         },
+         {
+            "product_id": 1,
+            "qty": 1
+         }
+      ]
+   }' --authorization "Qui ut veniam ea." --token "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ"
+`, os.Args[0])
+}
+
+// wixUsage displays the usage of the wix command and its subcommands.
+func wixUsage() {
+	fmt.Fprintf(os.Stderr, `integrations of Wix service
+Usage:
+    %[1]s [globalflags] wix COMMAND [flags]
+
+COMMAND:
+    callback-wix: CallbackWix implements callback_wix.
+    webhooks-products-wix: WebhooksProductsWix implements webhooks_products_wix.
+    products-list: ProductsList implements products_list.
+    orders-list: OrdersList implements orders_list.
+
+Additional help:
+    %[1]s wix COMMAND --help
+`, os.Args[0])
+}
+func wixCallbackWixUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] wix callback-wix -code STRING -state STRING -instance-id STRING
+
+CallbackWix implements callback_wix.
+    -code STRING: 
+    -state STRING: 
+    -instance-id STRING: 
+
+Example:
+    %[1]s wix callback-wix --code "Ut accusantium perferendis et incidunt assumenda." --state "Modi autem." --instance-id "Occaecati dolore."
+`, os.Args[0])
+}
+
+func wixWebhooksProductsWixUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] wix webhooks-products-wix -body JSON
+
+WebhooksProductsWix implements webhooks_products_wix.
+    -body JSON: 
+
+Example:
+    %[1]s wix webhooks-products-wix --body '{
+      "end_date": "Aut esse fugit.",
+      "start_date": "Est nobis modi iusto reprehenderit."
+   }'
+`, os.Args[0])
+}
+
+func wixProductsListUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] wix products-list -body JSON
+
+ProductsList implements products_list.
+    -body JSON: 
+
+Example:
+    %[1]s wix products-list --body '{
+      "end_date": "Dolores dolorem dolorum cumque rerum consequatur.",
+      "start_date": "Minima aut."
+   }'
+`, os.Args[0])
+}
+
+func wixOrdersListUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] wix orders-list -body JSON
+
+OrdersList implements orders_list.
+    -body JSON: 
+
+Example:
+    %[1]s wix orders-list --body '{
+      "end_date": "Neque sint quia error.",
+      "start_date": "Voluptatem molestiae officiis aut dolorum velit rem."
+   }'
+`, os.Args[0])
+}
+
+// wix-redirectUsage displays the usage of the wix-redirect command and its
+// subcommands.
+func wixRedirectUsage() {
+	fmt.Fprintf(os.Stderr, `integrations of Wix service
+Usage:
+    %[1]s [globalflags] wix-redirect COMMAND [flags]
+
+COMMAND:
+    return-wix: ReturnWix implements return_wix.
+
+Additional help:
+    %[1]s wix-redirect COMMAND --help
+`, os.Args[0])
+}
+func wixRedirectReturnWixUsage() {
+	fmt.Fprintf(os.Stderr, `%[1]s [flags] wix-redirect return-wix
+
+ReturnWix implements return_wix.
+
+Example:
+    %[1]s wix-redirect return-wix
 `, os.Args[0])
 }

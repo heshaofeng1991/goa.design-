@@ -9,8 +9,10 @@ package order
 
 import (
 	"context"
+	"io"
 
 	goa "goa.design/goa/v3/pkg"
+	"goa.design/goa/v3/security"
 )
 
 // The order service performs operations on order
@@ -19,16 +21,44 @@ type Service interface {
 	CreateInboundOrder(context.Context, *InboundOrder) (res *InboundOrderRsp, err error)
 	// UpdateInboundOrder implements update_inbound_order.
 	UpdateInboundOrder(context.Context, *InboundOrder) (res *UpdateResponse, err error)
+	// CreatePickupOrder implements create_pickup_order.
+	CreatePickupOrder(context.Context, *PickupOrder) (res *PickupOrderRsp, err error)
+	// BatchQueryInboundOrder implements batch_query_inbound_order.
+	BatchQueryInboundOrder(context.Context, *GetOrder) (res *InboundOrderResponse, err error)
+	// GetInboundOrder implements get_inbound_order.
+	GetInboundOrder(context.Context, *QueryOrder) (res *QueryInboundOrderRsp, err error)
 	// CreateOutboundOrder implements create_outbound_order.
 	CreateOutboundOrder(context.Context, *OutboundOrder) (res *OutboundOrderRsp, err error)
 	// UpdateOutboundOrder implements update_outbound_order.
-	UpdateOutboundOrder(context.Context, *OutboundOrder) (res *UpdateResponse, err error)
-	// CreatePickupOrder implements create_pickup_order.
-	CreatePickupOrder(context.Context, *PickupOrder) (res *PickupOrderRsp, err error)
-	// GetInboundOrder implements get_inbound_order.
-	GetInboundOrder(context.Context, *GetOrder) (res []*InboundOrderResponse, err error)
+	UpdateOutboundOrder(context.Context, *OutboundOrderUpdateRequest) (res *UpdateResponse, err error)
+	// BatchUpdateOutboundOrder implements batch_update_outbound_order.
+	BatchUpdateOutboundOrder(context.Context, *BatchUpdateOrderRequest) (res *BatchUpdateOrderResponse, err error)
+	// CreateOutboundOrderItem implements create_outbound_order_item.
+	CreateOutboundOrderItem(context.Context, *OutboundOrderItemCreateRequest) (res *BaseResponse, err error)
+	// UpdateOutboundOrderItem implements update_outbound_order_item.
+	UpdateOutboundOrderItem(context.Context, *OutboundOrderItemUpdateRequest) (res *BaseResponse, err error)
+	// DeleteOutboundOrderItem implements delete_outbound_order_item.
+	DeleteOutboundOrderItem(context.Context, *DeleteOutboundItemRequest) (res *BaseResponse, err error)
+	// BatchQueryOutboundOrder implements batch_query_outbound_order.
+	BatchQueryOutboundOrder(context.Context, *GetOrder) (res *OrderRsp, err error)
 	// GetOutboundOrder implements get_outbound_order.
-	GetOutboundOrder(context.Context, *GetOrder) (res []*OrderRsp, err error)
+	GetOutboundOrder(context.Context, *QueryOutOrder) (res *QueryOrderRsp, err error)
+	// GetOutboundOrderListFilters implements get_outbound_order_list_filters.
+	GetOutboundOrderListFilters(context.Context, *AuthToken) (res *OrderListFilters, err error)
+	// GetOutboundOrderCount implements get_outbound_order_count.
+	GetOutboundOrderCount(context.Context, *OrderQueryPayload) (res *OrderCountResult, err error)
+	// GetOutboundOrderList implements get_outbound_order_list.
+	GetOutboundOrderList(context.Context, *OrderQueryPayload) (res *GetOrderListResult, err error)
+	// UploadOutboundOrders implements upload_outbound_orders.
+	UploadOutboundOrders(context.Context, *UploadOrdersPayload) (res *UploadOrdersResult, err error)
+	// ExportOutboundOrders implements export_outbound_orders.
+	ExportOutboundOrders(context.Context, *OrderQueryPayload) (res *ExportOrderResult, body io.ReadCloser, err error)
+}
+
+// Auther defines the authorization functions to be implemented by the service.
+type Auther interface {
+	// JWTAuth implements the authorization logic for the JWT security scheme.
+	JWTAuth(ctx context.Context, token string, schema *security.JWTScheme) (context.Context, error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -39,12 +69,181 @@ const ServiceName = "order"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [7]string{"create_inbound_order", "update_inbound_order", "create_outbound_order", "update_outbound_order", "create_pickup_order", "get_inbound_order", "get_outbound_order"}
+var MethodNames = [18]string{"create_inbound_order", "update_inbound_order", "create_pickup_order", "batch_query_inbound_order", "get_inbound_order", "create_outbound_order", "update_outbound_order", "batch_update_outbound_order", "create_outbound_order_item", "update_outbound_order_item", "delete_outbound_order_item", "batch_query_outbound_order", "get_outbound_order", "get_outbound_order_list_filters", "get_outbound_order_count", "get_outbound_order_list", "upload_outbound_orders", "export_outbound_orders"}
 
-// GetOrder is the payload type of the order service get_inbound_order method.
+// Address
+type Address struct {
+	// First name
+	FirstName *string
+	// Last name
+	LastName *string
+	// Phone number
+	PhoneNumber *string
+	// Country Name
+	CountryName *string
+	// Country code
+	CountryCode *string
+	// State Name
+	StateName *string
+	// State code
+	StateCode *string
+	// Address Line 1
+	Address1 *string
+	// Address Line 2
+	Address2 *string
+	// City Name
+	CityName *string
+	// ZIP code
+	ZipCode *string
+	// name
+	Name *string
+	// company
+	Company *string
+	// email
+	Email *string
+	// certificate type
+	CertificateType *string
+	// certificate code
+	CertificateCode *string
+	// certificate period
+	CertificatePeriod *string
+}
+
+// AuthToken is the payload type of the order service
+// get_outbound_order_list_filters method.
+type AuthToken struct {
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// BaseResponse is the result type of the order service
+// create_outbound_order_item method.
+type BaseResponse struct {
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// BatchUpdateOrderRequest is the payload type of the order service
+// batch_update_outbound_order method.
+type BatchUpdateOrderRequest struct {
+	// Update Order Data
+	Orders []*OutboundOrderUpdateRequest
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// BatchUpdateOrderResponse is the result type of the order service
+// batch_update_outbound_order method.
+type BatchUpdateOrderResponse struct {
+	// Data
+	Data []*BatchUpdateResult
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// update status
+type BatchUpdateResult struct {
+	// outbound order id
+	ID int32
+	// success
+	Success bool
+	// message
+	Message *string
+}
+
+// Channel Option
+type ChannelOption struct {
+	// Channel Cost Id
+	ID *int64
+	// Channel Name
+	ChannelName *string
+	// Shipping Cost
+	ShippingCost *float64
+	// Channel Type Name
+	ChannelTypeName *string
+	// Min Normal Days
+	MinNormalDays *int
+	// Max Normal Days
+	MaxNormalDays *int
+	// Charge Weight
+	ChargeWeight *int64
+	// Fuel Fee
+	FuelFee *float64
+	// Misc Fee
+	MiscFee *float64
+	// Processing Fee
+	ProcessingFee *float64
+	// Total Fee
+	TotalFee *float64
+}
+
+// DeleteOutboundItemRequest is the payload type of the order service
+// delete_outbound_order_item method.
+type DeleteOutboundItemRequest struct {
+	// id
+	ID int64
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// ExportOrderResult is the result type of the order service
+// export_outbound_orders method.
+type ExportOrderResult struct {
+	// Length is the downloaded content length in bytes.
+	Length int64
+}
+
+// GetOrder is the payload type of the order service batch_query_inbound_order
+// method.
 type GetOrder struct {
-	// client_order_id
-	ClientOrderID string
+	// order number
+	OrderNumbers []string
+	// status
+	Status *int
+	// current
+	Current *int
+	// page_size
+	PageSize *int
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+type GetOrderListData struct {
+	// List
+	List []*ListItem
+	// meta
+	Mate *MetaData
+}
+
+// GetOrderListResult is the result type of the order service
+// get_outbound_order_list method.
+type GetOrderListResult struct {
+	// Data
+	Data *GetOrderListData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// Hold Reason
+type HoldReason struct {
+	// Hold Reason Type
+	Type *string
+	// Hold Reason
+	Reason *string
 }
 
 // InboundOrder is the payload type of the order service create_inbound_order
@@ -57,33 +256,63 @@ type InboundOrder struct {
 	// customer code
 	CustomerCode string
 	// tracking number
-	TrackingNumber string
+	TrackingNumber *string
 	// requested pickup at
-	RequestedPickupAt string
+	RequestedPickupAt *string
 	// estimated arrival at
-	EstimatedArrivalAt string
+	EstimatedArrivalAt *string
 	// inbound order items
 	Items []*Item
-	// delivery mode(1 direct，2 warehouse)
+	// delivery mode(1 direct，2 warehouse, 3 platform)
 	Type int
 	// address
 	Address *ShippingAddress
 	// is pickup
 	IsPickup bool
 	// description
-	Description string
+	Description *string
 	// inbound order id
 	ID *int32
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+type InboundOrderData struct {
+	// inbound order number
+	OrderNumber string
+	// label url
+	LabelURL string
 }
 
 // OrderRsp describes the order info
+type InboundOrderInfo struct {
+	// inbounds data
+	List []*InboundOrderResponseData
+	// MetaData info
+	Meta *MetaData
+}
+
+// InboundOrderResponse is the result type of the order service
+// batch_query_inbound_order method.
 type InboundOrderResponse struct {
-	// client order id
-	ClientOrderID string
-	// order status(1 准备揽件 2 运输中 3 已到库)
+	// data
+	Data *InboundOrderInfo
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// InboundOrderResponseData describes the order info
+type InboundOrderResponseData struct {
+	// customer order id
+	CustomerOrderID string
+	// order status(1 初始状态 10 准备揽件 20 运输中 30 已到库)
 	Status int
-	// platform order id
-	PlatformOrderID int64
+	// inbound order number
+	OrderNumber string
 	// tracking number
 	TrackingNumber string
 	// tracking url
@@ -92,15 +321,19 @@ type InboundOrderResponse struct {
 	Items []*Item
 	// timestamp
 	Timestamp string
+	// carrier name
+	CarrierName string
 }
 
 // InboundOrderRsp is the result type of the order service create_inbound_order
 // method.
 type InboundOrderRsp struct {
-	// inbound order id
-	InboundOrderID *int64
-	// label url
-	LabelURL *string
+	// data
+	Data *InboundOrderData
+	// code
+	Code int
+	// message
+	Message string
 }
 
 // InboundOrderItems describes the inbound order items
@@ -109,26 +342,217 @@ type Item struct {
 	ProductName string
 	// product sku
 	ProductSku string
-	// barcode
-	Barcode string
-	// quality
+	// product barcode
+	ProductBarcode string
+	// product quality
 	Qty int
 }
 
-// OrderRsp describes the order info
-type OrderRsp struct {
-	// client order id
-	ClientOrderID string
+// Order List Item
+type ListItem struct {
+	// Order Id
+	ID *int32
+	// Platform Order id
+	PlatformOrderID *string
+	// Platform Order No
+	PlatformOrderNo *string
+	// Platform
+	Platform *string
+	// Store Id
+	StoreID *int32
+	// Store Name
+	StoreName *string
+	// Shipping Info
+	ShippingInfo *OrderListItemShipInfo
+	// Channel Id
+	ChannelID *int32
+	// Channel Name
+	ChannelName *string
+	// Channel Type
+	ChannelType *int
+	// Channel Type Name
+	ChannelTypeName *string
+	// Delivery Cost
+	DeliveryCost *float64
+	// NSS Tracking Number
+	NssTrackingNumber *string
+	// Items
+	Items []*OrderItem
+	// Warehouse Id
+	WarehouseID *int32
+	// Warehouse Name
+	WarehouseName *string
+	// Status
+	Status *int
+	// Status Name
+	StatusName *string
+	// Created At
+	CreatedAt *string
+	// Ship Date
+	ShipDate *string
+	// Channel Options
+	ChannelOptions []*ChannelOption
+	// Hold Reasons
+	HoldReasons []*HoldReason
+}
+
+// MetaData describes the MetaData
+type MetaData struct {
+	// current
+	Current int
+	// page_size
+	PageSize int
+	// total
+	Total int
+}
+
+// Order Counts
+type OrderCountData struct {
+	// Total
+	Total *int
+	// Ready To Ship
+	ReadyToShip *int
+	// Pending
+	Pending *int
+	// Shipped
+	Shipped *int
+	// Cancelled
+	Cancelled *int
+	// Exception
+	Exception *int
+}
+
+// OrderCountResult is the result type of the order service
+// get_outbound_order_count method.
+type OrderCountResult struct {
+	// Order Counts
+	Data *OrderCountData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+type OrderData struct {
+	// customer order id
+	CustomerOrderID string
 	// order status
 	Status int
-	// platform order id
-	PlatformOrderID int64
+	// outbound order number
+	OrderNumber string
 	// tracking number
 	TrackingNumber string
 	// tracking url
 	TrackingURL string
 	// items
 	Items []*OutboundOrderItem
+}
+
+// OrderInfo describes the order info
+type OrderInfo struct {
+	// outbounds data
+	List []*OrderData
+	// MetaData info
+	Meta *MetaData
+}
+
+// List Order Item
+type OrderItem struct {
+	// SKU
+	Sku *string
+	// Qty
+	Qty *int
+}
+
+// OrderListFilters is the result type of the order service
+// get_outbound_order_list_filters method.
+type OrderListFilters struct {
+	// data
+	Data *OrderListFiltersResultData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// OrderListFiltersResultData
+type OrderListFiltersResultData struct {
+	// List of keywords types
+	KeywordsTypeList []*SelectOption
+	// List of user's platforms
+	PlatformList []*SelectOption
+	// List of user's stores
+	StoreList []*SelectOption
+	// List of user's warehouses
+	WarehouseList []*SelectOption
+	// List of user's countries
+	CountryList []*SelectOption
+}
+
+// Order List Item Ship Info
+type OrderListItemShipInfo struct {
+	// Shipping Name
+	ShippingName *string
+	// Shipping Country
+	ShippingCountry *string
+	// Shipping Phone
+	ZipCode *string
+}
+
+// OrderQueryPayload is the payload type of the order service
+// get_outbound_order_count method.
+type OrderQueryPayload struct {
+	// Order ID
+	ID []string
+	// Platform Order No
+	PlatformOrderNo *string
+	// Listing SKU
+	ListingSku *string
+	// SKU
+	Sku *string
+	// NSS Tracking Number
+	NssTrackingNumber *string
+	// Shipping Name
+	ShippingName *string
+	// Platform
+	Platform *string
+	// Status
+	Status []string
+	// Store Id
+	StoreID *string
+	// Warehouse Id
+	WarehouseID *string
+	// Country Code (二字码)
+	CountryCode *string
+	// Created Start Date
+	CreatedAtStart *string
+	// Created End Date
+	CreatedAtEnd *string
+	// Ship Start Date
+	ShipDateStart *string
+	// Ship End Date
+	ShipDateEnd *string
+	// Is Offline Order
+	OfflineOrder *string
+	// Page
+	Page *string
+	// Page Size
+	PageSize *string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// OrderRsp is the result type of the order service batch_query_outbound_order
+// method.
+type OrderRsp struct {
+	// data
+	Data *OrderInfo
+	// code
+	Code int
+	// message
+	Message string
 }
 
 // OutboundOrder is the payload type of the order service create_outbound_order
@@ -143,9 +567,9 @@ type OutboundOrder struct {
 	// currency
 	Currency string
 	// customer tariff number
-	CustomerTariffNumber string
-	// customer tariff number of type
-	CustomerTariffNumberType int
+	CustomerTariffNumber *string
+	// country code
+	CountryCode *string
 	// enable prepay tariff
 	EnablePrepayTariff bool
 	// shipping type(1 Economic, 2 Fastest, 3 Recommended)
@@ -157,15 +581,33 @@ type OutboundOrder struct {
 	// channel id
 	ChannelID int
 	// description
-	Description string
-	// 入库单ID
-	InboundOrderID int64
-	// delivery mode(1 direct，2 warehouse)
+	Description *string
+	// inbound number
+	InboundOrderNumber *string
+	// delivery mode(1 direct，2 warehouse, 3 platform)
 	Type int
 	// outbound order id
 	ID *int32
 	// package id
-	PackageID *int64
+	PackageID *string
+	// store id
+	StoreID *int32
+	// estimated weight
+	EstimatedWeight *int64
+	// platform order no
+	PlatformOrderNo *string
+	// Platform created at
+	PlatformCreatedAt *string
+	// request shipping at
+	RequestShippingAt *string
+	// remark
+	Remark *string
+	// var number
+	VatNumber *string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
 }
 
 type OutboundOrderItem struct {
@@ -186,7 +628,7 @@ type OutboundOrderItem struct {
 	// declared value in usd
 	DeclaredValueInUsd float64
 	// product weight
-	ProductWeight float64
+	ProductWeight int
 	// product length
 	ProductLength int
 	// product width
@@ -196,18 +638,181 @@ type OutboundOrderItem struct {
 	// product attributes
 	ProductAttributes []string
 	// 产品barcode
-	Barcode string
+	ProductBarcode string
 	// declared value in eur（€）
 	DeclaredValueInEur float64
+	// requires shipping
+	RequiresShipping *bool
+	// Ext. order item id
+	ExtOrderItemID *string
+	// Ext. order item id
+	ExtProductID *string
+	// Ext. order item id
+	PlatformProductID *int32
+	// Material
+	Material string
+	// Purpose
+	Purpose string
+}
+
+// OutboundOrderItemCreateRequest is the payload type of the order service
+// create_outbound_order_item method.
+type OutboundOrderItemCreateRequest struct {
+	// outbound order id
+	OutboundOrderID int64
+	// product SKU
+	ProductSku *string
+	// ext order item id
+	ExtOrderItemID *string
+	// product name
+	ProductName *string
+	// product price
+	ProductPrice *float64
+	// 产品barcode
+	Barcode *string
+	// 产品数量
+	Qty *int
+	// hs code
+	HsCode *string
+	// declared cn name
+	DeclaredCnName *string
+	// declared en name
+	DeclaredEnName *string
+	// declared value in usd
+	DeclaredValueInUsd *float64
+	// declared value in eur
+	DeclaredValueInEur *float64
+	// claim weight
+	ProductWeight *float64
+	// product attributes
+	ProductAttributes []string
+	// customer code
+	CustomerCode *string
+	// images
+	Images []string
+	// material
+	Material *string
+	// purpose
+	Purpose *string
+	// requires shipping
+	RequiresShipping *bool
+	// length
+	ProductLength *float64
+	// width
+	ProductWidth *float64
+	// height
+	ProductHeight *float64
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// OutboundOrderItemUpdateRequest is the payload type of the order service
+// update_outbound_order_item method.
+type OutboundOrderItemUpdateRequest struct {
+	// outbound order id
+	OutboundOrderID *int64
+	// product SKU
+	ProductSku *string
+	// ext order item id
+	ExtOrderItemID *string
+	// product name
+	ProductName *string
+	// product price
+	ProductPrice *float64
+	// 产品barcode
+	Barcode *string
+	// 产品数量
+	Qty *int
+	// hs code
+	HsCode *string
+	// declared cn name
+	DeclaredCnName *string
+	// declared en name
+	DeclaredEnName *string
+	// declared value in usd
+	DeclaredValueInUsd *float64
+	// declared value in eur
+	DeclaredValueInEur *float64
+	// claim weight
+	ProductWeight *float64
+	// product attributes
+	ProductAttributes []string
+	// customer code
+	CustomerCode *string
+	// images
+	Images []string
+	// material
+	Material *string
+	// purpose
+	Purpose *string
+	// requires shipping
+	RequiresShipping *bool
+	// length
+	ProductLength *float64
+	// width
+	ProductWidth *float64
+	// height
+	ProductHeight *float64
+	// ext order item id
+	ExtProductID *string
+	// ext order item id
+	PlatformProductID *int32
+	// outbound order item id
+	ID *int64
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
 }
 
 // OutboundOrderRsp is the result type of the order service
 // create_outbound_order method.
 type OutboundOrderRsp struct {
-	// outbound order id
-	OutboundOrderID *int64
+	// data
+	Data *OutboundOrderRspData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// OutboundOrderRspData describes the outbound order return value
+type OutboundOrderRspData struct {
+	// order number
+	OrderNumber string
 	// tracking number
-	TrackingNumber *string
+	TrackingNumber string
+}
+
+// OutboundOrderUpdateRequest is the payload type of the order service
+// update_outbound_order method.
+type OutboundOrderUpdateRequest struct {
+	// outbound order id
+	ID int32
+	// warehouse id
+	WarehouseID *int
+	// offline
+	Offline *bool
+	// enable prepay tariff
+	EnablePrepayTariff *bool
+	// customer tariff number of type
+	CustomerTariffNumberType *int
+	// customer tariff country code
+	CustomerTariffCountryCode *string
+	// customer tariff number
+	CustomerTariffNumber *string
+	// receiver info
+	ReceiverInfo *Address
+	// order items
+	Items []*OutboundOrderItemUpdateRequest
+	// description
+	Description *string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
 }
 
 // PickupOrder is the payload type of the order service create_pickup_order
@@ -223,6 +828,10 @@ type PickupOrder struct {
 	Type int
 	// customer code
 	CustomerCode string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
 }
 
 // PickupOrderRsp is the result type of the order service create_pickup_order
@@ -230,6 +839,57 @@ type PickupOrder struct {
 type PickupOrderRsp struct {
 	// error message
 	ErrorMsg string
+}
+
+// QueryInboundOrderRsp is the result type of the order service
+// get_inbound_order method.
+type QueryInboundOrderRsp struct {
+	// data
+	Data *InboundOrderResponseData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// QueryOrder is the payload type of the order service get_inbound_order method.
+type QueryOrder struct {
+	// inbound order number
+	OrderNumber string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// QueryOrderRsp is the result type of the order service get_outbound_order
+// method.
+type QueryOrderRsp struct {
+	// data
+	Data *OrderData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// QueryOutOrder is the payload type of the order service get_outbound_order
+// method.
+type QueryOutOrder struct {
+	// outbound order number
+	ID string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// Select Options
+type SelectOption struct {
+	// Value
+	Value string
+	// Label
+	Label string
 }
 
 // ShippingAddress describes the receiver address
@@ -258,19 +918,84 @@ type ShippingAddress struct {
 	ZipCode string
 	// name
 	Name *string
+	// company
+	Company *string
+	// email
+	Email *string
+	// certificate type
+	CertificateType *string
+	// certificate code
+	CertificateCode *string
+	// certificate period
+	CertificatePeriod *string
 }
 
 // UpdateResponse is the result type of the order service update_inbound_order
 // method.
 type UpdateResponse struct {
+	// data
+	Data *UpdateResponseData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// UpdateResponse describes update status
+type UpdateResponseData struct {
 	// status
 	Status int32
+}
+
+// Upload Orders Data
+type UploadOrdersData struct {
+	// Total Count
+	TotalCount *int
+	// Success Count
+	SuccessCount *int
+	// Fail Count
+	FailCount *int
+	// Result File
+	ResultFile *string
+}
+
+// UploadOrdersPayload is the payload type of the order service
+// upload_outbound_orders method.
+type UploadOrdersPayload struct {
+	// file
+	File []byte
+	// file name
+	FileName string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
+}
+
+// UploadOrdersResult is the result type of the order service
+// upload_outbound_orders method.
+type UploadOrdersResult struct {
+	// Data
+	Data *UploadOrdersData
+	// code
+	Code int
+	// message
+	Message string
 }
 
 // MakeUnauthorized builds a goa.ServiceError from an error.
 func MakeUnauthorized(err error) *goa.ServiceError {
 	return &goa.ServiceError{
 		Name:    "Unauthorized",
+		ID:      goa.NewErrorID(),
+		Message: err.Error(),
+	}
+}
+
+// MakeInternalError builds a goa.ServiceError from an error.
+func MakeInternalError(err error) *goa.ServiceError {
+	return &goa.ServiceError{
+		Name:    "internal_error",
 		ID:      goa.NewErrorID(),
 		Message: err.Error(),
 	}

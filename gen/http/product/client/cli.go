@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	product "goa/gen/product"
+	"strconv"
 	"unicode/utf8"
 
 	goa "goa.design/goa/v3/pkg"
@@ -18,13 +19,13 @@ import (
 
 // BuildBatchesCreateProductPayload builds the payload for the product
 // batches_create_product endpoint from CLI flags.
-func BuildBatchesCreateProductPayload(productBatchesCreateProductBody string) (*product.MultiProduct, error) {
+func BuildBatchesCreateProductPayload(productBatchesCreateProductBody string, productBatchesCreateProductAuthorization string, productBatchesCreateProductToken string) (*product.MultiProduct, error) {
 	var err error
 	var body BatchesCreateProductRequestBody
 	{
 		err = json.Unmarshal([]byte(productBatchesCreateProductBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"products\": [\n         {\n            \"barcode_service\": false,\n            \"customer_code\": \"xxx\",\n            \"declared_cn_name\": \"xxx\",\n            \"declared_en_name\": \"xxx\",\n            \"declared_value_in_eur\": 50,\n            \"declared_value_in_usd\": 50,\n            \"enabled_nss_barcode\": false,\n            \"hs_code\": \"xxx\",\n            \"id\": 1,\n            \"product_attributes\": [\n               \"liquid\",\n               \"battery\",\n               \"cosmetic\",\n               \"magnetic\"\n            ],\n            \"product_barcode\": \"xxx\",\n            \"product_height\": 2,\n            \"product_image\": [\n               \"url\"\n            ],\n            \"product_length\": 1,\n            \"product_name\": \"xxx\",\n            \"product_sku\": \"xxx\",\n            \"product_weight\": 10,\n            \"product_width\": 1,\n            \"qty\": 1\n         }\n      ]\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"products\": [\n         {\n            \"Authorization\": \"Consequatur vel omnis rerum ut dolorum.\",\n            \"attributes\": [\n               \"liquid\",\n               \"battery\",\n               \"cosmetic\",\n               \"magnetic\"\n            ],\n            \"barcode\": \"xxx\",\n            \"barcode_service\": false,\n            \"customer_code\": \"xxx\",\n            \"declared_cn_name\": \"xxx\",\n            \"declared_en_name\": \"xxx\",\n            \"declared_value_in_eur\": 50,\n            \"declared_value_in_usd\": 50,\n            \"enabled_nss_barcode\": false,\n            \"error_message\": \"Error ratione commodi explicabo temporibus accusantium cupiditate.\",\n            \"height\": 2,\n            \"hs_code\": \"xxx\",\n            \"id\": 1,\n            \"images\": [\n               \"url\"\n            ],\n            \"length\": 1,\n            \"material\": \"Perspiciatis animi consequuntur occaecati quia impedit.\",\n            \"name\": \"xxx\",\n            \"purpose\": \"Voluptatibus et quae provident sit doloribus consequatur.\",\n            \"qty\": 1,\n            \"sku\": \"xxx\",\n            \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ\",\n            \"weight\": 10,\n            \"width\": 1\n         },\n         {\n            \"Authorization\": \"Consequatur vel omnis rerum ut dolorum.\",\n            \"attributes\": [\n               \"liquid\",\n               \"battery\",\n               \"cosmetic\",\n               \"magnetic\"\n            ],\n            \"barcode\": \"xxx\",\n            \"barcode_service\": false,\n            \"customer_code\": \"xxx\",\n            \"declared_cn_name\": \"xxx\",\n            \"declared_en_name\": \"xxx\",\n            \"declared_value_in_eur\": 50,\n            \"declared_value_in_usd\": 50,\n            \"enabled_nss_barcode\": false,\n            \"error_message\": \"Error ratione commodi explicabo temporibus accusantium cupiditate.\",\n            \"height\": 2,\n            \"hs_code\": \"xxx\",\n            \"id\": 1,\n            \"images\": [\n               \"url\"\n            ],\n            \"length\": 1,\n            \"material\": \"Perspiciatis animi consequuntur occaecati quia impedit.\",\n            \"name\": \"xxx\",\n            \"purpose\": \"Voluptatibus et quae provident sit doloribus consequatur.\",\n            \"qty\": 1,\n            \"sku\": \"xxx\",\n            \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ\",\n            \"weight\": 10,\n            \"width\": 1\n         },\n         {\n            \"Authorization\": \"Consequatur vel omnis rerum ut dolorum.\",\n            \"attributes\": [\n               \"liquid\",\n               \"battery\",\n               \"cosmetic\",\n               \"magnetic\"\n            ],\n            \"barcode\": \"xxx\",\n            \"barcode_service\": false,\n            \"customer_code\": \"xxx\",\n            \"declared_cn_name\": \"xxx\",\n            \"declared_en_name\": \"xxx\",\n            \"declared_value_in_eur\": 50,\n            \"declared_value_in_usd\": 50,\n            \"enabled_nss_barcode\": false,\n            \"error_message\": \"Error ratione commodi explicabo temporibus accusantium cupiditate.\",\n            \"height\": 2,\n            \"hs_code\": \"xxx\",\n            \"id\": 1,\n            \"images\": [\n               \"url\"\n            ],\n            \"length\": 1,\n            \"material\": \"Perspiciatis animi consequuntur occaecati quia impedit.\",\n            \"name\": \"xxx\",\n            \"purpose\": \"Voluptatibus et quae provident sit doloribus consequatur.\",\n            \"qty\": 1,\n            \"sku\": \"xxx\",\n            \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ\",\n            \"weight\": 10,\n            \"width\": 1\n         }\n      ]\n   }'")
 		}
 		if body.Products == nil {
 			err = goa.MergeErrors(err, goa.MissingFieldError("products", "body"))
@@ -43,6 +44,18 @@ func BuildBatchesCreateProductPayload(productBatchesCreateProductBody string) (*
 			return nil, err
 		}
 	}
+	var authorization *string
+	{
+		if productBatchesCreateProductAuthorization != "" {
+			authorization = &productBatchesCreateProductAuthorization
+		}
+	}
+	var token *string
+	{
+		if productBatchesCreateProductToken != "" {
+			token = &productBatchesCreateProductToken
+		}
+	}
 	v := &product.MultiProduct{}
 	if body.Products != nil {
 		v.Products = make([]*product.Product, len(body.Products))
@@ -50,28 +63,30 @@ func BuildBatchesCreateProductPayload(productBatchesCreateProductBody string) (*
 			v.Products[i] = marshalProductRequestBodyToProductProduct(val)
 		}
 	}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v, nil
 }
 
 // BuildUpdateProductPayload builds the payload for the product update_product
 // endpoint from CLI flags.
-func BuildUpdateProductPayload(productUpdateProductBody string) (*product.Product, error) {
+func BuildUpdateProductPayload(productUpdateProductBody string, productUpdateProductAuthorization string, productUpdateProductToken string) (*product.Product, error) {
 	var err error
 	var body UpdateProductRequestBody
 	{
 		err = json.Unmarshal([]byte(productUpdateProductBody), &body)
 		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"barcode_service\": false,\n      \"customer_code\": \"xxx\",\n      \"declared_cn_name\": \"xxx\",\n      \"declared_en_name\": \"xxx\",\n      \"declared_value_in_eur\": 50,\n      \"declared_value_in_usd\": 50,\n      \"enabled_nss_barcode\": false,\n      \"hs_code\": \"xxx\",\n      \"id\": 1,\n      \"product_attributes\": [\n         \"liquid\",\n         \"battery\",\n         \"cosmetic\",\n         \"magnetic\"\n      ],\n      \"product_barcode\": \"xxx\",\n      \"product_height\": 2,\n      \"product_image\": [\n         \"url\"\n      ],\n      \"product_length\": 1,\n      \"product_name\": \"xxx\",\n      \"product_sku\": \"xxx\",\n      \"product_weight\": 10,\n      \"product_width\": 1,\n      \"qty\": 1\n   }'")
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"attributes\": [\n         \"liquid\",\n         \"battery\",\n         \"cosmetic\",\n         \"magnetic\"\n      ],\n      \"barcode\": \"xxx\",\n      \"barcode_service\": false,\n      \"customer_code\": \"xxx\",\n      \"declared_cn_name\": \"xxx\",\n      \"declared_en_name\": \"xxx\",\n      \"declared_value_in_eur\": 50,\n      \"declared_value_in_usd\": 50,\n      \"enabled_nss_barcode\": false,\n      \"error_message\": \"Adipisci facere vero nam sed deleniti rerum.\",\n      \"height\": 2,\n      \"hs_code\": \"xxx\",\n      \"id\": 1,\n      \"images\": [\n         \"url\"\n      ],\n      \"length\": 1,\n      \"material\": \"Doloremque id.\",\n      \"name\": \"xxx\",\n      \"purpose\": \"Aliquid aperiam amet id qui.\",\n      \"qty\": 1,\n      \"sku\": \"xxx\",\n      \"weight\": 10,\n      \"width\": 1\n   }'")
 		}
-		if body.ProductAttributes == nil {
-			err = goa.MergeErrors(err, goa.MissingFieldError("product_attributes", "body"))
+		if body.Attributes == nil {
+			err = goa.MergeErrors(err, goa.MissingFieldError("attributes", "body"))
 		}
-		if utf8.RuneCountInString(body.ProductSku) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_sku", body.ProductSku, utf8.RuneCountInString(body.ProductSku), 50, false))
+		if utf8.RuneCountInString(body.Sku) > 50 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.sku", body.Sku, utf8.RuneCountInString(body.Sku), 50, false))
 		}
-		if utf8.RuneCountInString(body.ProductName) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_name", body.ProductName, utf8.RuneCountInString(body.ProductName), 50, false))
+		if utf8.RuneCountInString(body.Name) > 50 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.name", body.Name, utf8.RuneCountInString(body.Name), 50, false))
 		}
 		if utf8.RuneCountInString(body.DeclaredEnName) > 50 {
 			err = goa.MergeErrors(err, goa.InvalidLengthError("body.declared_en_name", body.DeclaredEnName, utf8.RuneCountInString(body.DeclaredEnName), 50, false))
@@ -85,8 +100,8 @@ func BuildUpdateProductPayload(productUpdateProductBody string) (*product.Produc
 		if utf8.RuneCountInString(body.HsCode) > 50 {
 			err = goa.MergeErrors(err, goa.InvalidLengthError("body.hs_code", body.HsCode, utf8.RuneCountInString(body.HsCode), 50, false))
 		}
-		if utf8.RuneCountInString(body.ProductBarcode) > 50 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_barcode", body.ProductBarcode, utf8.RuneCountInString(body.ProductBarcode), 50, false))
+		if utf8.RuneCountInString(body.Barcode) > 50 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.barcode", body.Barcode, utf8.RuneCountInString(body.Barcode), 50, false))
 		}
 		if body.EnabledNssBarcode != nil {
 			if !(*body.EnabledNssBarcode == false || *body.EnabledNssBarcode == true) {
@@ -104,80 +119,504 @@ func BuildUpdateProductPayload(productUpdateProductBody string) (*product.Produc
 				err = goa.MergeErrors(err, goa.InvalidRangeError("body.id", *body.ID, 1, true))
 			}
 		}
-		if !(body.BarcodeService == false || body.BarcodeService == true) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.barcode_service", body.BarcodeService, []interface{}{false, true}))
+		if body.BarcodeService != nil {
+			if !(*body.BarcodeService == false || *body.BarcodeService == true) {
+				err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.barcode_service", *body.BarcodeService, []interface{}{false, true}))
+			}
 		}
 		if err != nil {
 			return nil, err
 		}
 	}
+	var authorization *string
+	{
+		if productUpdateProductAuthorization != "" {
+			authorization = &productUpdateProductAuthorization
+		}
+	}
+	var token *string
+	{
+		if productUpdateProductToken != "" {
+			token = &productUpdateProductToken
+		}
+	}
 	v := &product.Product{
-		ProductSku:         body.ProductSku,
-		ProductName:        body.ProductName,
+		Sku:                body.Sku,
+		Name:               body.Name,
 		DeclaredEnName:     body.DeclaredEnName,
 		DeclaredCnName:     body.DeclaredCnName,
 		DeclaredValueInUsd: body.DeclaredValueInUsd,
-		ProductWeight:      body.ProductWeight,
-		ProductLength:      body.ProductLength,
-		ProductWidth:       body.ProductWidth,
-		ProductHeight:      body.ProductHeight,
+		Weight:             body.Weight,
+		Length:             body.Length,
+		Width:              body.Width,
+		Height:             body.Height,
 		HsCode:             body.HsCode,
-		ProductBarcode:     body.ProductBarcode,
+		Barcode:            body.Barcode,
 		Qty:                body.Qty,
 		EnabledNssBarcode:  body.EnabledNssBarcode,
 		DeclaredValueInEur: body.DeclaredValueInEur,
 		CustomerCode:       body.CustomerCode,
 		ID:                 body.ID,
 		BarcodeService:     body.BarcodeService,
+		ErrorMessage:       body.ErrorMessage,
+		Material:           body.Material,
+		Purpose:            body.Purpose,
 	}
-	if body.ProductImage != nil {
-		v.ProductImage = make([]string, len(body.ProductImage))
-		for i, val := range body.ProductImage {
-			v.ProductImage[i] = val
+	if body.Images != nil {
+		v.Images = make([]string, len(body.Images))
+		for i, val := range body.Images {
+			v.Images[i] = val
 		}
 	}
-	if body.ProductAttributes != nil {
-		v.ProductAttributes = make([]string, len(body.ProductAttributes))
-		for i, val := range body.ProductAttributes {
-			v.ProductAttributes[i] = val
+	if body.Attributes != nil {
+		v.Attributes = make([]string, len(body.Attributes))
+		for i, val := range body.Attributes {
+			v.Attributes[i] = val
 		}
 	}
+	{
+		var zero string
+		if v.Material == zero {
+			v.Material = ""
+		}
+	}
+	{
+		var zero string
+		if v.Purpose == zero {
+			v.Purpose = ""
+		}
+	}
+	v.Authorization = authorization
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildExportProductPayload builds the payload for the product export_product
+// endpoint from CLI flags.
+func BuildExportProductPayload(productExportProductID string, productExportProductSku string, productExportProductBarcode string, productExportProductStatus string, productExportProductAttributes string, productExportProductName string, productExportProductInventory string, productExportProductCurrent string, productExportProductPageSize string, productExportProductAuthorization string, productExportProductToken string) (*product.ProductQueryPayload, error) {
+	var err error
+	var id []string
+	{
+		if productExportProductID != "" {
+			err = json.Unmarshal([]byte(productExportProductID), &id)
+			if err != nil {
+				return nil, fmt.Errorf("invalid JSON for id, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"1\",\n      \"2\",\n      \"3\"\n   ]'")
+			}
+		}
+	}
+	var sku *string
+	{
+		if productExportProductSku != "" {
+			sku = &productExportProductSku
+			if sku != nil {
+				if utf8.RuneCountInString(*sku) > 50 {
+					err = goa.MergeErrors(err, goa.InvalidLengthError("sku", *sku, utf8.RuneCountInString(*sku), 50, false))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	var barcode *string
+	{
+		if productExportProductBarcode != "" {
+			barcode = &productExportProductBarcode
+		}
+	}
+	var status *string
+	{
+		if productExportProductStatus != "" {
+			status = &productExportProductStatus
+		}
+	}
+	var attributes []string
+	{
+		if productExportProductAttributes != "" {
+			err = json.Unmarshal([]byte(productExportProductAttributes), &attributes)
+			if err != nil {
+				return nil, fmt.Errorf("invalid JSON for attributes, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"liquid\",\n      \"battery\",\n      \"cosmetic\",\n      \"magnetic\"\n   ]'")
+			}
+		}
+	}
+	var name *string
+	{
+		if productExportProductName != "" {
+			name = &productExportProductName
+		}
+	}
+	var inventory *string
+	{
+		if productExportProductInventory != "" {
+			inventory = &productExportProductInventory
+		}
+	}
+	var current *int
+	{
+		if productExportProductCurrent != "" {
+			var v int64
+			v, err = strconv.ParseInt(productExportProductCurrent, 10, 64)
+			val := int(v)
+			current = &val
+			if err != nil {
+				return nil, fmt.Errorf("invalid value for current, must be INT")
+			}
+			if current != nil {
+				if *current < 1 {
+					err = goa.MergeErrors(err, goa.InvalidRangeError("current", *current, 1, true))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	var pageSize *int
+	{
+		if productExportProductPageSize != "" {
+			var v int64
+			v, err = strconv.ParseInt(productExportProductPageSize, 10, 64)
+			val := int(v)
+			pageSize = &val
+			if err != nil {
+				return nil, fmt.Errorf("invalid value for pageSize, must be INT")
+			}
+			if pageSize != nil {
+				if *pageSize < 1 {
+					err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 1, true))
+				}
+			}
+			if pageSize != nil {
+				if *pageSize > 50 {
+					err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 50, false))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	var authorization *string
+	{
+		if productExportProductAuthorization != "" {
+			authorization = &productExportProductAuthorization
+		}
+	}
+	var token *string
+	{
+		if productExportProductToken != "" {
+			token = &productExportProductToken
+		}
+	}
+	v := &product.ProductQueryPayload{}
+	v.ID = id
+	v.Sku = sku
+	v.Barcode = barcode
+	v.Status = status
+	v.Attributes = attributes
+	v.Name = name
+	v.Inventory = inventory
+	v.Current = current
+	v.PageSize = pageSize
+	v.Authorization = authorization
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildDownloadTemplatesPayload builds the payload for the product
+// download_templates endpoint from CLI flags.
+func BuildDownloadTemplatesPayload(productDownloadTemplatesTemplate string, productDownloadTemplatesAuthorization string, productDownloadTemplatesToken string) (*product.DownloadTemplatesReq, error) {
+	var template string
+	{
+		template = productDownloadTemplatesTemplate
+	}
+	var authorization *string
+	{
+		if productDownloadTemplatesAuthorization != "" {
+			authorization = &productDownloadTemplatesAuthorization
+		}
+	}
+	var token *string
+	{
+		if productDownloadTemplatesToken != "" {
+			token = &productDownloadTemplatesToken
+		}
+	}
+	v := &product.DownloadTemplatesReq{}
+	v.Template = &template
+	v.Authorization = authorization
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildUploadProductPayload builds the payload for the product upload_product
+// endpoint from CLI flags.
+func BuildUploadProductPayload(productUploadProductBody string, productUploadProductAuthorization string, productUploadProductToken string) (*product.UploadProductPayload, error) {
+	var err error
+	var body UploadProductRequestBody
+	{
+		err = json.Unmarshal([]byte(productUploadProductBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"file\": \"1.xlsx\"\n   }'")
+		}
+	}
+	var authorization *string
+	{
+		if productUploadProductAuthorization != "" {
+			authorization = &productUploadProductAuthorization
+		}
+	}
+	var token *string
+	{
+		if productUploadProductToken != "" {
+			token = &productUploadProductToken
+		}
+	}
+	v := &product.UploadProductPayload{
+		File: body.File,
+	}
+	v.Authorization = authorization
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildUploadProductUpdatePayload builds the payload for the product
+// upload_product_update endpoint from CLI flags.
+func BuildUploadProductUpdatePayload(productUploadProductUpdateBody string, productUploadProductUpdateAuthorization string, productUploadProductUpdateToken string) (*product.UploadProductPayload, error) {
+	var err error
+	var body UploadProductUpdateRequestBody
+	{
+		err = json.Unmarshal([]byte(productUploadProductUpdateBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"file\": \"1.xlsx\"\n   }'")
+		}
+	}
+	var authorization *string
+	{
+		if productUploadProductUpdateAuthorization != "" {
+			authorization = &productUploadProductUpdateAuthorization
+		}
+	}
+	var token *string
+	{
+		if productUploadProductUpdateToken != "" {
+			token = &productUploadProductUpdateToken
+		}
+	}
+	v := &product.UploadProductPayload{
+		File: body.File,
+	}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v, nil
 }
 
 // BuildGenerateBarcodePayload builds the payload for the product
 // generate_barcode endpoint from CLI flags.
-func BuildGenerateBarcodePayload() (*product.BarCode, error) {
-	v := &product.BarCode{}
+func BuildGenerateBarcodePayload(productGenerateBarcodeAuthorization string, productGenerateBarcodeToken string) (*product.AuthToken, error) {
+	var authorization *string
+	{
+		if productGenerateBarcodeAuthorization != "" {
+			authorization = &productGenerateBarcodeAuthorization
+		}
+	}
+	var token *string
+	{
+		if productGenerateBarcodeToken != "" {
+			token = &productGenerateBarcodeToken
+		}
+	}
+	v := &product.AuthToken{}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v, nil
 }
 
-// BuildGenerateTokenPayload builds the payload for the product generate_token
+// BuildProductsQueryPayload builds the payload for the product products_query
 // endpoint from CLI flags.
-func BuildGenerateTokenPayload(productGenerateTokenBody string) (*product.GenerateTokenReq, error) {
+func BuildProductsQueryPayload(productProductsQueryName string, productProductsQuerySku string, productProductsQueryBarcode string, productProductsQueryStatus string, productProductsQueryAttributes string, productProductsQueryInventory string, productProductsQueryCurrent string, productProductsQueryPageSize string, productProductsQueryAuthorization string, productProductsQueryToken string) (*product.ProductsQueryReq, error) {
 	var err error
-	var body GenerateTokenRequestBody
+	var name *string
 	{
-		err = json.Unmarshal([]byte(productGenerateTokenBody), &body)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"id\": 1,\n      \"tenant_id\": 1\n   }'")
-		}
-		if body.ID < 1 {
-			err = goa.MergeErrors(err, goa.InvalidRangeError("body.id", body.ID, 1, true))
-		}
-		if body.TenantID < 1 {
-			err = goa.MergeErrors(err, goa.InvalidRangeError("body.tenant_id", body.TenantID, 1, true))
-		}
-		if err != nil {
-			return nil, err
+		if productProductsQueryName != "" {
+			name = &productProductsQueryName
+			if name != nil {
+				if utf8.RuneCountInString(*name) > 50 {
+					err = goa.MergeErrors(err, goa.InvalidLengthError("name", *name, utf8.RuneCountInString(*name), 50, false))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
-	v := &product.GenerateTokenReq{
-		ID:       body.ID,
-		TenantID: body.TenantID,
+	var sku *string
+	{
+		if productProductsQuerySku != "" {
+			sku = &productProductsQuerySku
+		}
 	}
+	var barcode *string
+	{
+		if productProductsQueryBarcode != "" {
+			barcode = &productProductsQueryBarcode
+		}
+	}
+	var status *int
+	{
+		if productProductsQueryStatus != "" {
+			var v int64
+			v, err = strconv.ParseInt(productProductsQueryStatus, 10, 64)
+			val := int(v)
+			status = &val
+			if err != nil {
+				return nil, fmt.Errorf("invalid value for status, must be INT")
+			}
+			if status != nil {
+				if !(*status == 0 || *status == 1 || *status == 10) {
+					err = goa.MergeErrors(err, goa.InvalidEnumValueError("status", *status, []interface{}{0, 1, 10}))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	var attributes []string
+	{
+		if productProductsQueryAttributes != "" {
+			err = json.Unmarshal([]byte(productProductsQueryAttributes), &attributes)
+			if err != nil {
+				return nil, fmt.Errorf("invalid JSON for attributes, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"normal\",\n      \"liquid\",\n      \"electric\",\n      \"cosmetic\",\n      \"magnetic\"\n   ]'")
+			}
+		}
+	}
+	var inventory *bool
+	{
+		if productProductsQueryInventory != "" {
+			var val bool
+			val, err = strconv.ParseBool(productProductsQueryInventory)
+			inventory = &val
+			if err != nil {
+				return nil, fmt.Errorf("invalid value for inventory, must be BOOL")
+			}
+			if inventory != nil {
+				if !(*inventory == false || *inventory == true) {
+					err = goa.MergeErrors(err, goa.InvalidEnumValueError("inventory", *inventory, []interface{}{false, true}))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	var current *int
+	{
+		if productProductsQueryCurrent != "" {
+			var v int64
+			v, err = strconv.ParseInt(productProductsQueryCurrent, 10, 64)
+			val := int(v)
+			current = &val
+			if err != nil {
+				return nil, fmt.Errorf("invalid value for current, must be INT")
+			}
+			if current != nil {
+				if *current < 1 {
+					err = goa.MergeErrors(err, goa.InvalidRangeError("current", *current, 1, true))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	var pageSize *int
+	{
+		if productProductsQueryPageSize != "" {
+			var v int64
+			v, err = strconv.ParseInt(productProductsQueryPageSize, 10, 64)
+			val := int(v)
+			pageSize = &val
+			if err != nil {
+				return nil, fmt.Errorf("invalid value for pageSize, must be INT")
+			}
+			if pageSize != nil {
+				if *pageSize < 1 {
+					err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 1, true))
+				}
+			}
+			if pageSize != nil {
+				if *pageSize > 50 {
+					err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 50, false))
+				}
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	var authorization *string
+	{
+		if productProductsQueryAuthorization != "" {
+			authorization = &productProductsQueryAuthorization
+		}
+	}
+	var token *string
+	{
+		if productProductsQueryToken != "" {
+			token = &productProductsQueryToken
+		}
+	}
+	v := &product.ProductsQueryReq{}
+	v.Name = name
+	v.Sku = sku
+	v.Barcode = barcode
+	v.Status = status
+	v.Attributes = attributes
+	v.Inventory = inventory
+	v.Current = current
+	v.PageSize = pageSize
+	v.Authorization = authorization
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildProductDetailPayload builds the payload for the product product_detail
+// endpoint from CLI flags.
+func BuildProductDetailPayload(productProductDetailID string, productProductDetailAuthorization string, productProductDetailToken string) (*product.ProductDetailReq, error) {
+	var err error
+	var id int32
+	{
+		var v int64
+		v, err = strconv.ParseInt(productProductDetailID, 10, 32)
+		id = int32(v)
+		if err != nil {
+			return nil, fmt.Errorf("invalid value for id, must be INT32")
+		}
+	}
+	var authorization *string
+	{
+		if productProductDetailAuthorization != "" {
+			authorization = &productProductDetailAuthorization
+		}
+	}
+	var token *string
+	{
+		if productProductDetailToken != "" {
+			token = &productProductDetailToken
+		}
+	}
+	v := &product.ProductDetailReq{}
+	v.ID = &id
+	v.Authorization = authorization
+	v.Token = token
 
 	return v, nil
 }

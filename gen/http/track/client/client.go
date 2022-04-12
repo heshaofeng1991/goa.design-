@@ -17,8 +17,13 @@ import (
 
 // Client lists the track service endpoint HTTP clients.
 type Client struct {
-	// Get Doer is the HTTP client used to make requests to the get endpoint.
-	GetDoer goahttp.Doer
+	// BatchQueryTrackInfo Doer is the HTTP client used to make requests to the
+	// batch_query_track_info endpoint.
+	BatchQueryTrackInfoDoer goahttp.Doer
+
+	// GetTrack Doer is the HTTP client used to make requests to the get_track
+	// endpoint.
+	GetTrackDoer goahttp.Doer
 
 	// CORS Doer is the HTTP client used to make requests to the  endpoint.
 	CORSDoer goahttp.Doer
@@ -43,25 +48,26 @@ func NewClient(
 	restoreBody bool,
 ) *Client {
 	return &Client{
-		GetDoer:             doer,
-		CORSDoer:            doer,
-		RestoreResponseBody: restoreBody,
-		scheme:              scheme,
-		host:                host,
-		decoder:             dec,
-		encoder:             enc,
+		BatchQueryTrackInfoDoer: doer,
+		GetTrackDoer:            doer,
+		CORSDoer:                doer,
+		RestoreResponseBody:     restoreBody,
+		scheme:                  scheme,
+		host:                    host,
+		decoder:                 dec,
+		encoder:                 enc,
 	}
 }
 
-// Get returns an endpoint that makes HTTP requests to the track service get
-// server.
-func (c *Client) Get() goa.Endpoint {
+// BatchQueryTrackInfo returns an endpoint that makes HTTP requests to the
+// track service batch_query_track_info server.
+func (c *Client) BatchQueryTrackInfo() goa.Endpoint {
 	var (
-		encodeRequest  = EncodeGetRequest(c.encoder)
-		decodeResponse = DecodeGetResponse(c.decoder, c.RestoreResponseBody)
+		encodeRequest  = EncodeBatchQueryTrackInfoRequest(c.encoder)
+		decodeResponse = DecodeBatchQueryTrackInfoResponse(c.decoder, c.RestoreResponseBody)
 	)
 	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildGetRequest(ctx, v)
+		req, err := c.BuildBatchQueryTrackInfoRequest(ctx, v)
 		if err != nil {
 			return nil, err
 		}
@@ -69,9 +75,28 @@ func (c *Client) Get() goa.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		resp, err := c.GetDoer.Do(req)
+		resp, err := c.BatchQueryTrackInfoDoer.Do(req)
 		if err != nil {
-			return nil, goahttp.ErrRequestError("track", "get", err)
+			return nil, goahttp.ErrRequestError("track", "batch_query_track_info", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// GetTrack returns an endpoint that makes HTTP requests to the track service
+// get_track server.
+func (c *Client) GetTrack() goa.Endpoint {
+	var (
+		decodeResponse = DecodeGetTrackResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildGetTrackRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.GetTrackDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("track", "get_track", err)
 		}
 		return decodeResponse(resp)
 	}

@@ -13,17 +13,35 @@ import (
 	. "goa.design/goa/v3/dsl"
 ) //nolint:revive
 
-// GetTrack 物流轨迹请求入参.
-var GetTrack = Type("GetTrack", func() {
-	Field(1, "tracking_number", String, "tracking number of order")
-	Field(3, "type", Int, "type(1 tracking_number 2 order_id)", func() {
-		Enum(1, 2)
-		Example(1)
+// BatchQueryTrackPayload 物流轨迹请求入参.
+var BatchQueryTrackPayload = Type("BatchQueryTrackPayload", func() {
+	Field(1, "tracking_numbers", ArrayOf(String), "tracking number", func() {
+		MinLength(1)
+		MaxLength(50)
 	})
-	Required("tracking_number", "type")
+	Required("tracking_numbers")
 })
 
-// Track 物流轨迹返回出参.
+// QueryTrackPayload 物流轨迹请求入参.
+var QueryTrackPayload = Type("QueryTrackPayload", func() {
+	Field(1, "tracking_number", String, "tracking number", func() {
+		MinLength(1)
+	})
+	Required("tracking_number")
+})
+
+// QueryTrackRsp 物流轨迹返回出参.
+var QueryTrackRsp = Type("QueryTrackRsp", func() {
+	Extend(BaseResponse)
+	Field(1, "data", TrackInfo, "data")
+})
+
+var TrackInfo = Type("TrackInfo", func() {
+	Field(1, "list", ArrayOf(Track), "tracks")
+	Required("list")
+})
+
+// Track 物流轨迹返回出参Data.
 var Track = Type("Track", func() {
 	Field(1, "tracking_number", String, "tracking number of order", func() {
 		Example("NSS193719374,NSS193719")
@@ -35,13 +53,7 @@ var Track = Type("Track", func() {
 	Field(4, "status", Int, "status", func() {
 		Example(0)
 	})
-	Field(5, "type", Int, "type", func() {
-		Example(1)
-	})
-	Field(6, "order_id", String, "order_id", func() {
-		Example("xxx")
-	})
-	Required("tracking_number", "details", "status", "type")
+	Required("tracking_number", "tracking_url", "details", "status")
 })
 
 // TrackItems 物流轨迹消息体内容.
@@ -52,4 +64,10 @@ var TrackItems = Type("TrackItem", func() {
 	Field(2, "timestamp", String, "tracking timestamp", func() {
 		Example("2022-01-27 00:00:00")
 	})
+})
+
+// TrackRsp 物流轨迹返回出参.
+var TrackRsp = Type("TrackRsp", func() {
+	Extend(BaseResponse)
+	Field(1, "data", Track, "data")
 })

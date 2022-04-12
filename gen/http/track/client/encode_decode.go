@@ -10,23 +10,22 @@ package client
 import (
 	"bytes"
 	"context"
-	"fmt"
 	track "goa/gen/track"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 
 	goahttp "goa.design/goa/v3/http"
-	goa "goa.design/goa/v3/pkg"
 )
 
-// BuildGetRequest instantiates a HTTP request object with method and path set
-// to call the "track" service "get" endpoint
-func (c *Client) BuildGetRequest(ctx context.Context, v interface{}) (*http.Request, error) {
-	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: GetTrackPath()}
+// BuildBatchQueryTrackInfoRequest instantiates a HTTP request object with
+// method and path set to call the "track" service "batch_query_track_info"
+// endpoint
+func (c *Client) BuildBatchQueryTrackInfoRequest(ctx context.Context, v interface{}) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: BatchQueryTrackInfoTrackPath()}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, goahttp.ErrInvalidURL("track", "get", u.String(), err)
+		return nil, goahttp.ErrInvalidURL("track", "batch_query_track_info", u.String(), err)
 	}
 	if ctx != nil {
 		req = req.WithContext(ctx)
@@ -35,29 +34,30 @@ func (c *Client) BuildGetRequest(ctx context.Context, v interface{}) (*http.Requ
 	return req, nil
 }
 
-// EncodeGetRequest returns an encoder for requests sent to the track get
-// server.
-func EncodeGetRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
+// EncodeBatchQueryTrackInfoRequest returns an encoder for requests sent to the
+// track batch_query_track_info server.
+func EncodeBatchQueryTrackInfoRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
 	return func(req *http.Request, v interface{}) error {
-		p, ok := v.(*track.GetTrack)
+		p, ok := v.(*track.BatchQueryTrackPayload)
 		if !ok {
-			return goahttp.ErrInvalidType("track", "get", "*track.GetTrack", v)
+			return goahttp.ErrInvalidType("track", "batch_query_track_info", "*track.BatchQueryTrackPayload", v)
 		}
 		values := req.URL.Query()
-		values.Add("tracking_number", p.TrackingNumber)
-		values.Add("type", fmt.Sprintf("%v", p.Type))
+		for _, value := range p.TrackingNumbers {
+			values.Add("tracking_numbers", value)
+		}
 		req.URL.RawQuery = values.Encode()
 		return nil
 	}
 }
 
-// DecodeGetResponse returns a decoder for responses returned by the track get
-// endpoint. restoreBody controls whether the response body should be restored
-// after having been read.
-// DecodeGetResponse may return the following errors:
+// DecodeBatchQueryTrackInfoResponse returns a decoder for responses returned
+// by the track batch_query_track_info endpoint. restoreBody controls whether
+// the response body should be restored after having been read.
+// DecodeBatchQueryTrackInfoResponse may return the following errors:
 //	- "Unauthorized" (type *goa.ServiceError): http.StatusUnauthorized
 //	- error: internal error
-func DecodeGetResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+func DecodeBatchQueryTrackInfoResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
 	return func(resp *http.Response) (interface{}, error) {
 		if restoreBody {
 			b, err := ioutil.ReadAll(resp.Body)
@@ -74,67 +74,156 @@ func DecodeGetResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody
 		switch resp.StatusCode {
 		case http.StatusOK:
 			var (
-				body GetResponseBody
+				body BatchQueryTrackInfoResponseBody
 				err  error
 			)
 			err = decoder(resp).Decode(&body)
 			if err != nil {
-				return nil, goahttp.ErrDecodingError("track", "get", err)
+				return nil, goahttp.ErrDecodingError("track", "batch_query_track_info", err)
 			}
-			for _, e := range body {
-				if e != nil {
-					if err2 := ValidateTrackResponse(e); err2 != nil {
-						err = goa.MergeErrors(err, err2)
-					}
-				}
-			}
+			err = ValidateBatchQueryTrackInfoResponseBody(&body)
 			if err != nil {
-				return nil, goahttp.ErrValidationError("track", "get", err)
+				return nil, goahttp.ErrValidationError("track", "batch_query_track_info", err)
 			}
-			res := NewGetTrackOK(body)
+			res := NewBatchQueryTrackInfoQueryTrackRspOK(&body)
 			return res, nil
 		case http.StatusUnauthorized:
 			var (
-				body GetUnauthorizedResponseBody
+				body BatchQueryTrackInfoUnauthorizedResponseBody
 				err  error
 			)
 			err = decoder(resp).Decode(&body)
 			if err != nil {
-				return nil, goahttp.ErrDecodingError("track", "get", err)
+				return nil, goahttp.ErrDecodingError("track", "batch_query_track_info", err)
 			}
-			err = ValidateGetUnauthorizedResponseBody(&body)
+			err = ValidateBatchQueryTrackInfoUnauthorizedResponseBody(&body)
 			if err != nil {
-				return nil, goahttp.ErrValidationError("track", "get", err)
+				return nil, goahttp.ErrValidationError("track", "batch_query_track_info", err)
 			}
-			return nil, NewGetUnauthorized(&body)
+			return nil, NewBatchQueryTrackInfoUnauthorized(&body)
 		default:
 			body, _ := ioutil.ReadAll(resp.Body)
-			return nil, goahttp.ErrInvalidResponse("track", "get", resp.StatusCode, string(body))
+			return nil, goahttp.ErrInvalidResponse("track", "batch_query_track_info", resp.StatusCode, string(body))
 		}
 	}
 }
 
-// unmarshalTrackResponseToTrackTrack builds a value of type *track.Track from
-// a value of type *TrackResponse.
-func unmarshalTrackResponseToTrackTrack(v *TrackResponse) *track.Track {
-	res := &track.Track{
-		TrackingNumber: *v.TrackingNumber,
-		TrackingURL:    v.TrackingURL,
-		Status:         *v.Status,
-		Type:           *v.Type,
-		OrderID:        v.OrderID,
+// BuildGetTrackRequest instantiates a HTTP request object with method and path
+// set to call the "track" service "get_track" endpoint
+func (c *Client) BuildGetTrackRequest(ctx context.Context, v interface{}) (*http.Request, error) {
+	var (
+		trackingNumber string
+	)
+	{
+		p, ok := v.(*track.QueryTrackPayload)
+		if !ok {
+			return nil, goahttp.ErrInvalidType("track", "get_track", "*track.QueryTrackPayload", v)
+		}
+		trackingNumber = p.TrackingNumber
 	}
-	res.Details = make([]*track.TrackItem, len(v.Details))
-	for i, val := range v.Details {
-		res.Details[i] = unmarshalTrackItemResponseToTrackTrackItem(val)
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: GetTrackTrackPath(trackingNumber)}
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("track", "get_track", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// DecodeGetTrackResponse returns a decoder for responses returned by the track
+// get_track endpoint. restoreBody controls whether the response body should be
+// restored after having been read.
+// DecodeGetTrackResponse may return the following errors:
+//	- "Unauthorized" (type *goa.ServiceError): http.StatusUnauthorized
+//	- error: internal error
+func DecodeGetTrackResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+	return func(resp *http.Response) (interface{}, error) {
+		if restoreBody {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusOK:
+			var (
+				body GetTrackResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("track", "get_track", err)
+			}
+			err = ValidateGetTrackResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("track", "get_track", err)
+			}
+			res := NewGetTrackTrackRspOK(&body)
+			return res, nil
+		case http.StatusUnauthorized:
+			var (
+				body GetTrackUnauthorizedResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("track", "get_track", err)
+			}
+			err = ValidateGetTrackUnauthorizedResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("track", "get_track", err)
+			}
+			return nil, NewGetTrackUnauthorized(&body)
+		default:
+			body, _ := ioutil.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("track", "get_track", resp.StatusCode, string(body))
+		}
+	}
+}
+
+// unmarshalTrackInfoResponseBodyToTrackTrackInfo builds a value of type
+// *track.TrackInfo from a value of type *TrackInfoResponseBody.
+func unmarshalTrackInfoResponseBodyToTrackTrackInfo(v *TrackInfoResponseBody) *track.TrackInfo {
+	if v == nil {
+		return nil
+	}
+	res := &track.TrackInfo{}
+	res.List = make([]*track.Track, len(v.List))
+	for i, val := range v.List {
+		res.List[i] = unmarshalTrackResponseBodyToTrackTrack(val)
 	}
 
 	return res
 }
 
-// unmarshalTrackItemResponseToTrackTrackItem builds a value of type
-// *track.TrackItem from a value of type *TrackItemResponse.
-func unmarshalTrackItemResponseToTrackTrackItem(v *TrackItemResponse) *track.TrackItem {
+// unmarshalTrackResponseBodyToTrackTrack builds a value of type *track.Track
+// from a value of type *TrackResponseBody.
+func unmarshalTrackResponseBodyToTrackTrack(v *TrackResponseBody) *track.Track {
+	res := &track.Track{
+		TrackingNumber: *v.TrackingNumber,
+		TrackingURL:    *v.TrackingURL,
+		Status:         *v.Status,
+	}
+	res.Details = make([]*track.TrackItem, len(v.Details))
+	for i, val := range v.Details {
+		res.Details[i] = unmarshalTrackItemResponseBodyToTrackTrackItem(val)
+	}
+
+	return res
+}
+
+// unmarshalTrackItemResponseBodyToTrackTrackItem builds a value of type
+// *track.TrackItem from a value of type *TrackItemResponseBody.
+func unmarshalTrackItemResponseBodyToTrackTrackItem(v *TrackItemResponseBody) *track.TrackItem {
 	res := &track.TrackItem{
 		Content:   v.Content,
 		Timestamp: v.Timestamp,

@@ -9,6 +9,8 @@ package client
 
 import (
 	"context"
+	order "goa/gen/order"
+	"mime/multipart"
 	"net/http"
 
 	goahttp "goa.design/goa/v3/http"
@@ -25,6 +27,18 @@ type Client struct {
 	// update_inbound_order endpoint.
 	UpdateInboundOrderDoer goahttp.Doer
 
+	// CreatePickupOrder Doer is the HTTP client used to make requests to the
+	// create_pickup_order endpoint.
+	CreatePickupOrderDoer goahttp.Doer
+
+	// BatchQueryInboundOrder Doer is the HTTP client used to make requests to the
+	// batch_query_inbound_order endpoint.
+	BatchQueryInboundOrderDoer goahttp.Doer
+
+	// GetInboundOrder Doer is the HTTP client used to make requests to the
+	// get_inbound_order endpoint.
+	GetInboundOrderDoer goahttp.Doer
+
 	// CreateOutboundOrder Doer is the HTTP client used to make requests to the
 	// create_outbound_order endpoint.
 	CreateOutboundOrderDoer goahttp.Doer
@@ -33,17 +47,49 @@ type Client struct {
 	// update_outbound_order endpoint.
 	UpdateOutboundOrderDoer goahttp.Doer
 
-	// CreatePickupOrder Doer is the HTTP client used to make requests to the
-	// create_pickup_order endpoint.
-	CreatePickupOrderDoer goahttp.Doer
+	// BatchUpdateOutboundOrder Doer is the HTTP client used to make requests to
+	// the batch_update_outbound_order endpoint.
+	BatchUpdateOutboundOrderDoer goahttp.Doer
 
-	// GetInboundOrder Doer is the HTTP client used to make requests to the
-	// get_inbound_order endpoint.
-	GetInboundOrderDoer goahttp.Doer
+	// CreateOutboundOrderItem Doer is the HTTP client used to make requests to the
+	// create_outbound_order_item endpoint.
+	CreateOutboundOrderItemDoer goahttp.Doer
+
+	// UpdateOutboundOrderItem Doer is the HTTP client used to make requests to the
+	// update_outbound_order_item endpoint.
+	UpdateOutboundOrderItemDoer goahttp.Doer
+
+	// DeleteOutboundOrderItem Doer is the HTTP client used to make requests to the
+	// delete_outbound_order_item endpoint.
+	DeleteOutboundOrderItemDoer goahttp.Doer
+
+	// BatchQueryOutboundOrder Doer is the HTTP client used to make requests to the
+	// batch_query_outbound_order endpoint.
+	BatchQueryOutboundOrderDoer goahttp.Doer
 
 	// GetOutboundOrder Doer is the HTTP client used to make requests to the
 	// get_outbound_order endpoint.
 	GetOutboundOrderDoer goahttp.Doer
+
+	// GetOutboundOrderListFilters Doer is the HTTP client used to make requests to
+	// the get_outbound_order_list_filters endpoint.
+	GetOutboundOrderListFiltersDoer goahttp.Doer
+
+	// GetOutboundOrderCount Doer is the HTTP client used to make requests to the
+	// get_outbound_order_count endpoint.
+	GetOutboundOrderCountDoer goahttp.Doer
+
+	// GetOutboundOrderList Doer is the HTTP client used to make requests to the
+	// get_outbound_order_list endpoint.
+	GetOutboundOrderListDoer goahttp.Doer
+
+	// UploadOutboundOrders Doer is the HTTP client used to make requests to the
+	// upload_outbound_orders endpoint.
+	UploadOutboundOrdersDoer goahttp.Doer
+
+	// ExportOutboundOrders Doer is the HTTP client used to make requests to the
+	// export_outbound_orders endpoint.
+	ExportOutboundOrdersDoer goahttp.Doer
 
 	// CORS Doer is the HTTP client used to make requests to the  endpoint.
 	CORSDoer goahttp.Doer
@@ -58,6 +104,10 @@ type Client struct {
 	decoder func(*http.Response) goahttp.Decoder
 }
 
+// OrderUploadOutboundOrdersEncoderFunc is the type to encode multipart request
+// for the "order" service "upload_outbound_orders" endpoint.
+type OrderUploadOutboundOrdersEncoderFunc func(*multipart.Writer, *order.UploadOrdersPayload) error
+
 // NewClient instantiates HTTP clients for all the order service servers.
 func NewClient(
 	scheme string,
@@ -68,19 +118,30 @@ func NewClient(
 	restoreBody bool,
 ) *Client {
 	return &Client{
-		CreateInboundOrderDoer:  doer,
-		UpdateInboundOrderDoer:  doer,
-		CreateOutboundOrderDoer: doer,
-		UpdateOutboundOrderDoer: doer,
-		CreatePickupOrderDoer:   doer,
-		GetInboundOrderDoer:     doer,
-		GetOutboundOrderDoer:    doer,
-		CORSDoer:                doer,
-		RestoreResponseBody:     restoreBody,
-		scheme:                  scheme,
-		host:                    host,
-		decoder:                 dec,
-		encoder:                 enc,
+		CreateInboundOrderDoer:          doer,
+		UpdateInboundOrderDoer:          doer,
+		CreatePickupOrderDoer:           doer,
+		BatchQueryInboundOrderDoer:      doer,
+		GetInboundOrderDoer:             doer,
+		CreateOutboundOrderDoer:         doer,
+		UpdateOutboundOrderDoer:         doer,
+		BatchUpdateOutboundOrderDoer:    doer,
+		CreateOutboundOrderItemDoer:     doer,
+		UpdateOutboundOrderItemDoer:     doer,
+		DeleteOutboundOrderItemDoer:     doer,
+		BatchQueryOutboundOrderDoer:     doer,
+		GetOutboundOrderDoer:            doer,
+		GetOutboundOrderListFiltersDoer: doer,
+		GetOutboundOrderCountDoer:       doer,
+		GetOutboundOrderListDoer:        doer,
+		UploadOutboundOrdersDoer:        doer,
+		ExportOutboundOrdersDoer:        doer,
+		CORSDoer:                        doer,
+		RestoreResponseBody:             restoreBody,
+		scheme:                          scheme,
+		host:                            host,
+		decoder:                         dec,
+		encoder:                         enc,
 	}
 }
 
@@ -127,6 +188,78 @@ func (c *Client) UpdateInboundOrder() goa.Endpoint {
 		resp, err := c.UpdateInboundOrderDoer.Do(req)
 		if err != nil {
 			return nil, goahttp.ErrRequestError("order", "update_inbound_order", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// CreatePickupOrder returns an endpoint that makes HTTP requests to the order
+// service create_pickup_order server.
+func (c *Client) CreatePickupOrder() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeCreatePickupOrderRequest(c.encoder)
+		decodeResponse = DecodeCreatePickupOrderResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildCreatePickupOrderRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.CreatePickupOrderDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "create_pickup_order", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// BatchQueryInboundOrder returns an endpoint that makes HTTP requests to the
+// order service batch_query_inbound_order server.
+func (c *Client) BatchQueryInboundOrder() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeBatchQueryInboundOrderRequest(c.encoder)
+		decodeResponse = DecodeBatchQueryInboundOrderResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildBatchQueryInboundOrderRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.BatchQueryInboundOrderDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "batch_query_inbound_order", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// GetInboundOrder returns an endpoint that makes HTTP requests to the order
+// service get_inbound_order server.
+func (c *Client) GetInboundOrder() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeGetInboundOrderRequest(c.encoder)
+		decodeResponse = DecodeGetInboundOrderResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildGetInboundOrderRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.GetInboundOrderDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "get_inbound_order", err)
 		}
 		return decodeResponse(resp)
 	}
@@ -180,15 +313,15 @@ func (c *Client) UpdateOutboundOrder() goa.Endpoint {
 	}
 }
 
-// CreatePickupOrder returns an endpoint that makes HTTP requests to the order
-// service create_pickup_order server.
-func (c *Client) CreatePickupOrder() goa.Endpoint {
+// BatchUpdateOutboundOrder returns an endpoint that makes HTTP requests to the
+// order service batch_update_outbound_order server.
+func (c *Client) BatchUpdateOutboundOrder() goa.Endpoint {
 	var (
-		encodeRequest  = EncodeCreatePickupOrderRequest(c.encoder)
-		decodeResponse = DecodeCreatePickupOrderResponse(c.decoder, c.RestoreResponseBody)
+		encodeRequest  = EncodeBatchUpdateOutboundOrderRequest(c.encoder)
+		decodeResponse = DecodeBatchUpdateOutboundOrderResponse(c.decoder, c.RestoreResponseBody)
 	)
 	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildCreatePickupOrderRequest(ctx, v)
+		req, err := c.BuildBatchUpdateOutboundOrderRequest(ctx, v)
 		if err != nil {
 			return nil, err
 		}
@@ -196,23 +329,23 @@ func (c *Client) CreatePickupOrder() goa.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		resp, err := c.CreatePickupOrderDoer.Do(req)
+		resp, err := c.BatchUpdateOutboundOrderDoer.Do(req)
 		if err != nil {
-			return nil, goahttp.ErrRequestError("order", "create_pickup_order", err)
+			return nil, goahttp.ErrRequestError("order", "batch_update_outbound_order", err)
 		}
 		return decodeResponse(resp)
 	}
 }
 
-// GetInboundOrder returns an endpoint that makes HTTP requests to the order
-// service get_inbound_order server.
-func (c *Client) GetInboundOrder() goa.Endpoint {
+// CreateOutboundOrderItem returns an endpoint that makes HTTP requests to the
+// order service create_outbound_order_item server.
+func (c *Client) CreateOutboundOrderItem() goa.Endpoint {
 	var (
-		encodeRequest  = EncodeGetInboundOrderRequest(c.encoder)
-		decodeResponse = DecodeGetInboundOrderResponse(c.decoder, c.RestoreResponseBody)
+		encodeRequest  = EncodeCreateOutboundOrderItemRequest(c.encoder)
+		decodeResponse = DecodeCreateOutboundOrderItemResponse(c.decoder, c.RestoreResponseBody)
 	)
 	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildGetInboundOrderRequest(ctx, v)
+		req, err := c.BuildCreateOutboundOrderItemRequest(ctx, v)
 		if err != nil {
 			return nil, err
 		}
@@ -220,9 +353,81 @@ func (c *Client) GetInboundOrder() goa.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		resp, err := c.GetInboundOrderDoer.Do(req)
+		resp, err := c.CreateOutboundOrderItemDoer.Do(req)
 		if err != nil {
-			return nil, goahttp.ErrRequestError("order", "get_inbound_order", err)
+			return nil, goahttp.ErrRequestError("order", "create_outbound_order_item", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// UpdateOutboundOrderItem returns an endpoint that makes HTTP requests to the
+// order service update_outbound_order_item server.
+func (c *Client) UpdateOutboundOrderItem() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeUpdateOutboundOrderItemRequest(c.encoder)
+		decodeResponse = DecodeUpdateOutboundOrderItemResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildUpdateOutboundOrderItemRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.UpdateOutboundOrderItemDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "update_outbound_order_item", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// DeleteOutboundOrderItem returns an endpoint that makes HTTP requests to the
+// order service delete_outbound_order_item server.
+func (c *Client) DeleteOutboundOrderItem() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeDeleteOutboundOrderItemRequest(c.encoder)
+		decodeResponse = DecodeDeleteOutboundOrderItemResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildDeleteOutboundOrderItemRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.DeleteOutboundOrderItemDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "delete_outbound_order_item", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// BatchQueryOutboundOrder returns an endpoint that makes HTTP requests to the
+// order service batch_query_outbound_order server.
+func (c *Client) BatchQueryOutboundOrder() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeBatchQueryOutboundOrderRequest(c.encoder)
+		decodeResponse = DecodeBatchQueryOutboundOrderResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildBatchQueryOutboundOrderRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.BatchQueryOutboundOrderDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "batch_query_outbound_order", err)
 		}
 		return decodeResponse(resp)
 	}
@@ -249,5 +454,130 @@ func (c *Client) GetOutboundOrder() goa.Endpoint {
 			return nil, goahttp.ErrRequestError("order", "get_outbound_order", err)
 		}
 		return decodeResponse(resp)
+	}
+}
+
+// GetOutboundOrderListFilters returns an endpoint that makes HTTP requests to
+// the order service get_outbound_order_list_filters server.
+func (c *Client) GetOutboundOrderListFilters() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeGetOutboundOrderListFiltersRequest(c.encoder)
+		decodeResponse = DecodeGetOutboundOrderListFiltersResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildGetOutboundOrderListFiltersRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.GetOutboundOrderListFiltersDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "get_outbound_order_list_filters", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// GetOutboundOrderCount returns an endpoint that makes HTTP requests to the
+// order service get_outbound_order_count server.
+func (c *Client) GetOutboundOrderCount() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeGetOutboundOrderCountRequest(c.encoder)
+		decodeResponse = DecodeGetOutboundOrderCountResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildGetOutboundOrderCountRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.GetOutboundOrderCountDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "get_outbound_order_count", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// GetOutboundOrderList returns an endpoint that makes HTTP requests to the
+// order service get_outbound_order_list server.
+func (c *Client) GetOutboundOrderList() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeGetOutboundOrderListRequest(c.encoder)
+		decodeResponse = DecodeGetOutboundOrderListResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildGetOutboundOrderListRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.GetOutboundOrderListDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "get_outbound_order_list", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// UploadOutboundOrders returns an endpoint that makes HTTP requests to the
+// order service upload_outbound_orders server.
+func (c *Client) UploadOutboundOrders(orderUploadOutboundOrdersEncoderFn OrderUploadOutboundOrdersEncoderFunc) goa.Endpoint {
+	var (
+		encodeRequest  = EncodeUploadOutboundOrdersRequest(NewOrderUploadOutboundOrdersEncoder(orderUploadOutboundOrdersEncoderFn))
+		decodeResponse = DecodeUploadOutboundOrdersResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildUploadOutboundOrdersRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.UploadOutboundOrdersDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "upload_outbound_orders", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// ExportOutboundOrders returns an endpoint that makes HTTP requests to the
+// order service export_outbound_orders server.
+func (c *Client) ExportOutboundOrders() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeExportOutboundOrdersRequest(c.encoder)
+		decodeResponse = DecodeExportOutboundOrdersResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildExportOutboundOrdersRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.ExportOutboundOrdersDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("order", "export_outbound_orders", err)
+		}
+		res, err := decodeResponse(resp)
+		if err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		return &order.ExportOutboundOrdersResponseData{Result: res.(*order.ExportOrderResult), Body: resp.Body}, nil
 	}
 }

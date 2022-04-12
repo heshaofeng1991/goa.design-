@@ -7,22 +7,51 @@
 
 package server
 
+import (
+	"fmt"
+)
+
 // BatchesCreateProductProductPath returns the URL path to the product service batches_create_product HTTP endpoint.
 func BatchesCreateProductProductPath() string {
-	return "/products"
+	return "/v1/products"
 }
 
 // UpdateProductProductPath returns the URL path to the product service update_product HTTP endpoint.
 func UpdateProductProductPath() string {
-	return "/products"
+	return "/v1/products"
+}
+
+// ExportProductProductPath returns the URL path to the product service export_product HTTP endpoint.
+func ExportProductProductPath() string {
+	return "/v1/products/export"
+}
+
+// DownloadTemplatesProductPath returns the URL path to the product service download_templates HTTP endpoint.
+func DownloadTemplatesProductPath(template string) string {
+	return fmt.Sprintf("/v1/download-templates/%v", template)
+}
+
+// UploadProductProductPath returns the URL path to the product service upload_product HTTP endpoint.
+func UploadProductProductPath() string {
+	return "/v1/products/upload"
+}
+
+// UploadProductUpdateProductPath returns the URL path to the product service upload_product_update HTTP endpoint.
+func UploadProductUpdateProductPath() string {
+	return "/v1/products/upload"
 }
 
 // GenerateBarcodeProductPath returns the URL path to the product service generate_barcode HTTP endpoint.
 func GenerateBarcodeProductPath() string {
-	return "/barcode"
+	return "/v1/barcode"
 }
 
-// GenerateTokenProductPath returns the URL path to the product service generate_token HTTP endpoint.
-func GenerateTokenProductPath() string {
-	return "/token"
+// ProductsQueryProductPath returns the URL path to the product service products_query HTTP endpoint.
+func ProductsQueryProductPath() string {
+	return "/v1/products"
+}
+
+// ProductDetailProductPath returns the URL path to the product service product_detail HTTP endpoint.
+func ProductDetailProductPath(id int32) string {
+	return fmt.Sprintf("/v1/products/%v", id)
 }

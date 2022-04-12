@@ -15,9 +15,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	goahttp "goa.design/goa/v3/http"
-	goa "goa.design/goa/v3/pkg"
 )
 
 // BuildGetRequest instantiates a HTTP request object with method and path set
@@ -42,6 +42,22 @@ func EncodeGetRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Re
 		p, ok := v.(*quote.GetQuote)
 		if !ok {
 			return goahttp.ErrInvalidType("quote", "get", "*quote.GetQuote", v)
+		}
+		if p.Authorization != nil {
+			head := *p.Authorization
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
+		}
+		if p.Token != nil {
+			head := *p.Token
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
 		}
 		values := req.URL.Query()
 		values.Add("origin_country", p.OriginCountry)
@@ -96,17 +112,11 @@ func DecodeGetResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody
 			if err != nil {
 				return nil, goahttp.ErrDecodingError("quote", "get", err)
 			}
-			for _, e := range body {
-				if e != nil {
-					if err2 := ValidateQuoteResponse(e); err2 != nil {
-						err = goa.MergeErrors(err, err2)
-					}
-				}
-			}
+			err = ValidateGetResponseBody(&body)
 			if err != nil {
 				return nil, goahttp.ErrValidationError("quote", "get", err)
 			}
-			res := NewGetQuoteOK(body)
+			res := NewGetQuoteRspOK(&body)
 			return res, nil
 		case http.StatusUnauthorized:
 			var (
@@ -129,9 +139,128 @@ func DecodeGetResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody
 	}
 }
 
-// unmarshalQuoteResponseToQuoteQuote builds a value of type *quote.Quote from
-// a value of type *QuoteResponse.
-func unmarshalQuoteResponseToQuoteQuote(v *QuoteResponse) *quote.Quote {
+// BuildPostRequest instantiates a HTTP request object with method and path set
+// to call the "quote" service "post" endpoint
+func (c *Client) BuildPostRequest(ctx context.Context, v interface{}) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: PostQuotePath()}
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, goahttp.ErrInvalidURL("quote", "post", u.String(), err)
+	}
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
+
+	return req, nil
+}
+
+// EncodePostRequest returns an encoder for requests sent to the quote post
+// server.
+func EncodePostRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
+	return func(req *http.Request, v interface{}) error {
+		p, ok := v.(*quote.PostQuote)
+		if !ok {
+			return goahttp.ErrInvalidType("quote", "post", "*quote.PostQuote", v)
+		}
+		if p.Authorization != nil {
+			head := *p.Authorization
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
+		}
+		if p.Token != nil {
+			head := *p.Token
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
+		}
+		body := NewPostRequestBody(p)
+		if err := encoder(req).Encode(&body); err != nil {
+			return goahttp.ErrEncodingError("quote", "post", err)
+		}
+		return nil
+	}
+}
+
+// DecodePostResponse returns a decoder for responses returned by the quote
+// post endpoint. restoreBody controls whether the response body should be
+// restored after having been read.
+// DecodePostResponse may return the following errors:
+//	- "Unauthorized" (type *goa.ServiceError): http.StatusUnauthorized
+//	- error: internal error
+func DecodePostResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+	return func(resp *http.Response) (interface{}, error) {
+		if restoreBody {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			defer func() {
+				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+			}()
+		} else {
+			defer resp.Body.Close()
+		}
+		switch resp.StatusCode {
+		case http.StatusOK:
+			var (
+				body PostResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("quote", "post", err)
+			}
+			err = ValidatePostResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("quote", "post", err)
+			}
+			res := NewPostUserRspOK(&body)
+			return res, nil
+		case http.StatusUnauthorized:
+			var (
+				body PostUnauthorizedResponseBody
+				err  error
+			)
+			err = decoder(resp).Decode(&body)
+			if err != nil {
+				return nil, goahttp.ErrDecodingError("quote", "post", err)
+			}
+			err = ValidatePostUnauthorizedResponseBody(&body)
+			if err != nil {
+				return nil, goahttp.ErrValidationError("quote", "post", err)
+			}
+			return nil, NewPostUnauthorized(&body)
+		default:
+			body, _ := ioutil.ReadAll(resp.Body)
+			return nil, goahttp.ErrInvalidResponse("quote", "post", resp.StatusCode, string(body))
+		}
+	}
+}
+
+// unmarshalQuoteInfoResponseBodyToQuoteQuoteInfo builds a value of type
+// *quote.QuoteInfo from a value of type *QuoteInfoResponseBody.
+func unmarshalQuoteInfoResponseBodyToQuoteQuoteInfo(v *QuoteInfoResponseBody) *quote.QuoteInfo {
+	if v == nil {
+		return nil
+	}
+	res := &quote.QuoteInfo{}
+	res.List = make([]*quote.Quote, len(v.List))
+	for i, val := range v.List {
+		res.List[i] = unmarshalQuoteResponseBodyToQuoteQuote(val)
+	}
+
+	return res
+}
+
+// unmarshalQuoteResponseBodyToQuoteQuote builds a value of type *quote.Quote
+// from a value of type *QuoteResponseBody.
+func unmarshalQuoteResponseBodyToQuoteQuote(v *QuoteResponseBody) *quote.Quote {
 	res := &quote.Quote{
 		ChannelName:   *v.ChannelName,
 		ChannelID:     *v.ChannelID,
@@ -141,6 +270,19 @@ func unmarshalQuoteResponseToQuoteQuote(v *QuoteResponse) *quote.Quote {
 		TotalCost:     *v.TotalCost,
 		Currency:      *v.Currency,
 		Weight:        *v.Weight,
+	}
+
+	return res
+}
+
+// unmarshalUserDataResponseBodyToQuoteUserData builds a value of type
+// *quote.UserData from a value of type *UserDataResponseBody.
+func unmarshalUserDataResponseBodyToQuoteUserData(v *UserDataResponseBody) *quote.UserData {
+	if v == nil {
+		return nil
+	}
+	res := &quote.UserData{
+		Status: *v.Status,
 	}
 
 	return res

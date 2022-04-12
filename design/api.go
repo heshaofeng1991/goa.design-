@@ -1,16 +1,20 @@
 package design
 
 import (
+	_ "goa/design/service"
+	_ "goa/design/service/integrations"
 	. "goa.design/goa/v3/dsl"
 	cors "goa.design/plugins/v3/cors/dsl"
-) //nolint:revive
+) //nolint:nolintlint
 
 var _ = API("openapi", func() {
 	Title("NextSmartShip openapi")
 	Description("NextSmartShip openapi for oms and wms")
 
 	cors.Origin("*", func() {
-		cors.Headers("Authorization")
+		cors.Headers("X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Api-Version, x-nss-tenant-id")
+		cors.Credentials()
+		cors.Methods("GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH")
 	})
 
 	// Server describes a single process listening for client requests. The DSL
@@ -19,7 +23,11 @@ var _ = API("openapi", func() {
 		Description("Order Management Service")
 
 		// List the services hosted by this server.
-		Services([]string{"healthy", "quote", "swagger", "track", "order", "product", "file"}...)
+		Services([]string{
+			"healthy", "quote", "swagger", "track", "order",
+			"product", "integrations", "auth", "file", "user",
+			"woocommerce", "tenant", "platform_product", "wix", "wix_redirect",
+		}...)
 
 		// List the Hosts and their transport URLs.
 		Host("localhost", func() {
@@ -35,22 +43,4 @@ var _ = API("openapi", func() {
 			})
 		})
 	})
-})
-
-// JWTAuth defines a security scheme that uses JWT tokens.
-var JWTAuth = JWTSecurity("jwt", func() {
-	Description(`Secures endpoint by requiring a valid JWT token retrieved via the signin endpoint`)
-	Scope("api:read")  // Enforce presence of both "api:read"
-	Scope("api:write") // and "api:write" scopes in OAuth2 claims.
-})
-
-// APIKeyAuth defines a security scheme that uses API keys.
-var APIKeyAuth = APIKeySecurity("api_key", func() {
-	Description("Secures endpoint by requiring an API key.")
-})
-
-// BasicAuth defines a security scheme using basic authentication. The scheme
-// protects the "signin" action used to create JWTs.
-var BasicAuth = BasicAuthSecurity("basic", func() {
-	Description("Basic authentication used to authenticate security principal during signin")
 })

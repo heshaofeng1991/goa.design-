@@ -15,6 +15,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strings"
 
 	goahttp "goa.design/goa/v3/http"
 )
@@ -38,9 +39,25 @@ func (c *Client) BuildUploadImageRequest(ctx context.Context, v interface{}) (*h
 // upload_image server.
 func EncodeUploadImageRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
 	return func(req *http.Request, v interface{}) error {
-		p, ok := v.(*file.ImageFile)
+		p, ok := v.(*file.UploadFile)
 		if !ok {
-			return goahttp.ErrInvalidType("file", "upload_image", "*file.ImageFile", v)
+			return goahttp.ErrInvalidType("file", "upload_image", "*file.UploadFile", v)
+		}
+		if p.Authorization != nil {
+			head := *p.Authorization
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
+		}
+		if p.Token != nil {
+			head := *p.Token
+			if !strings.Contains(head, " ") {
+				req.Header.Set("Authorization", "Bearer "+head)
+			} else {
+				req.Header.Set("Authorization", head)
+			}
 		}
 		if err := encoder(req).Encode(p); err != nil {
 			return goahttp.ErrEncodingError("file", "upload_image", err)
@@ -56,7 +73,7 @@ func NewFileUploadImageEncoder(encoderFn FileUploadImageEncoderFunc) func(r *htt
 		body := &bytes.Buffer{}
 		mw := multipart.NewWriter(body)
 		return goahttp.EncodingFunc(func(v interface{}) error {
-			p := v.(*file.ImageFile)
+			p := v.(*file.UploadFile)
 			if err := encoderFn(mw, p); err != nil {
 				return err
 			}
@@ -101,7 +118,7 @@ func DecodeUploadImageResponse(decoder func(*http.Response) goahttp.Decoder, res
 			if err != nil {
 				return nil, goahttp.ErrValidationError("file", "upload_image", err)
 			}
-			res := NewUploadImageImageURLOK(&body)
+			res := NewUploadImageUploadURLOK(&body)
 			return res, nil
 		case http.StatusUnauthorized:
 			var (
@@ -122,4 +139,17 @@ func DecodeUploadImageResponse(decoder func(*http.Response) goahttp.Decoder, res
 			return nil, goahttp.ErrInvalidResponse("file", "upload_image", resp.StatusCode, string(body))
 		}
 	}
+}
+
+// unmarshalUploadURLDataResponseBodyToFileUploadURLData builds a value of type
+// *file.UploadURLData from a value of type *UploadURLDataResponseBody.
+func unmarshalUploadURLDataResponseBodyToFileUploadURLData(v *UploadURLDataResponseBody) *file.UploadURLData {
+	if v == nil {
+		return nil
+	}
+	res := &file.UploadURLData{
+		URL: *v.URL,
+	}
+
+	return res
 }

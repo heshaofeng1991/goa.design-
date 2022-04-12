@@ -120,9 +120,11 @@ func HandleSwaggerOrigin(h http.Handler) http.Handler {
 		if cors.MatchOrigin(origin, "*") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			if acrm := r.Header.Get("Access-Control-Request-Method"); acrm != "" {
 				// We are handling a preflight request
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE, PATCH")
+				w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Api-Version, x-nss-tenant-id")
 			}
 			h.ServeHTTP(w, r)
 			return

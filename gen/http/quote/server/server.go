@@ -21,6 +21,7 @@ import (
 type Server struct {
 	Mounts []*MountPoint
 	Get    http.Handler
+	Post   http.Handler
 	CORS   http.Handler
 }
 
@@ -57,10 +58,12 @@ func New(
 ) *Server {
 	return &Server{
 		Mounts: []*MountPoint{
-			{"Get", "GET", "/shipping-estimate"},
-			{"CORS", "OPTIONS", "/shipping-estimate"},
+			{"Get", "GET", "/v1/shipping-estimate"},
+			{"Post", "POST", "/v1/shipping-estimate"},
+			{"CORS", "OPTIONS", "/v1/shipping-estimate"},
 		},
 		Get:  NewGetHandler(e.Get, mux, decoder, encoder, errhandler, formatter),
+		Post: NewPostHandler(e.Post, mux, decoder, encoder, errhandler, formatter),
 		CORS: NewCORSHandler(),
 	}
 }
@@ -71,12 +74,14 @@ func (s *Server) Service() string { return "quote" }
 // Use wraps the server handlers with the given middleware.
 func (s *Server) Use(m func(http.Handler) http.Handler) {
 	s.Get = m(s.Get)
+	s.Post = m(s.Post)
 	s.CORS = m(s.CORS)
 }
 
 // Mount configures the mux to serve the quote endpoints.
 func Mount(mux goahttp.Muxer, h *Server) {
 	MountGetHandler(mux, h.Get)
+	MountPostHandler(mux, h.Post)
 	MountCORSHandler(mux, h.CORS)
 }
 
@@ -94,7 +99,7 @@ func MountGetHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("GET", "/shipping-estimate", f)
+	mux.Handle("GET", "/v1/shipping-estimate", f)
 }
 
 // NewGetHandler creates a HTTP handler which loads the HTTP request and calls
@@ -136,11 +141,62 @@ func NewGetHandler(
 	})
 }
 
+// MountPostHandler configures the mux to serve the "quote" service "post"
+// endpoint.
+func MountPostHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleQuoteOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/v1/shipping-estimate", f)
+}
+
+// NewPostHandler creates a HTTP handler which loads the HTTP request and calls
+// the "quote" service "post" endpoint.
+func NewPostHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodePostRequest(mux, decoder)
+		encodeResponse = EncodePostResponse(encoder)
+		encodeError    = EncodePostError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "post")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "quote")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
 // MountCORSHandler configures the mux to serve the CORS endpoints for the
 // service quote.
 func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
 	h = HandleQuoteOrigin(h)
-	mux.Handle("OPTIONS", "/shipping-estimate", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/shipping-estimate", h.ServeHTTP)
 }
 
 // NewCORSHandler creates a HTTP handler which returns a simple 200 response.
@@ -163,9 +219,11 @@ func HandleQuoteOrigin(h http.Handler) http.Handler {
 		if cors.MatchOrigin(origin, "*") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			if acrm := r.Header.Get("Access-Control-Request-Method"); acrm != "" {
 				// We are handling a preflight request
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE, PATCH")
+				w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Api-Version, x-nss-tenant-id")
 			}
 			h.ServeHTTP(w, r)
 			return

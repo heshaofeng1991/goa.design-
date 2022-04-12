@@ -26,8 +26,12 @@ type UploadImageRequestBody struct {
 // UploadImageResponseBody is the type of the "file" service "upload_image"
 // endpoint HTTP response body.
 type UploadImageResponseBody struct {
-	// image URL
-	URL string `form:"url" json:"url" xml:"url"`
+	// data
+	Data *UploadURLDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code int `form:"code" json:"code" xml:"code"`
+	// message
+	Message string `form:"message" json:"message" xml:"message"`
 }
 
 // UploadImageUnauthorizedResponseBody is the type of the "file" service
@@ -48,11 +52,21 @@ type UploadImageUnauthorizedResponseBody struct {
 	Fault bool `form:"fault" json:"fault" xml:"fault"`
 }
 
+// UploadURLDataResponseBody is used to define fields on response body types.
+type UploadURLDataResponseBody struct {
+	// file URL
+	URL string `form:"url" json:"url" xml:"url"`
+}
+
 // NewUploadImageResponseBody builds the HTTP response body from the result of
 // the "upload_image" endpoint of the "file" service.
-func NewUploadImageResponseBody(res *file.ImageURL) *UploadImageResponseBody {
+func NewUploadImageResponseBody(res *file.UploadURL) *UploadImageResponseBody {
 	body := &UploadImageResponseBody{
-		URL: res.URL,
+		Code:    res.Code,
+		Message: res.Message,
+	}
+	if res.Data != nil {
+		body.Data = marshalFileUploadURLDataToUploadURLDataResponseBody(res.Data)
 	}
 	return body
 }
@@ -71,12 +85,14 @@ func NewUploadImageUnauthorizedResponseBody(res *goa.ServiceError) *UploadImageU
 	return body
 }
 
-// NewUploadImageImageFile builds a file service upload_image endpoint payload.
-func NewUploadImageImageFile(body *UploadImageRequestBody) *file.ImageFile {
-	v := &file.ImageFile{
+// NewUploadImageUploadFile builds a file service upload_image endpoint payload.
+func NewUploadImageUploadFile(body *UploadImageRequestBody, authorization *string, token *string) *file.UploadFile {
+	v := &file.UploadFile{
 		File:     body.File,
 		FileName: *body.FileName,
 	}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v
 }

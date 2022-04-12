@@ -18,7 +18,7 @@ import (
 
 // BuildUploadImagePayload builds the payload for the file upload_image
 // endpoint from CLI flags.
-func BuildUploadImagePayload(fileUploadImageBody string) (*file.ImageFile, error) {
+func BuildUploadImagePayload(fileUploadImageBody string, fileUploadImageAuthorization string, fileUploadImageToken string) (*file.UploadFile, error) {
 	var err error
 	var body UploadImageRequestBody
 	{
@@ -39,10 +39,24 @@ func BuildUploadImagePayload(fileUploadImageBody string) (*file.ImageFile, error
 			return nil, err
 		}
 	}
-	v := &file.ImageFile{
+	var authorization *string
+	{
+		if fileUploadImageAuthorization != "" {
+			authorization = &fileUploadImageAuthorization
+		}
+	}
+	var token *string
+	{
+		if fileUploadImageToken != "" {
+			token = &fileUploadImageToken
+		}
+	}
+	v := &file.UploadFile{
 		File:     body.File,
 		FileName: body.FileName,
 	}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v, nil
 }

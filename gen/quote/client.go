@@ -15,22 +15,34 @@ import (
 
 // Client is the "quote" service client.
 type Client struct {
-	GetEndpoint goa.Endpoint
+	GetEndpoint  goa.Endpoint
+	PostEndpoint goa.Endpoint
 }
 
 // NewClient initializes a "quote" service client given the endpoints.
-func NewClient(get goa.Endpoint) *Client {
+func NewClient(get, post goa.Endpoint) *Client {
 	return &Client{
-		GetEndpoint: get,
+		GetEndpoint:  get,
+		PostEndpoint: post,
 	}
 }
 
 // Get calls the "get" endpoint of the "quote" service.
-func (c *Client) Get(ctx context.Context, p *GetQuote) (res []*Quote, err error) {
+func (c *Client) Get(ctx context.Context, p *GetQuote) (res *QuoteRsp, err error) {
 	var ires interface{}
 	ires, err = c.GetEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.([]*Quote), nil
+	return ires.(*QuoteRsp), nil
+}
+
+// Post calls the "post" endpoint of the "quote" service.
+func (c *Client) Post(ctx context.Context, p *PostQuote) (res *UserRsp, err error) {
+	var ires interface{}
+	ires, err = c.PostEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*UserRsp), nil
 }

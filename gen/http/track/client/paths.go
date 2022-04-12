@@ -7,7 +7,16 @@
 
 package client
 
-// GetTrackPath returns the URL path to the track service get HTTP endpoint.
-func GetTrackPath() string {
-	return "/track"
+import (
+	"fmt"
+)
+
+// BatchQueryTrackInfoTrackPath returns the URL path to the track service batch_query_track_info HTTP endpoint.
+func BatchQueryTrackInfoTrackPath() string {
+	return "/v1/tracks"
+}
+
+// GetTrackTrackPath returns the URL path to the track service get_track HTTP endpoint.
+func GetTrackTrackPath(trackingNumber string) string {
+	return fmt.Sprintf("/v1/tracks/%v", trackingNumber)
 }

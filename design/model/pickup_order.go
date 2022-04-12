@@ -32,6 +32,7 @@ var PickupOrder = Type("PickupOrder", func() {
 		Example("1013")
 		MaxLength(50)
 	})
+	Extend(AuthToken)
 
 	Required("requested_pickup_at", "items", "address", "type", "customer_code")
 })

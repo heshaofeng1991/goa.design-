@@ -15,26 +15,38 @@ import (
 
 // Endpoints wraps the "track" service endpoints.
 type Endpoints struct {
-	Get goa.Endpoint
+	BatchQueryTrackInfo goa.Endpoint
+	GetTrack            goa.Endpoint
 }
 
 // NewEndpoints wraps the methods of the "track" service with endpoints.
 func NewEndpoints(s Service) *Endpoints {
 	return &Endpoints{
-		Get: NewGetEndpoint(s),
+		BatchQueryTrackInfo: NewBatchQueryTrackInfoEndpoint(s),
+		GetTrack:            NewGetTrackEndpoint(s),
 	}
 }
 
 // Use applies the given middleware to all the "track" service endpoints.
 func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
-	e.Get = m(e.Get)
+	e.BatchQueryTrackInfo = m(e.BatchQueryTrackInfo)
+	e.GetTrack = m(e.GetTrack)
 }
 
-// NewGetEndpoint returns an endpoint function that calls the method "get" of
-// service "track".
-func NewGetEndpoint(s Service) goa.Endpoint {
+// NewBatchQueryTrackInfoEndpoint returns an endpoint function that calls the
+// method "batch_query_track_info" of service "track".
+func NewBatchQueryTrackInfoEndpoint(s Service) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*GetTrack)
-		return s.Get(ctx, p)
+		p := req.(*BatchQueryTrackPayload)
+		return s.BatchQueryTrackInfo(ctx, p)
+	}
+}
+
+// NewGetTrackEndpoint returns an endpoint function that calls the method
+// "get_track" of service "track".
+func NewGetTrackEndpoint(s Service) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		p := req.(*QueryTrackPayload)
+		return s.GetTrack(ctx, p)
 	}
 }

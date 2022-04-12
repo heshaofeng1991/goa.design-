@@ -18,7 +18,7 @@ import (
 )
 
 // BuildGetPayload builds the payload for the quote get endpoint from CLI flags.
-func BuildGetPayload(quoteGetOriginCountry string, quoteGetDestCountry string, quoteGetDestState string, quoteGetDestZipCode string, quoteGetWeight string, quoteGetLength string, quoteGetWidth string, quoteGetHeight string, quoteGetProductAttributes string, quoteGetFactory string, quoteGetDate string) (*quote.GetQuote, error) {
+func BuildGetPayload(quoteGetOriginCountry string, quoteGetDestCountry string, quoteGetDestState string, quoteGetDestZipCode string, quoteGetWeight string, quoteGetLength string, quoteGetWidth string, quoteGetHeight string, quoteGetProductAttributes string, quoteGetFactory string, quoteGetDate string, quoteGetAuthorization string, quoteGetToken string) (*quote.GetQuote, error) {
 	var err error
 	var originCountry string
 	{
@@ -116,9 +116,11 @@ func BuildGetPayload(quoteGetOriginCountry string, quoteGetDestCountry string, q
 	}
 	var productAttributes []string
 	{
-		err = json.Unmarshal([]byte(quoteGetProductAttributes), &productAttributes)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for productAttributes, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"battery\",\n      \"cosmetic\",\n      \"liquid\",\n      \"magnetic\"\n   ]'")
+		if quoteGetProductAttributes != "" {
+			err = json.Unmarshal([]byte(quoteGetProductAttributes), &productAttributes)
+			if err != nil {
+				return nil, fmt.Errorf("invalid JSON for productAttributes, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"battery\",\n      \"cosmetic\",\n      \"liquid\",\n      \"magnetic\"\n   ]'")
+			}
 		}
 	}
 	var factory *string
@@ -141,6 +143,18 @@ func BuildGetPayload(quoteGetOriginCountry string, quoteGetDestCountry string, q
 			}
 		}
 	}
+	var authorization *string
+	{
+		if quoteGetAuthorization != "" {
+			authorization = &quoteGetAuthorization
+		}
+	}
+	var token *string
+	{
+		if quoteGetToken != "" {
+			token = &quoteGetToken
+		}
+	}
 	v := &quote.GetQuote{}
 	v.OriginCountry = originCountry
 	v.DestCountry = destCountry
@@ -153,6 +167,54 @@ func BuildGetPayload(quoteGetOriginCountry string, quoteGetDestCountry string, q
 	v.ProductAttributes = productAttributes
 	v.Factory = factory
 	v.Date = date
+	v.Authorization = authorization
+	v.Token = token
+
+	return v, nil
+}
+
+// BuildPostPayload builds the payload for the quote post endpoint from CLI
+// flags.
+func BuildPostPayload(quotePostBody string, quotePostAuthorization string, quotePostToken string) (*quote.PostQuote, error) {
+	var err error
+	var body PostRequestBody
+	{
+		err = json.Unmarshal([]byte(quotePostBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"delivery_area\": 4558231424970667987,\n      \"delivery_city_code\": \"Ut adipisci sint.\",\n      \"delivery_city_name\": \"Iusto aut aut ut velit sequi nemo.\",\n      \"delivery_country_code\": \"Consequatur optio rerum amet.\",\n      \"delivery_country_name\": \"Consequatur illum ipsam aut eos natus.\",\n      \"delivery_province_code\": \"Cupiditate aspernatur qui.\",\n      \"delivery_province_name\": \"Modi corporis.\",\n      \"dest_area\": 5670275367545471786,\n      \"dest_city_code\": \"Ratione alias sunt nulla excepturi.\",\n      \"dest_city_name\": \"Quidem est iusto consequuntur excepturi dolores.\",\n      \"dest_country_code\": \"In laudantium enim enim perspiciatis at.\",\n      \"dest_country_name\": \"Vitae facilis at quasi error.\",\n      \"dest_province_code\": \"Qui voluptatem est.\",\n      \"dest_province_name\": \"Aliquid aperiam eius velit.\",\n      \"id\": 1343392620\n   }'")
+		}
+	}
+	var authorization *string
+	{
+		if quotePostAuthorization != "" {
+			authorization = &quotePostAuthorization
+		}
+	}
+	var token *string
+	{
+		if quotePostToken != "" {
+			token = &quotePostToken
+		}
+	}
+	v := &quote.PostQuote{
+		ID:                   body.ID,
+		DeliveryArea:         body.DeliveryArea,
+		DeliveryCountryCode:  body.DeliveryCountryCode,
+		DeliveryCountryName:  body.DeliveryCountryName,
+		DeliveryProvinceCode: body.DeliveryProvinceCode,
+		DeliveryProvinceName: body.DeliveryProvinceName,
+		DeliveryCityCode:     body.DeliveryCityCode,
+		DeliveryCityName:     body.DeliveryCityName,
+		DestArea:             body.DestArea,
+		DestCountryCode:      body.DestCountryCode,
+		DestCountryName:      body.DestCountryName,
+		DestProvinceCode:     body.DestProvinceCode,
+		DestProvinceName:     body.DestProvinceName,
+		DestCityCode:         body.DestCityCode,
+		DestCityName:         body.DestCityName,
+	}
+	v.Authorization = authorization
+	v.Token = token
 
 	return v, nil
 }

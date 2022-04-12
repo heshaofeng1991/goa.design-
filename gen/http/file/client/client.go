@@ -38,7 +38,7 @@ type Client struct {
 
 // FileUploadImageEncoderFunc is the type to encode multipart request for the
 // "file" service "upload_image" endpoint.
-type FileUploadImageEncoderFunc func(*multipart.Writer, *file.ImageFile) error
+type FileUploadImageEncoderFunc func(*multipart.Writer, *file.UploadFile) error
 
 // NewClient instantiates HTTP clients for all the file service servers.
 func NewClient(

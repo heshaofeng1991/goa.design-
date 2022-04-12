@@ -15,8 +15,10 @@ import (
 
 // The track service performs operations on track order status
 type Service interface {
-	// Get implements get.
-	Get(context.Context, *GetTrack) (res []*Track, err error)
+	// BatchQueryTrackInfo implements batch_query_track_info.
+	BatchQueryTrackInfo(context.Context, *BatchQueryTrackPayload) (res *QueryTrackRsp, err error)
+	// GetTrack implements get_track.
+	GetTrack(context.Context, *QueryTrackPayload) (res *TrackRsp, err error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -27,29 +29,46 @@ const ServiceName = "track"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [1]string{"get"}
+var MethodNames = [2]string{"batch_query_track_info", "get_track"}
 
-// GetTrack is the payload type of the track service get method.
-type GetTrack struct {
-	// tracking number of order
+// BatchQueryTrackPayload is the payload type of the track service
+// batch_query_track_info method.
+type BatchQueryTrackPayload struct {
+	// tracking number
+	TrackingNumbers []string
+}
+
+// QueryTrackPayload is the payload type of the track service get_track method.
+type QueryTrackPayload struct {
+	// tracking number
 	TrackingNumber string
-	// type(1 tracking_number 2 order_id)
-	Type int
+}
+
+// QueryTrackRsp is the result type of the track service batch_query_track_info
+// method.
+type QueryTrackRsp struct {
+	// data
+	Data *TrackInfo
+	// code
+	Code int
+	// message
+	Message string
 }
 
 type Track struct {
 	// tracking number of order
 	TrackingNumber string
 	// tracking url
-	TrackingURL *string
+	TrackingURL string
 	// tracking details
 	Details []*TrackItem
 	// status
 	Status int
-	// type
-	Type int
-	// order_id
-	OrderID *string
+}
+
+type TrackInfo struct {
+	// tracks
+	List []*Track
 }
 
 type TrackItem struct {
@@ -57,6 +76,16 @@ type TrackItem struct {
 	Content *string
 	// tracking timestamp
 	Timestamp *string
+}
+
+// TrackRsp is the result type of the track service get_track method.
+type TrackRsp struct {
+	// data
+	Data *Track
+	// code
+	Code int
+	// message
+	Message string
 }
 
 // MakeUnauthorized builds a goa.ServiceError from an error.

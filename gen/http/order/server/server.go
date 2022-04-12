@@ -10,6 +10,8 @@ package server
 import (
 	"context"
 	order "goa/gen/order"
+	"io"
+	"mime/multipart"
 	"net/http"
 
 	goahttp "goa.design/goa/v3/http"
@@ -19,15 +21,26 @@ import (
 
 // Server lists the order service endpoint HTTP handlers.
 type Server struct {
-	Mounts              []*MountPoint
-	CreateInboundOrder  http.Handler
-	UpdateInboundOrder  http.Handler
-	CreateOutboundOrder http.Handler
-	UpdateOutboundOrder http.Handler
-	CreatePickupOrder   http.Handler
-	GetInboundOrder     http.Handler
-	GetOutboundOrder    http.Handler
-	CORS                http.Handler
+	Mounts                      []*MountPoint
+	CreateInboundOrder          http.Handler
+	UpdateInboundOrder          http.Handler
+	CreatePickupOrder           http.Handler
+	BatchQueryInboundOrder      http.Handler
+	GetInboundOrder             http.Handler
+	CreateOutboundOrder         http.Handler
+	UpdateOutboundOrder         http.Handler
+	BatchUpdateOutboundOrder    http.Handler
+	CreateOutboundOrderItem     http.Handler
+	UpdateOutboundOrderItem     http.Handler
+	DeleteOutboundOrderItem     http.Handler
+	BatchQueryOutboundOrder     http.Handler
+	GetOutboundOrder            http.Handler
+	GetOutboundOrderListFilters http.Handler
+	GetOutboundOrderCount       http.Handler
+	GetOutboundOrderList        http.Handler
+	UploadOutboundOrders        http.Handler
+	ExportOutboundOrders        http.Handler
+	CORS                        http.Handler
 }
 
 // ErrorNamer is an interface implemented by generated error structs that
@@ -47,6 +60,10 @@ type MountPoint struct {
 	Pattern string
 }
 
+// OrderUploadOutboundOrdersDecoderFunc is the type to decode multipart request
+// for the "order" service "upload_outbound_orders" endpoint.
+type OrderUploadOutboundOrdersDecoderFunc func(*multipart.Reader, **order.UploadOrdersPayload) error
+
 // New instantiates HTTP handlers for all the order service endpoints using the
 // provided encoder and decoder. The handlers are mounted on the given mux
 // using the HTTP verb and path defined in the design. errhandler is called
@@ -60,28 +77,60 @@ func New(
 	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
 	errhandler func(context.Context, http.ResponseWriter, error),
 	formatter func(err error) goahttp.Statuser,
+	orderUploadOutboundOrdersDecoderFn OrderUploadOutboundOrdersDecoderFunc,
 ) *Server {
 	return &Server{
 		Mounts: []*MountPoint{
-			{"CreateInboundOrder", "POST", "/inbound-orders"},
-			{"UpdateInboundOrder", "PUT", "/inbound-orders"},
-			{"CreateOutboundOrder", "POST", "/outbound-orders"},
-			{"UpdateOutboundOrder", "PUT", "/outbound-orders"},
-			{"CreatePickupOrder", "POST", "/pickup-orders"},
-			{"GetInboundOrder", "GET", "/inbound-orders"},
-			{"GetOutboundOrder", "GET", "/outbound-orders"},
-			{"CORS", "OPTIONS", "/inbound-orders"},
-			{"CORS", "OPTIONS", "/outbound-orders"},
-			{"CORS", "OPTIONS", "/pickup-orders"},
+			{"CreateInboundOrder", "POST", "/v1/inbound-orders"},
+			{"UpdateInboundOrder", "PUT", "/v1/inbound-orders"},
+			{"CreatePickupOrder", "POST", "/v1/pickup-orders"},
+			{"BatchQueryInboundOrder", "GET", "/v1/inbound-orders"},
+			{"GetInboundOrder", "GET", "/v1/inbound-orders/{order_number}"},
+			{"CreateOutboundOrder", "POST", "/v1/outbound-orders"},
+			{"UpdateOutboundOrder", "PUT", "/v1/outbound-orders/{id}"},
+			{"BatchUpdateOutboundOrder", "PUT", "/v1/outbound-orders"},
+			{"CreateOutboundOrderItem", "POST", "/v1/outbound-order-items"},
+			{"UpdateOutboundOrderItem", "PUT", "/v1/outbound-order-items/{id}"},
+			{"DeleteOutboundOrderItem", "DELETE", "/v1/outbound-order-items/{id}"},
+			{"BatchQueryOutboundOrder", "GET", "/v1/outbound-orders"},
+			{"GetOutboundOrder", "GET", "/v1/outbound-orders/{id}"},
+			{"GetOutboundOrderListFilters", "GET", "/v1/outbound-orders/filters"},
+			{"GetOutboundOrderCount", "GET", "/v1/outbound-orders/counts"},
+			{"GetOutboundOrderList", "GET", "/v1/outbound-orders/list"},
+			{"UploadOutboundOrders", "POST", "/v1/outbound-orders/upload"},
+			{"ExportOutboundOrders", "GET", "/v1/outbound-orders/export"},
+			{"CORS", "OPTIONS", "/v1/inbound-orders"},
+			{"CORS", "OPTIONS", "/v1/pickup-orders"},
+			{"CORS", "OPTIONS", "/v1/inbound-orders/{order_number}"},
+			{"CORS", "OPTIONS", "/v1/outbound-orders"},
+			{"CORS", "OPTIONS", "/v1/outbound-orders/{id}"},
+			{"CORS", "OPTIONS", "/v1/outbound-order-items"},
+			{"CORS", "OPTIONS", "/v1/outbound-order-items/{id}"},
+			{"CORS", "OPTIONS", "/v1/outbound-orders/filters"},
+			{"CORS", "OPTIONS", "/v1/outbound-orders/counts"},
+			{"CORS", "OPTIONS", "/v1/outbound-orders/list"},
+			{"CORS", "OPTIONS", "/v1/outbound-orders/upload"},
+			{"CORS", "OPTIONS", "/v1/outbound-orders/export"},
 		},
-		CreateInboundOrder:  NewCreateInboundOrderHandler(e.CreateInboundOrder, mux, decoder, encoder, errhandler, formatter),
-		UpdateInboundOrder:  NewUpdateInboundOrderHandler(e.UpdateInboundOrder, mux, decoder, encoder, errhandler, formatter),
-		CreateOutboundOrder: NewCreateOutboundOrderHandler(e.CreateOutboundOrder, mux, decoder, encoder, errhandler, formatter),
-		UpdateOutboundOrder: NewUpdateOutboundOrderHandler(e.UpdateOutboundOrder, mux, decoder, encoder, errhandler, formatter),
-		CreatePickupOrder:   NewCreatePickupOrderHandler(e.CreatePickupOrder, mux, decoder, encoder, errhandler, formatter),
-		GetInboundOrder:     NewGetInboundOrderHandler(e.GetInboundOrder, mux, decoder, encoder, errhandler, formatter),
-		GetOutboundOrder:    NewGetOutboundOrderHandler(e.GetOutboundOrder, mux, decoder, encoder, errhandler, formatter),
-		CORS:                NewCORSHandler(),
+		CreateInboundOrder:          NewCreateInboundOrderHandler(e.CreateInboundOrder, mux, decoder, encoder, errhandler, formatter),
+		UpdateInboundOrder:          NewUpdateInboundOrderHandler(e.UpdateInboundOrder, mux, decoder, encoder, errhandler, formatter),
+		CreatePickupOrder:           NewCreatePickupOrderHandler(e.CreatePickupOrder, mux, decoder, encoder, errhandler, formatter),
+		BatchQueryInboundOrder:      NewBatchQueryInboundOrderHandler(e.BatchQueryInboundOrder, mux, decoder, encoder, errhandler, formatter),
+		GetInboundOrder:             NewGetInboundOrderHandler(e.GetInboundOrder, mux, decoder, encoder, errhandler, formatter),
+		CreateOutboundOrder:         NewCreateOutboundOrderHandler(e.CreateOutboundOrder, mux, decoder, encoder, errhandler, formatter),
+		UpdateOutboundOrder:         NewUpdateOutboundOrderHandler(e.UpdateOutboundOrder, mux, decoder, encoder, errhandler, formatter),
+		BatchUpdateOutboundOrder:    NewBatchUpdateOutboundOrderHandler(e.BatchUpdateOutboundOrder, mux, decoder, encoder, errhandler, formatter),
+		CreateOutboundOrderItem:     NewCreateOutboundOrderItemHandler(e.CreateOutboundOrderItem, mux, decoder, encoder, errhandler, formatter),
+		UpdateOutboundOrderItem:     NewUpdateOutboundOrderItemHandler(e.UpdateOutboundOrderItem, mux, decoder, encoder, errhandler, formatter),
+		DeleteOutboundOrderItem:     NewDeleteOutboundOrderItemHandler(e.DeleteOutboundOrderItem, mux, decoder, encoder, errhandler, formatter),
+		BatchQueryOutboundOrder:     NewBatchQueryOutboundOrderHandler(e.BatchQueryOutboundOrder, mux, decoder, encoder, errhandler, formatter),
+		GetOutboundOrder:            NewGetOutboundOrderHandler(e.GetOutboundOrder, mux, decoder, encoder, errhandler, formatter),
+		GetOutboundOrderListFilters: NewGetOutboundOrderListFiltersHandler(e.GetOutboundOrderListFilters, mux, decoder, encoder, errhandler, formatter),
+		GetOutboundOrderCount:       NewGetOutboundOrderCountHandler(e.GetOutboundOrderCount, mux, decoder, encoder, errhandler, formatter),
+		GetOutboundOrderList:        NewGetOutboundOrderListHandler(e.GetOutboundOrderList, mux, decoder, encoder, errhandler, formatter),
+		UploadOutboundOrders:        NewUploadOutboundOrdersHandler(e.UploadOutboundOrders, mux, NewOrderUploadOutboundOrdersDecoder(mux, orderUploadOutboundOrdersDecoderFn), encoder, errhandler, formatter),
+		ExportOutboundOrders:        NewExportOutboundOrdersHandler(e.ExportOutboundOrders, mux, decoder, encoder, errhandler, formatter),
+		CORS:                        NewCORSHandler(),
 	}
 }
 
@@ -92,11 +141,22 @@ func (s *Server) Service() string { return "order" }
 func (s *Server) Use(m func(http.Handler) http.Handler) {
 	s.CreateInboundOrder = m(s.CreateInboundOrder)
 	s.UpdateInboundOrder = m(s.UpdateInboundOrder)
+	s.CreatePickupOrder = m(s.CreatePickupOrder)
+	s.BatchQueryInboundOrder = m(s.BatchQueryInboundOrder)
+	s.GetInboundOrder = m(s.GetInboundOrder)
 	s.CreateOutboundOrder = m(s.CreateOutboundOrder)
 	s.UpdateOutboundOrder = m(s.UpdateOutboundOrder)
-	s.CreatePickupOrder = m(s.CreatePickupOrder)
-	s.GetInboundOrder = m(s.GetInboundOrder)
+	s.BatchUpdateOutboundOrder = m(s.BatchUpdateOutboundOrder)
+	s.CreateOutboundOrderItem = m(s.CreateOutboundOrderItem)
+	s.UpdateOutboundOrderItem = m(s.UpdateOutboundOrderItem)
+	s.DeleteOutboundOrderItem = m(s.DeleteOutboundOrderItem)
+	s.BatchQueryOutboundOrder = m(s.BatchQueryOutboundOrder)
 	s.GetOutboundOrder = m(s.GetOutboundOrder)
+	s.GetOutboundOrderListFilters = m(s.GetOutboundOrderListFilters)
+	s.GetOutboundOrderCount = m(s.GetOutboundOrderCount)
+	s.GetOutboundOrderList = m(s.GetOutboundOrderList)
+	s.UploadOutboundOrders = m(s.UploadOutboundOrders)
+	s.ExportOutboundOrders = m(s.ExportOutboundOrders)
 	s.CORS = m(s.CORS)
 }
 
@@ -104,11 +164,22 @@ func (s *Server) Use(m func(http.Handler) http.Handler) {
 func Mount(mux goahttp.Muxer, h *Server) {
 	MountCreateInboundOrderHandler(mux, h.CreateInboundOrder)
 	MountUpdateInboundOrderHandler(mux, h.UpdateInboundOrder)
+	MountCreatePickupOrderHandler(mux, h.CreatePickupOrder)
+	MountBatchQueryInboundOrderHandler(mux, h.BatchQueryInboundOrder)
+	MountGetInboundOrderHandler(mux, h.GetInboundOrder)
 	MountCreateOutboundOrderHandler(mux, h.CreateOutboundOrder)
 	MountUpdateOutboundOrderHandler(mux, h.UpdateOutboundOrder)
-	MountCreatePickupOrderHandler(mux, h.CreatePickupOrder)
-	MountGetInboundOrderHandler(mux, h.GetInboundOrder)
+	MountBatchUpdateOutboundOrderHandler(mux, h.BatchUpdateOutboundOrder)
+	MountCreateOutboundOrderItemHandler(mux, h.CreateOutboundOrderItem)
+	MountUpdateOutboundOrderItemHandler(mux, h.UpdateOutboundOrderItem)
+	MountDeleteOutboundOrderItemHandler(mux, h.DeleteOutboundOrderItem)
+	MountBatchQueryOutboundOrderHandler(mux, h.BatchQueryOutboundOrder)
 	MountGetOutboundOrderHandler(mux, h.GetOutboundOrder)
+	MountGetOutboundOrderListFiltersHandler(mux, h.GetOutboundOrderListFilters)
+	MountGetOutboundOrderCountHandler(mux, h.GetOutboundOrderCount)
+	MountGetOutboundOrderListHandler(mux, h.GetOutboundOrderList)
+	MountUploadOutboundOrdersHandler(mux, h.UploadOutboundOrders)
+	MountExportOutboundOrdersHandler(mux, h.ExportOutboundOrders)
 	MountCORSHandler(mux, h.CORS)
 }
 
@@ -126,7 +197,7 @@ func MountCreateInboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("POST", "/inbound-orders", f)
+	mux.Handle("POST", "/v1/inbound-orders", f)
 }
 
 // NewCreateInboundOrderHandler creates a HTTP handler which loads the HTTP
@@ -177,7 +248,7 @@ func MountUpdateInboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("PUT", "/inbound-orders", f)
+	mux.Handle("PUT", "/v1/inbound-orders", f)
 }
 
 // NewUpdateInboundOrderHandler creates a HTTP handler which loads the HTTP
@@ -219,6 +290,159 @@ func NewUpdateInboundOrderHandler(
 	})
 }
 
+// MountCreatePickupOrderHandler configures the mux to serve the "order"
+// service "create_pickup_order" endpoint.
+func MountCreatePickupOrderHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/v1/pickup-orders", f)
+}
+
+// NewCreatePickupOrderHandler creates a HTTP handler which loads the HTTP
+// request and calls the "order" service "create_pickup_order" endpoint.
+func NewCreatePickupOrderHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeCreatePickupOrderRequest(mux, decoder)
+		encodeResponse = EncodeCreatePickupOrderResponse(encoder)
+		encodeError    = EncodeCreatePickupOrderError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "create_pickup_order")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountBatchQueryInboundOrderHandler configures the mux to serve the "order"
+// service "batch_query_inbound_order" endpoint.
+func MountBatchQueryInboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/inbound-orders", f)
+}
+
+// NewBatchQueryInboundOrderHandler creates a HTTP handler which loads the HTTP
+// request and calls the "order" service "batch_query_inbound_order" endpoint.
+func NewBatchQueryInboundOrderHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeBatchQueryInboundOrderRequest(mux, decoder)
+		encodeResponse = EncodeBatchQueryInboundOrderResponse(encoder)
+		encodeError    = EncodeBatchQueryInboundOrderError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "batch_query_inbound_order")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountGetInboundOrderHandler configures the mux to serve the "order" service
+// "get_inbound_order" endpoint.
+func MountGetInboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/inbound-orders/{order_number}", f)
+}
+
+// NewGetInboundOrderHandler creates a HTTP handler which loads the HTTP
+// request and calls the "order" service "get_inbound_order" endpoint.
+func NewGetInboundOrderHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeGetInboundOrderRequest(mux, decoder)
+		encodeResponse = EncodeGetInboundOrderResponse(encoder)
+		encodeError    = EncodeGetInboundOrderError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "get_inbound_order")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
 // MountCreateOutboundOrderHandler configures the mux to serve the "order"
 // service "create_outbound_order" endpoint.
 func MountCreateOutboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
@@ -228,7 +452,7 @@ func MountCreateOutboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("POST", "/outbound-orders", f)
+	mux.Handle("POST", "/v1/outbound-orders", f)
 }
 
 // NewCreateOutboundOrderHandler creates a HTTP handler which loads the HTTP
@@ -279,7 +503,7 @@ func MountUpdateOutboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("PUT", "/outbound-orders", f)
+	mux.Handle("PUT", "/v1/outbound-orders/{id}", f)
 }
 
 // NewUpdateOutboundOrderHandler creates a HTTP handler which loads the HTTP
@@ -321,21 +545,22 @@ func NewUpdateOutboundOrderHandler(
 	})
 }
 
-// MountCreatePickupOrderHandler configures the mux to serve the "order"
-// service "create_pickup_order" endpoint.
-func MountCreatePickupOrderHandler(mux goahttp.Muxer, h http.Handler) {
+// MountBatchUpdateOutboundOrderHandler configures the mux to serve the "order"
+// service "batch_update_outbound_order" endpoint.
+func MountBatchUpdateOutboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
 	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
 	if !ok {
 		f = func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("POST", "/pickup-orders", f)
+	mux.Handle("PUT", "/v1/outbound-orders", f)
 }
 
-// NewCreatePickupOrderHandler creates a HTTP handler which loads the HTTP
-// request and calls the "order" service "create_pickup_order" endpoint.
-func NewCreatePickupOrderHandler(
+// NewBatchUpdateOutboundOrderHandler creates a HTTP handler which loads the
+// HTTP request and calls the "order" service "batch_update_outbound_order"
+// endpoint.
+func NewBatchUpdateOutboundOrderHandler(
 	endpoint goa.Endpoint,
 	mux goahttp.Muxer,
 	decoder func(*http.Request) goahttp.Decoder,
@@ -344,13 +569,13 @@ func NewCreatePickupOrderHandler(
 	formatter func(err error) goahttp.Statuser,
 ) http.Handler {
 	var (
-		decodeRequest  = DecodeCreatePickupOrderRequest(mux, decoder)
-		encodeResponse = EncodeCreatePickupOrderResponse(encoder)
-		encodeError    = EncodeCreatePickupOrderError(encoder, formatter)
+		decodeRequest  = DecodeBatchUpdateOutboundOrderRequest(mux, decoder)
+		encodeResponse = EncodeBatchUpdateOutboundOrderResponse(encoder)
+		encodeError    = EncodeBatchUpdateOutboundOrderError(encoder, formatter)
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
-		ctx = context.WithValue(ctx, goa.MethodKey, "create_pickup_order")
+		ctx = context.WithValue(ctx, goa.MethodKey, "batch_update_outbound_order")
 		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
 		payload, err := decodeRequest(r)
 		if err != nil {
@@ -372,21 +597,22 @@ func NewCreatePickupOrderHandler(
 	})
 }
 
-// MountGetInboundOrderHandler configures the mux to serve the "order" service
-// "get_inbound_order" endpoint.
-func MountGetInboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
+// MountCreateOutboundOrderItemHandler configures the mux to serve the "order"
+// service "create_outbound_order_item" endpoint.
+func MountCreateOutboundOrderItemHandler(mux goahttp.Muxer, h http.Handler) {
 	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
 	if !ok {
 		f = func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("GET", "/inbound-orders", f)
+	mux.Handle("POST", "/v1/outbound-order-items", f)
 }
 
-// NewGetInboundOrderHandler creates a HTTP handler which loads the HTTP
-// request and calls the "order" service "get_inbound_order" endpoint.
-func NewGetInboundOrderHandler(
+// NewCreateOutboundOrderItemHandler creates a HTTP handler which loads the
+// HTTP request and calls the "order" service "create_outbound_order_item"
+// endpoint.
+func NewCreateOutboundOrderItemHandler(
 	endpoint goa.Endpoint,
 	mux goahttp.Muxer,
 	decoder func(*http.Request) goahttp.Decoder,
@@ -395,13 +621,169 @@ func NewGetInboundOrderHandler(
 	formatter func(err error) goahttp.Statuser,
 ) http.Handler {
 	var (
-		decodeRequest  = DecodeGetInboundOrderRequest(mux, decoder)
-		encodeResponse = EncodeGetInboundOrderResponse(encoder)
-		encodeError    = EncodeGetInboundOrderError(encoder, formatter)
+		decodeRequest  = DecodeCreateOutboundOrderItemRequest(mux, decoder)
+		encodeResponse = EncodeCreateOutboundOrderItemResponse(encoder)
+		encodeError    = EncodeCreateOutboundOrderItemError(encoder, formatter)
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
-		ctx = context.WithValue(ctx, goa.MethodKey, "get_inbound_order")
+		ctx = context.WithValue(ctx, goa.MethodKey, "create_outbound_order_item")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountUpdateOutboundOrderItemHandler configures the mux to serve the "order"
+// service "update_outbound_order_item" endpoint.
+func MountUpdateOutboundOrderItemHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("PUT", "/v1/outbound-order-items/{id}", f)
+}
+
+// NewUpdateOutboundOrderItemHandler creates a HTTP handler which loads the
+// HTTP request and calls the "order" service "update_outbound_order_item"
+// endpoint.
+func NewUpdateOutboundOrderItemHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeUpdateOutboundOrderItemRequest(mux, decoder)
+		encodeResponse = EncodeUpdateOutboundOrderItemResponse(encoder)
+		encodeError    = EncodeUpdateOutboundOrderItemError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "update_outbound_order_item")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountDeleteOutboundOrderItemHandler configures the mux to serve the "order"
+// service "delete_outbound_order_item" endpoint.
+func MountDeleteOutboundOrderItemHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("DELETE", "/v1/outbound-order-items/{id}", f)
+}
+
+// NewDeleteOutboundOrderItemHandler creates a HTTP handler which loads the
+// HTTP request and calls the "order" service "delete_outbound_order_item"
+// endpoint.
+func NewDeleteOutboundOrderItemHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeDeleteOutboundOrderItemRequest(mux, decoder)
+		encodeResponse = EncodeDeleteOutboundOrderItemResponse(encoder)
+		encodeError    = EncodeDeleteOutboundOrderItemError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "delete_outbound_order_item")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountBatchQueryOutboundOrderHandler configures the mux to serve the "order"
+// service "batch_query_outbound_order" endpoint.
+func MountBatchQueryOutboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/outbound-orders", f)
+}
+
+// NewBatchQueryOutboundOrderHandler creates a HTTP handler which loads the
+// HTTP request and calls the "order" service "batch_query_outbound_order"
+// endpoint.
+func NewBatchQueryOutboundOrderHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeBatchQueryOutboundOrderRequest(mux, decoder)
+		encodeResponse = EncodeBatchQueryOutboundOrderResponse(encoder)
+		encodeError    = EncodeBatchQueryOutboundOrderError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "batch_query_outbound_order")
 		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
 		payload, err := decodeRequest(r)
 		if err != nil {
@@ -432,7 +814,7 @@ func MountGetOutboundOrderHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("GET", "/outbound-orders", f)
+	mux.Handle("GET", "/v1/outbound-orders/{id}", f)
 }
 
 // NewGetOutboundOrderHandler creates a HTTP handler which loads the HTTP
@@ -474,13 +856,286 @@ func NewGetOutboundOrderHandler(
 	})
 }
 
+// MountGetOutboundOrderListFiltersHandler configures the mux to serve the
+// "order" service "get_outbound_order_list_filters" endpoint.
+func MountGetOutboundOrderListFiltersHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/outbound-orders/filters", f)
+}
+
+// NewGetOutboundOrderListFiltersHandler creates a HTTP handler which loads the
+// HTTP request and calls the "order" service "get_outbound_order_list_filters"
+// endpoint.
+func NewGetOutboundOrderListFiltersHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeGetOutboundOrderListFiltersRequest(mux, decoder)
+		encodeResponse = EncodeGetOutboundOrderListFiltersResponse(encoder)
+		encodeError    = EncodeGetOutboundOrderListFiltersError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "get_outbound_order_list_filters")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountGetOutboundOrderCountHandler configures the mux to serve the "order"
+// service "get_outbound_order_count" endpoint.
+func MountGetOutboundOrderCountHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/outbound-orders/counts", f)
+}
+
+// NewGetOutboundOrderCountHandler creates a HTTP handler which loads the HTTP
+// request and calls the "order" service "get_outbound_order_count" endpoint.
+func NewGetOutboundOrderCountHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeGetOutboundOrderCountRequest(mux, decoder)
+		encodeResponse = EncodeGetOutboundOrderCountResponse(encoder)
+		encodeError    = EncodeGetOutboundOrderCountError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "get_outbound_order_count")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountGetOutboundOrderListHandler configures the mux to serve the "order"
+// service "get_outbound_order_list" endpoint.
+func MountGetOutboundOrderListHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/outbound-orders/list", f)
+}
+
+// NewGetOutboundOrderListHandler creates a HTTP handler which loads the HTTP
+// request and calls the "order" service "get_outbound_order_list" endpoint.
+func NewGetOutboundOrderListHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeGetOutboundOrderListRequest(mux, decoder)
+		encodeResponse = EncodeGetOutboundOrderListResponse(encoder)
+		encodeError    = EncodeGetOutboundOrderListError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "get_outbound_order_list")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountUploadOutboundOrdersHandler configures the mux to serve the "order"
+// service "upload_outbound_orders" endpoint.
+func MountUploadOutboundOrdersHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("POST", "/v1/outbound-orders/upload", f)
+}
+
+// NewUploadOutboundOrdersHandler creates a HTTP handler which loads the HTTP
+// request and calls the "order" service "upload_outbound_orders" endpoint.
+func NewUploadOutboundOrdersHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeUploadOutboundOrdersRequest(mux, decoder)
+		encodeResponse = EncodeUploadOutboundOrdersResponse(encoder)
+		encodeError    = EncodeUploadOutboundOrdersError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "upload_outbound_orders")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountExportOutboundOrdersHandler configures the mux to serve the "order"
+// service "export_outbound_orders" endpoint.
+func MountExportOutboundOrdersHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleOrderOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/outbound-orders/export", f)
+}
+
+// NewExportOutboundOrdersHandler creates a HTTP handler which loads the HTTP
+// request and calls the "order" service "export_outbound_orders" endpoint.
+func NewExportOutboundOrdersHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeExportOutboundOrdersRequest(mux, decoder)
+		encodeResponse = EncodeExportOutboundOrdersResponse(encoder)
+		encodeError    = EncodeExportOutboundOrdersError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "export_outbound_orders")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "order")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		o := res.(*order.ExportOutboundOrdersResponseData)
+		defer o.Body.Close()
+		if err := encodeResponse(ctx, w, o.Result); err != nil {
+			errhandler(ctx, w, err)
+			return
+		}
+		if _, err := io.Copy(w, o.Body); err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+		}
+	})
+}
+
 // MountCORSHandler configures the mux to serve the CORS endpoints for the
 // service order.
 func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
 	h = HandleOrderOrigin(h)
-	mux.Handle("OPTIONS", "/inbound-orders", h.ServeHTTP)
-	mux.Handle("OPTIONS", "/outbound-orders", h.ServeHTTP)
-	mux.Handle("OPTIONS", "/pickup-orders", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/inbound-orders", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/pickup-orders", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/inbound-orders/{order_number}", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-orders", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-orders/{id}", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-order-items", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-order-items/{id}", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-orders/filters", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-orders/counts", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-orders/list", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-orders/upload", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/outbound-orders/export", h.ServeHTTP)
 }
 
 // NewCORSHandler creates a HTTP handler which returns a simple 200 response.
@@ -503,9 +1158,11 @@ func HandleOrderOrigin(h http.Handler) http.Handler {
 		if cors.MatchOrigin(origin, "*") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			if acrm := r.Header.Get("Access-Control-Request-Method"); acrm != "" {
 				// We are handling a preflight request
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE, PATCH")
+				w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Api-Version, x-nss-tenant-id")
 			}
 			h.ServeHTTP(w, r)
 			return

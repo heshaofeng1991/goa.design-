@@ -19,9 +19,10 @@ import (
 
 // Server lists the track service endpoint HTTP handlers.
 type Server struct {
-	Mounts []*MountPoint
-	Get    http.Handler
-	CORS   http.Handler
+	Mounts              []*MountPoint
+	BatchQueryTrackInfo http.Handler
+	GetTrack            http.Handler
+	CORS                http.Handler
 }
 
 // ErrorNamer is an interface implemented by generated error structs that
@@ -57,11 +58,14 @@ func New(
 ) *Server {
 	return &Server{
 		Mounts: []*MountPoint{
-			{"Get", "GET", "/track"},
-			{"CORS", "OPTIONS", "/track"},
+			{"BatchQueryTrackInfo", "GET", "/v1/tracks"},
+			{"GetTrack", "GET", "/v1/tracks/{tracking_number}"},
+			{"CORS", "OPTIONS", "/v1/tracks"},
+			{"CORS", "OPTIONS", "/v1/tracks/{tracking_number}"},
 		},
-		Get:  NewGetHandler(e.Get, mux, decoder, encoder, errhandler, formatter),
-		CORS: NewCORSHandler(),
+		BatchQueryTrackInfo: NewBatchQueryTrackInfoHandler(e.BatchQueryTrackInfo, mux, decoder, encoder, errhandler, formatter),
+		GetTrack:            NewGetTrackHandler(e.GetTrack, mux, decoder, encoder, errhandler, formatter),
+		CORS:                NewCORSHandler(),
 	}
 }
 
@@ -70,13 +74,15 @@ func (s *Server) Service() string { return "track" }
 
 // Use wraps the server handlers with the given middleware.
 func (s *Server) Use(m func(http.Handler) http.Handler) {
-	s.Get = m(s.Get)
+	s.BatchQueryTrackInfo = m(s.BatchQueryTrackInfo)
+	s.GetTrack = m(s.GetTrack)
 	s.CORS = m(s.CORS)
 }
 
 // Mount configures the mux to serve the track endpoints.
 func Mount(mux goahttp.Muxer, h *Server) {
-	MountGetHandler(mux, h.Get)
+	MountBatchQueryTrackInfoHandler(mux, h.BatchQueryTrackInfo)
+	MountGetTrackHandler(mux, h.GetTrack)
 	MountCORSHandler(mux, h.CORS)
 }
 
@@ -85,21 +91,21 @@ func (s *Server) Mount(mux goahttp.Muxer) {
 	Mount(mux, s)
 }
 
-// MountGetHandler configures the mux to serve the "track" service "get"
-// endpoint.
-func MountGetHandler(mux goahttp.Muxer, h http.Handler) {
+// MountBatchQueryTrackInfoHandler configures the mux to serve the "track"
+// service "batch_query_track_info" endpoint.
+func MountBatchQueryTrackInfoHandler(mux goahttp.Muxer, h http.Handler) {
 	f, ok := HandleTrackOrigin(h).(http.HandlerFunc)
 	if !ok {
 		f = func(w http.ResponseWriter, r *http.Request) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("GET", "/track", f)
+	mux.Handle("GET", "/v1/tracks", f)
 }
 
-// NewGetHandler creates a HTTP handler which loads the HTTP request and calls
-// the "track" service "get" endpoint.
-func NewGetHandler(
+// NewBatchQueryTrackInfoHandler creates a HTTP handler which loads the HTTP
+// request and calls the "track" service "batch_query_track_info" endpoint.
+func NewBatchQueryTrackInfoHandler(
 	endpoint goa.Endpoint,
 	mux goahttp.Muxer,
 	decoder func(*http.Request) goahttp.Decoder,
@@ -108,13 +114,64 @@ func NewGetHandler(
 	formatter func(err error) goahttp.Statuser,
 ) http.Handler {
 	var (
-		decodeRequest  = DecodeGetRequest(mux, decoder)
-		encodeResponse = EncodeGetResponse(encoder)
-		encodeError    = EncodeGetError(encoder, formatter)
+		decodeRequest  = DecodeBatchQueryTrackInfoRequest(mux, decoder)
+		encodeResponse = EncodeBatchQueryTrackInfoResponse(encoder)
+		encodeError    = EncodeBatchQueryTrackInfoError(encoder, formatter)
 	)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
-		ctx = context.WithValue(ctx, goa.MethodKey, "get")
+		ctx = context.WithValue(ctx, goa.MethodKey, "batch_query_track_info")
+		ctx = context.WithValue(ctx, goa.ServiceKey, "track")
+		payload, err := decodeRequest(r)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		res, err := endpoint(ctx, payload)
+		if err != nil {
+			if err := encodeError(ctx, w, err); err != nil {
+				errhandler(ctx, w, err)
+			}
+			return
+		}
+		if err := encodeResponse(ctx, w, res); err != nil {
+			errhandler(ctx, w, err)
+		}
+	})
+}
+
+// MountGetTrackHandler configures the mux to serve the "track" service
+// "get_track" endpoint.
+func MountGetTrackHandler(mux goahttp.Muxer, h http.Handler) {
+	f, ok := HandleTrackOrigin(h).(http.HandlerFunc)
+	if !ok {
+		f = func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		}
+	}
+	mux.Handle("GET", "/v1/tracks/{tracking_number}", f)
+}
+
+// NewGetTrackHandler creates a HTTP handler which loads the HTTP request and
+// calls the "track" service "get_track" endpoint.
+func NewGetTrackHandler(
+	endpoint goa.Endpoint,
+	mux goahttp.Muxer,
+	decoder func(*http.Request) goahttp.Decoder,
+	encoder func(context.Context, http.ResponseWriter) goahttp.Encoder,
+	errhandler func(context.Context, http.ResponseWriter, error),
+	formatter func(err error) goahttp.Statuser,
+) http.Handler {
+	var (
+		decodeRequest  = DecodeGetTrackRequest(mux, decoder)
+		encodeResponse = EncodeGetTrackResponse(encoder)
+		encodeError    = EncodeGetTrackError(encoder, formatter)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), goahttp.AcceptTypeKey, r.Header.Get("Accept"))
+		ctx = context.WithValue(ctx, goa.MethodKey, "get_track")
 		ctx = context.WithValue(ctx, goa.ServiceKey, "track")
 		payload, err := decodeRequest(r)
 		if err != nil {
@@ -140,7 +197,8 @@ func NewGetHandler(
 // service track.
 func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
 	h = HandleTrackOrigin(h)
-	mux.Handle("OPTIONS", "/track", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/tracks", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/tracks/{tracking_number}", h.ServeHTTP)
 }
 
 // NewCORSHandler creates a HTTP handler which returns a simple 200 response.
@@ -163,9 +221,11 @@ func HandleTrackOrigin(h http.Handler) http.Handler {
 		if cors.MatchOrigin(origin, "*") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			if acrm := r.Header.Get("Access-Control-Request-Method"); acrm != "" {
 				// We are handling a preflight request
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE, PATCH")
+				w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Api-Version, x-nss-tenant-id")
 			}
 			h.ServeHTTP(w, r)
 			return

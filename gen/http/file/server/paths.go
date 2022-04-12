@@ -9,5 +9,5 @@ package server
 
 // UploadImageFilePath returns the URL path to the file service upload_image HTTP endpoint.
 func UploadImageFilePath() string {
-	return "/upload_image"
+	return "/v1/upload_image"
 }

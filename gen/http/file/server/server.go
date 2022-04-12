@@ -44,7 +44,7 @@ type MountPoint struct {
 
 // FileUploadImageDecoderFunc is the type to decode multipart request for the
 // "file" service "upload_image" endpoint.
-type FileUploadImageDecoderFunc func(*multipart.Reader, **file.ImageFile) error
+type FileUploadImageDecoderFunc func(*multipart.Reader, **file.UploadFile) error
 
 // New instantiates HTTP handlers for all the file service endpoints using the
 // provided encoder and decoder. The handlers are mounted on the given mux
@@ -63,8 +63,8 @@ func New(
 ) *Server {
 	return &Server{
 		Mounts: []*MountPoint{
-			{"UploadImage", "POST", "/upload_image"},
-			{"CORS", "OPTIONS", "/upload_image"},
+			{"UploadImage", "POST", "/v1/upload_image"},
+			{"CORS", "OPTIONS", "/v1/upload_image"},
 		},
 		UploadImage: NewUploadImageHandler(e.UploadImage, mux, NewFileUploadImageDecoder(mux, fileUploadImageDecoderFn), encoder, errhandler, formatter),
 		CORS:        NewCORSHandler(),
@@ -100,7 +100,7 @@ func MountUploadImageHandler(mux goahttp.Muxer, h http.Handler) {
 			h.ServeHTTP(w, r)
 		}
 	}
-	mux.Handle("POST", "/upload_image", f)
+	mux.Handle("POST", "/v1/upload_image", f)
 }
 
 // NewUploadImageHandler creates a HTTP handler which loads the HTTP request
@@ -146,7 +146,7 @@ func NewUploadImageHandler(
 // service file.
 func MountCORSHandler(mux goahttp.Muxer, h http.Handler) {
 	h = HandleFileOrigin(h)
-	mux.Handle("OPTIONS", "/upload_image", h.ServeHTTP)
+	mux.Handle("OPTIONS", "/v1/upload_image", h.ServeHTTP)
 }
 
 // NewCORSHandler creates a HTTP handler which returns a simple 200 response.
@@ -169,9 +169,11 @@ func HandleFileOrigin(h http.Handler) http.Handler {
 		if cors.MatchOrigin(origin, "*") {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			if acrm := r.Header.Get("Access-Control-Request-Method"); acrm != "" {
 				// We are handling a preflight request
-				w.Header().Set("Access-Control-Allow-Headers", "Authorization")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE, PATCH")
+				w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Api-Version, x-nss-tenant-id")
 			}
 			h.ServeHTTP(w, r)
 			return

@@ -13,6 +13,9 @@ import (
 	product "goa/gen/product"
 	"io"
 	"net/http"
+	"strconv"
+	"strings"
+	"unicode/utf8"
 
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
@@ -49,7 +52,27 @@ func DecodeBatchesCreateProductRequest(mux goahttp.Muxer, decoder func(*http.Req
 		if err != nil {
 			return nil, err
 		}
-		payload := NewBatchesCreateProductMultiProduct(&body)
+
+		var (
+			authorization *string
+			token         *string
+		)
+		authorizationRaw := r.Header.Get("Authorization")
+		if authorizationRaw != "" {
+			authorization = &authorizationRaw
+		}
+		tokenRaw := r.Header.Get("Authorization")
+		if tokenRaw != "" {
+			token = &tokenRaw
+		}
+		payload := NewBatchesCreateProductMultiProduct(&body, authorization, token)
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
 
 		return payload, nil
 	}
@@ -115,7 +138,27 @@ func DecodeUpdateProductRequest(mux goahttp.Muxer, decoder func(*http.Request) g
 		if err != nil {
 			return nil, err
 		}
-		payload := NewUpdateProductProduct(&body)
+
+		var (
+			authorization *string
+			token         *string
+		)
+		authorizationRaw := r.Header.Get("Authorization")
+		if authorizationRaw != "" {
+			authorization = &authorizationRaw
+		}
+		tokenRaw := r.Header.Get("Authorization")
+		if tokenRaw != "" {
+			token = &tokenRaw
+		}
+		payload := NewUpdateProductProduct(&body, authorization, token)
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
 
 		return payload, nil
 	}
@@ -150,6 +193,447 @@ func EncodeUpdateProductError(encoder func(context.Context, http.ResponseWriter)
 	}
 }
 
+// EncodeExportProductResponse returns an encoder for responses returned by the
+// product export_product endpoint.
+func EncodeExportProductResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res, _ := v.(*product.ExportProductResult)
+		{
+			val := res.Length
+			lengths := strconv.FormatInt(val, 10)
+			w.Header().Set("Content-Length", lengths)
+		}
+		w.WriteHeader(http.StatusOK)
+		return nil
+	}
+}
+
+// DecodeExportProductRequest returns a decoder for requests sent to the
+// product export_product endpoint.
+func DecodeExportProductRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var (
+			id            []string
+			sku           *string
+			barcode       *string
+			status        *string
+			attributes    []string
+			name          *string
+			inventory     *string
+			current       *int
+			pageSize      *int
+			authorization *string
+			token         *string
+			err           error
+		)
+		id = r.URL.Query()["id"]
+		skuRaw := r.URL.Query().Get("sku")
+		if skuRaw != "" {
+			sku = &skuRaw
+		}
+		if sku != nil {
+			if utf8.RuneCountInString(*sku) > 50 {
+				err = goa.MergeErrors(err, goa.InvalidLengthError("sku", *sku, utf8.RuneCountInString(*sku), 50, false))
+			}
+		}
+		barcodeRaw := r.URL.Query().Get("barcode")
+		if barcodeRaw != "" {
+			barcode = &barcodeRaw
+		}
+		statusRaw := r.URL.Query().Get("status")
+		if statusRaw != "" {
+			status = &statusRaw
+		}
+		attributes = r.URL.Query()["attributes"]
+		nameRaw := r.URL.Query().Get("name")
+		if nameRaw != "" {
+			name = &nameRaw
+		}
+		inventoryRaw := r.URL.Query().Get("inventory")
+		if inventoryRaw != "" {
+			inventory = &inventoryRaw
+		}
+		{
+			currentRaw := r.URL.Query().Get("current")
+			if currentRaw != "" {
+				v, err2 := strconv.ParseInt(currentRaw, 10, strconv.IntSize)
+				if err2 != nil {
+					err = goa.MergeErrors(err, goa.InvalidFieldTypeError("current", currentRaw, "integer"))
+				}
+				pv := int(v)
+				current = &pv
+			}
+		}
+		if current != nil {
+			if *current < 1 {
+				err = goa.MergeErrors(err, goa.InvalidRangeError("current", *current, 1, true))
+			}
+		}
+		{
+			pageSizeRaw := r.URL.Query().Get("page_size")
+			if pageSizeRaw != "" {
+				v, err2 := strconv.ParseInt(pageSizeRaw, 10, strconv.IntSize)
+				if err2 != nil {
+					err = goa.MergeErrors(err, goa.InvalidFieldTypeError("pageSize", pageSizeRaw, "integer"))
+				}
+				pv := int(v)
+				pageSize = &pv
+			}
+		}
+		if pageSize != nil {
+			if *pageSize < 1 {
+				err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 1, true))
+			}
+		}
+		if pageSize != nil {
+			if *pageSize > 50 {
+				err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 50, false))
+			}
+		}
+		authorizationRaw := r.Header.Get("Authorization")
+		if authorizationRaw != "" {
+			authorization = &authorizationRaw
+		}
+		tokenRaw := r.Header.Get("Authorization")
+		if tokenRaw != "" {
+			token = &tokenRaw
+		}
+		if err != nil {
+			return nil, err
+		}
+		payload := NewExportProductProductQueryPayload(id, sku, barcode, status, attributes, name, inventory, current, pageSize, authorization, token)
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
+
+		return payload, nil
+	}
+}
+
+// EncodeExportProductError returns an encoder for errors returned by the
+// export_product product endpoint.
+func EncodeExportProductError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en ErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.ErrorName() {
+		case "Unauthorized":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewExportProductUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		case "internal_error":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewExportProductInternalErrorResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusInternalServerError)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
+// EncodeDownloadTemplatesResponse returns an encoder for responses returned by
+// the product download_templates endpoint.
+func EncodeDownloadTemplatesResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res, _ := v.(*product.ExportProductResult)
+		{
+			val := res.Length
+			lengths := strconv.FormatInt(val, 10)
+			w.Header().Set("Content-Length", lengths)
+		}
+		w.WriteHeader(http.StatusOK)
+		return nil
+	}
+}
+
+// DecodeDownloadTemplatesRequest returns a decoder for requests sent to the
+// product download_templates endpoint.
+func DecodeDownloadTemplatesRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var (
+			template      string
+			authorization *string
+			token         *string
+
+			params = mux.Vars(r)
+		)
+		template = params["template"]
+		authorizationRaw := r.Header.Get("Authorization")
+		if authorizationRaw != "" {
+			authorization = &authorizationRaw
+		}
+		tokenRaw := r.Header.Get("Authorization")
+		if tokenRaw != "" {
+			token = &tokenRaw
+		}
+		payload := NewDownloadTemplatesReq(template, authorization, token)
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
+
+		return payload, nil
+	}
+}
+
+// EncodeDownloadTemplatesError returns an encoder for errors returned by the
+// download_templates product endpoint.
+func EncodeDownloadTemplatesError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en ErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.ErrorName() {
+		case "Unauthorized":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewDownloadTemplatesUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		case "internal_error":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewDownloadTemplatesInternalErrorResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusInternalServerError)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
+// EncodeUploadProductResponse returns an encoder for responses returned by the
+// product upload_product endpoint.
+func EncodeUploadProductResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res, _ := v.(*product.UploadProductResponse)
+		enc := encoder(ctx, w)
+		body := NewUploadProductResponseBody(res)
+		w.WriteHeader(http.StatusOK)
+		return enc.Encode(body)
+	}
+}
+
+// DecodeUploadProductRequest returns a decoder for requests sent to the
+// product upload_product endpoint.
+func DecodeUploadProductRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var payload *product.UploadProductPayload
+		if err := decoder(r).Decode(&payload); err != nil {
+			return nil, goa.DecodePayloadError(err.Error())
+		}
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
+
+		return payload, nil
+	}
+}
+
+// NewProductUploadProductDecoder returns a decoder to decode the multipart
+// request for the "product" service "upload_product" endpoint.
+func NewProductUploadProductDecoder(mux goahttp.Muxer, productUploadProductDecoderFn ProductUploadProductDecoderFunc) func(r *http.Request) goahttp.Decoder {
+	return func(r *http.Request) goahttp.Decoder {
+		return goahttp.EncodingFunc(func(v interface{}) error {
+			mr, merr := r.MultipartReader()
+			if merr != nil {
+				return merr
+			}
+			p := v.(**product.UploadProductPayload)
+			if err := productUploadProductDecoderFn(mr, p); err != nil {
+				return err
+			}
+
+			var (
+				authorization *string
+				token         *string
+			)
+			authorizationRaw := r.Header.Get("Authorization")
+			if authorizationRaw != "" {
+				authorization = &authorizationRaw
+			}
+			tokenRaw := r.Header.Get("Authorization")
+			if tokenRaw != "" {
+				token = &tokenRaw
+			}
+			(*p).Authorization = authorization
+			(*p).Token = token
+			return nil
+		})
+	}
+}
+
+// EncodeUploadProductError returns an encoder for errors returned by the
+// upload_product product endpoint.
+func EncodeUploadProductError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en ErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.ErrorName() {
+		case "Unauthorized":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewUploadProductUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
+// EncodeUploadProductUpdateResponse returns an encoder for responses returned
+// by the product upload_product_update endpoint.
+func EncodeUploadProductUpdateResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res, _ := v.(*product.UploadProductResponse)
+		enc := encoder(ctx, w)
+		body := NewUploadProductUpdateResponseBody(res)
+		w.WriteHeader(http.StatusOK)
+		return enc.Encode(body)
+	}
+}
+
+// DecodeUploadProductUpdateRequest returns a decoder for requests sent to the
+// product upload_product_update endpoint.
+func DecodeUploadProductUpdateRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var payload *product.UploadProductPayload
+		if err := decoder(r).Decode(&payload); err != nil {
+			return nil, goa.DecodePayloadError(err.Error())
+		}
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
+
+		return payload, nil
+	}
+}
+
+// NewProductUploadProductUpdateDecoder returns a decoder to decode the
+// multipart request for the "product" service "upload_product_update" endpoint.
+func NewProductUploadProductUpdateDecoder(mux goahttp.Muxer, productUploadProductUpdateDecoderFn ProductUploadProductUpdateDecoderFunc) func(r *http.Request) goahttp.Decoder {
+	return func(r *http.Request) goahttp.Decoder {
+		return goahttp.EncodingFunc(func(v interface{}) error {
+			mr, merr := r.MultipartReader()
+			if merr != nil {
+				return merr
+			}
+			p := v.(**product.UploadProductPayload)
+			if err := productUploadProductUpdateDecoderFn(mr, p); err != nil {
+				return err
+			}
+
+			var (
+				authorization *string
+				token         *string
+			)
+			authorizationRaw := r.Header.Get("Authorization")
+			if authorizationRaw != "" {
+				authorization = &authorizationRaw
+			}
+			tokenRaw := r.Header.Get("Authorization")
+			if tokenRaw != "" {
+				token = &tokenRaw
+			}
+			(*p).Authorization = authorization
+			(*p).Token = token
+			return nil
+		})
+	}
+}
+
+// EncodeUploadProductUpdateError returns an encoder for errors returned by the
+// upload_product_update product endpoint.
+func EncodeUploadProductUpdateError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en ErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.ErrorName() {
+		case "Unauthorized":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewUploadProductUpdateUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
 // EncodeGenerateBarcodeResponse returns an encoder for responses returned by
 // the product generate_barcode endpoint.
 func EncodeGenerateBarcodeResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
@@ -166,7 +650,26 @@ func EncodeGenerateBarcodeResponse(encoder func(context.Context, http.ResponseWr
 // product generate_barcode endpoint.
 func DecodeGenerateBarcodeRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
 	return func(r *http.Request) (interface{}, error) {
-		payload := NewGenerateBarcodeBarCode()
+		var (
+			authorization *string
+			token         *string
+		)
+		authorizationRaw := r.Header.Get("Authorization")
+		if authorizationRaw != "" {
+			authorization = &authorizationRaw
+		}
+		tokenRaw := r.Header.Get("Authorization")
+		if tokenRaw != "" {
+			token = &tokenRaw
+		}
+		payload := NewGenerateBarcodeAuthToken(authorization, token)
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
 
 		return payload, nil
 	}
@@ -201,46 +704,148 @@ func EncodeGenerateBarcodeError(encoder func(context.Context, http.ResponseWrite
 	}
 }
 
-// EncodeGenerateTokenResponse returns an encoder for responses returned by the
-// product generate_token endpoint.
-func EncodeGenerateTokenResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+// EncodeProductsQueryResponse returns an encoder for responses returned by the
+// product products_query endpoint.
+func EncodeProductsQueryResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
 	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
-		res, _ := v.(*product.GenerateTokenRsp)
+		res, _ := v.(*product.ProductsQueryRsp)
 		enc := encoder(ctx, w)
-		body := NewGenerateTokenResponseBody(res)
+		body := NewProductsQueryResponseBody(res)
 		w.WriteHeader(http.StatusOK)
 		return enc.Encode(body)
 	}
 }
 
-// DecodeGenerateTokenRequest returns a decoder for requests sent to the
-// product generate_token endpoint.
-func DecodeGenerateTokenRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+// DecodeProductsQueryRequest returns a decoder for requests sent to the
+// product products_query endpoint.
+func DecodeProductsQueryRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
 	return func(r *http.Request) (interface{}, error) {
 		var (
-			body GenerateTokenRequestBody
-			err  error
+			name          *string
+			sku           *string
+			barcode       *string
+			status        *int
+			attributes    []string
+			inventory     *bool
+			current       *int
+			pageSize      *int
+			authorization *string
+			token         *string
+			err           error
 		)
-		err = decoder(r).Decode(&body)
-		if err != nil {
-			if err == io.EOF {
-				return nil, goa.MissingPayloadError()
-			}
-			return nil, goa.DecodePayloadError(err.Error())
+		nameRaw := r.URL.Query().Get("name")
+		if nameRaw != "" {
+			name = &nameRaw
 		}
-		err = ValidateGenerateTokenRequestBody(&body)
+		if name != nil {
+			if utf8.RuneCountInString(*name) > 50 {
+				err = goa.MergeErrors(err, goa.InvalidLengthError("name", *name, utf8.RuneCountInString(*name), 50, false))
+			}
+		}
+		skuRaw := r.URL.Query().Get("sku")
+		if skuRaw != "" {
+			sku = &skuRaw
+		}
+		barcodeRaw := r.URL.Query().Get("barcode")
+		if barcodeRaw != "" {
+			barcode = &barcodeRaw
+		}
+		{
+			statusRaw := r.URL.Query().Get("status")
+			if statusRaw != "" {
+				v, err2 := strconv.ParseInt(statusRaw, 10, strconv.IntSize)
+				if err2 != nil {
+					err = goa.MergeErrors(err, goa.InvalidFieldTypeError("status", statusRaw, "integer"))
+				}
+				pv := int(v)
+				status = &pv
+			}
+		}
+		if status != nil {
+			if !(*status == 0 || *status == 1 || *status == 10) {
+				err = goa.MergeErrors(err, goa.InvalidEnumValueError("status", *status, []interface{}{0, 1, 10}))
+			}
+		}
+		attributes = r.URL.Query()["attributes"]
+		{
+			inventoryRaw := r.URL.Query().Get("inventory")
+			if inventoryRaw != "" {
+				v, err2 := strconv.ParseBool(inventoryRaw)
+				if err2 != nil {
+					err = goa.MergeErrors(err, goa.InvalidFieldTypeError("inventory", inventoryRaw, "boolean"))
+				}
+				inventory = &v
+			}
+		}
+		if inventory != nil {
+			if !(*inventory == false || *inventory == true) {
+				err = goa.MergeErrors(err, goa.InvalidEnumValueError("inventory", *inventory, []interface{}{false, true}))
+			}
+		}
+		{
+			currentRaw := r.URL.Query().Get("current")
+			if currentRaw != "" {
+				v, err2 := strconv.ParseInt(currentRaw, 10, strconv.IntSize)
+				if err2 != nil {
+					err = goa.MergeErrors(err, goa.InvalidFieldTypeError("current", currentRaw, "integer"))
+				}
+				pv := int(v)
+				current = &pv
+			}
+		}
+		if current != nil {
+			if *current < 1 {
+				err = goa.MergeErrors(err, goa.InvalidRangeError("current", *current, 1, true))
+			}
+		}
+		{
+			pageSizeRaw := r.URL.Query().Get("page_size")
+			if pageSizeRaw != "" {
+				v, err2 := strconv.ParseInt(pageSizeRaw, 10, strconv.IntSize)
+				if err2 != nil {
+					err = goa.MergeErrors(err, goa.InvalidFieldTypeError("pageSize", pageSizeRaw, "integer"))
+				}
+				pv := int(v)
+				pageSize = &pv
+			}
+		}
+		if pageSize != nil {
+			if *pageSize < 1 {
+				err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 1, true))
+			}
+		}
+		if pageSize != nil {
+			if *pageSize > 50 {
+				err = goa.MergeErrors(err, goa.InvalidRangeError("pageSize", *pageSize, 50, false))
+			}
+		}
+		authorizationRaw := r.Header.Get("Authorization")
+		if authorizationRaw != "" {
+			authorization = &authorizationRaw
+		}
+		tokenRaw := r.Header.Get("Authorization")
+		if tokenRaw != "" {
+			token = &tokenRaw
+		}
 		if err != nil {
 			return nil, err
 		}
-		payload := NewGenerateTokenReq(&body)
+		payload := NewProductsQueryReq(name, sku, barcode, status, attributes, inventory, current, pageSize, authorization, token)
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
 
 		return payload, nil
 	}
 }
 
-// EncodeGenerateTokenError returns an encoder for errors returned by the
-// generate_token product endpoint.
-func EncodeGenerateTokenError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+// EncodeProductsQueryError returns an encoder for errors returned by the
+// products_query product endpoint.
+func EncodeProductsQueryError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
 	encodeError := goahttp.ErrorEncoder(encoder, formatter)
 	return func(ctx context.Context, w http.ResponseWriter, v error) error {
 		var en ErrorNamer
@@ -256,7 +861,92 @@ func EncodeGenerateTokenError(encoder func(context.Context, http.ResponseWriter)
 			if formatter != nil {
 				body = formatter(res)
 			} else {
-				body = NewGenerateTokenUnauthorizedResponseBody(res)
+				body = NewProductsQueryUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
+// EncodeProductDetailResponse returns an encoder for responses returned by the
+// product product_detail endpoint.
+func EncodeProductDetailResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res, _ := v.(*product.ProductDetailRsp)
+		enc := encoder(ctx, w)
+		body := NewProductDetailResponseBody(res)
+		w.WriteHeader(http.StatusOK)
+		return enc.Encode(body)
+	}
+}
+
+// DecodeProductDetailRequest returns a decoder for requests sent to the
+// product product_detail endpoint.
+func DecodeProductDetailRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var (
+			id            int32
+			authorization *string
+			token         *string
+			err           error
+
+			params = mux.Vars(r)
+		)
+		{
+			idRaw := params["id"]
+			v, err2 := strconv.ParseInt(idRaw, 10, 32)
+			if err2 != nil {
+				err = goa.MergeErrors(err, goa.InvalidFieldTypeError("id", idRaw, "integer"))
+			}
+			id = int32(v)
+		}
+		authorizationRaw := r.Header.Get("Authorization")
+		if authorizationRaw != "" {
+			authorization = &authorizationRaw
+		}
+		tokenRaw := r.Header.Get("Authorization")
+		if tokenRaw != "" {
+			token = &tokenRaw
+		}
+		if err != nil {
+			return nil, err
+		}
+		payload := NewProductDetailReq(id, authorization, token)
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
+		}
+
+		return payload, nil
+	}
+}
+
+// EncodeProductDetailError returns an encoder for errors returned by the
+// product_detail product endpoint.
+func EncodeProductDetailError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en ErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.ErrorName() {
+		case "Unauthorized":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewProductDetailUnauthorizedResponseBody(res)
 			}
 			w.Header().Set("goa-error", res.ErrorName())
 			w.WriteHeader(http.StatusUnauthorized)
@@ -271,33 +961,66 @@ func EncodeGenerateTokenError(encoder func(context.Context, http.ResponseWriter)
 // *product.Product from a value of type *ProductRequestBody.
 func unmarshalProductRequestBodyToProductProduct(v *ProductRequestBody) *product.Product {
 	res := &product.Product{
-		ProductSku:         *v.ProductSku,
-		ProductName:        *v.ProductName,
+		Sku:                *v.Sku,
+		Name:               *v.Name,
 		DeclaredEnName:     *v.DeclaredEnName,
 		DeclaredCnName:     *v.DeclaredCnName,
 		DeclaredValueInUsd: *v.DeclaredValueInUsd,
-		ProductWeight:      *v.ProductWeight,
-		ProductLength:      *v.ProductLength,
-		ProductWidth:       *v.ProductWidth,
-		ProductHeight:      *v.ProductHeight,
+		Weight:             *v.Weight,
+		Length:             *v.Length,
+		Width:              *v.Width,
+		Height:             *v.Height,
 		HsCode:             *v.HsCode,
-		ProductBarcode:     *v.ProductBarcode,
+		Barcode:            *v.Barcode,
 		Qty:                v.Qty,
 		EnabledNssBarcode:  v.EnabledNssBarcode,
 		DeclaredValueInEur: *v.DeclaredValueInEur,
 		CustomerCode:       *v.CustomerCode,
 		ID:                 v.ID,
-		BarcodeService:     *v.BarcodeService,
+		BarcodeService:     v.BarcodeService,
+		ErrorMessage:       v.ErrorMessage,
+		Authorization:      v.Authorization,
+		Token:              v.Token,
 	}
-	if v.ProductImage != nil {
-		res.ProductImage = make([]string, len(v.ProductImage))
-		for i, val := range v.ProductImage {
-			res.ProductImage[i] = val
+	if v.Material != nil {
+		res.Material = *v.Material
+	}
+	if v.Purpose != nil {
+		res.Purpose = *v.Purpose
+	}
+	if v.Images != nil {
+		res.Images = make([]string, len(v.Images))
+		for i, val := range v.Images {
+			res.Images[i] = val
 		}
 	}
-	res.ProductAttributes = make([]string, len(v.ProductAttributes))
-	for i, val := range v.ProductAttributes {
-		res.ProductAttributes[i] = val
+	res.Attributes = make([]string, len(v.Attributes))
+	for i, val := range v.Attributes {
+		res.Attributes[i] = val
+	}
+	if v.Material == nil {
+		res.Material = ""
+	}
+	if v.Purpose == nil {
+		res.Purpose = ""
+	}
+
+	return res
+}
+
+// marshalProductMultiProductInfoToMultiProductInfoResponseBody builds a value
+// of type *MultiProductInfoResponseBody from a value of type
+// *product.MultiProductInfo.
+func marshalProductMultiProductInfoToMultiProductInfoResponseBody(v *product.MultiProductInfo) *MultiProductInfoResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &MultiProductInfoResponseBody{}
+	if v.Products != nil {
+		res.Products = make([]*MultiProductDataResponseBody, len(v.Products))
+		for i, val := range v.Products {
+			res.Products[i] = marshalProductMultiProductDataToMultiProductDataResponseBody(val)
+		}
 	}
 
 	return res
@@ -314,6 +1037,155 @@ func marshalProductMultiProductDataToMultiProductDataResponseBody(v *product.Mul
 		Barcode:     v.Barcode,
 		Sku:         v.Sku,
 		ProductName: v.ProductName,
+	}
+
+	return res
+}
+
+// marshalProductUpdateResponseDataToUpdateResponseDataResponseBody builds a
+// value of type *UpdateResponseDataResponseBody from a value of type
+// *product.UpdateResponseData.
+func marshalProductUpdateResponseDataToUpdateResponseDataResponseBody(v *product.UpdateResponseData) *UpdateResponseDataResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &UpdateResponseDataResponseBody{
+		Status: v.Status,
+	}
+
+	return res
+}
+
+// marshalProductUploadProductResponseDataToUploadProductResponseDataResponseBody
+// builds a value of type *UploadProductResponseDataResponseBody from a value
+// of type *product.UploadProductResponseData.
+func marshalProductUploadProductResponseDataToUploadProductResponseDataResponseBody(v *product.UploadProductResponseData) *UploadProductResponseDataResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &UploadProductResponseDataResponseBody{
+		TotalCount:   v.TotalCount,
+		SuccessCount: v.SuccessCount,
+		FailCount:    v.FailCount,
+		ResultFile:   v.ResultFile,
+	}
+
+	return res
+}
+
+// marshalProductBarCodeDataToBarCodeDataResponseBody builds a value of type
+// *BarCodeDataResponseBody from a value of type *product.BarCodeData.
+func marshalProductBarCodeDataToBarCodeDataResponseBody(v *product.BarCodeData) *BarCodeDataResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &BarCodeDataResponseBody{
+		Barcode: v.Barcode,
+	}
+
+	return res
+}
+
+// marshalProductProductsQueryDataToProductsQueryDataResponseBody builds a
+// value of type *ProductsQueryDataResponseBody from a value of type
+// *product.ProductsQueryData.
+func marshalProductProductsQueryDataToProductsQueryDataResponseBody(v *product.ProductsQueryData) *ProductsQueryDataResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &ProductsQueryDataResponseBody{}
+	if v.List != nil {
+		res.List = make([]*ProductItemResponseBody, len(v.List))
+		for i, val := range v.List {
+			res.List[i] = marshalProductProductItemToProductItemResponseBody(val)
+		}
+	}
+	if v.Meta != nil {
+		res.Meta = marshalProductMetaDataToMetaDataResponseBody(v.Meta)
+	}
+
+	return res
+}
+
+// marshalProductProductItemToProductItemResponseBody builds a value of type
+// *ProductItemResponseBody from a value of type *product.ProductItem.
+func marshalProductProductItemToProductItemResponseBody(v *product.ProductItem) *ProductItemResponseBody {
+	res := &ProductItemResponseBody{
+		ID:            v.ID,
+		Status:        v.Status,
+		Barcode:       v.Barcode,
+		Sku:           v.Sku,
+		Name:          v.Name,
+		Inventory:     v.Inventory,
+		Weight:        v.Weight,
+		InboundWeight: v.InboundWeight,
+		Length:        v.Length,
+		Width:         v.Width,
+		Height:        v.Height,
+	}
+	if v.Attributes != nil {
+		res.Attributes = make([]string, len(v.Attributes))
+		for i, val := range v.Attributes {
+			res.Attributes[i] = val
+		}
+	}
+	if v.Images != nil {
+		res.Images = make([]string, len(v.Images))
+		for i, val := range v.Images {
+			res.Images[i] = val
+		}
+	}
+
+	return res
+}
+
+// marshalProductMetaDataToMetaDataResponseBody builds a value of type
+// *MetaDataResponseBody from a value of type *product.MetaData.
+func marshalProductMetaDataToMetaDataResponseBody(v *product.MetaData) *MetaDataResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &MetaDataResponseBody{
+		Current:  v.Current,
+		PageSize: v.PageSize,
+		Total:    v.Total,
+	}
+
+	return res
+}
+
+// marshalProductProductDetailDataToProductDetailDataResponseBody builds a
+// value of type *ProductDetailDataResponseBody from a value of type
+// *product.ProductDetailData.
+func marshalProductProductDetailDataToProductDetailDataResponseBody(v *product.ProductDetailData) *ProductDetailDataResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &ProductDetailDataResponseBody{
+		ID:                 v.ID,
+		Status:             v.Status,
+		Barcode:            v.Barcode,
+		Sku:                v.Sku,
+		Name:               v.Name,
+		Weight:             v.Weight,
+		HsCode:             v.HsCode,
+		DeclaredCnName:     v.DeclaredCnName,
+		DeclaredEnName:     v.DeclaredEnName,
+		DeclaredValueInUsd: v.DeclaredValueInUsd,
+		DeclaredValueInEur: v.DeclaredValueInEur,
+		BarcodeService:     v.BarcodeService,
+	}
+	if v.Attributes != nil {
+		res.Attributes = make([]string, len(v.Attributes))
+		for i, val := range v.Attributes {
+			res.Attributes[i] = val
+		}
+	}
+	if v.Images != nil {
+		res.Images = make([]string, len(v.Images))
+		for i, val := range v.Images {
+			res.Images[i] = val
+		}
 	}
 
 	return res

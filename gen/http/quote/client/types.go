@@ -13,9 +13,62 @@ import (
 	goa "goa.design/goa/v3/pkg"
 )
 
+// PostRequestBody is the type of the "quote" service "post" endpoint HTTP
+// request body.
+type PostRequestBody struct {
+	// channel cost id
+	ID int32 `form:"id" json:"id" xml:"id"`
+	// delivery area
+	DeliveryArea int `form:"delivery_area" json:"delivery_area" xml:"delivery_area"`
+	// delivery country code
+	DeliveryCountryCode string `form:"delivery_country_code" json:"delivery_country_code" xml:"delivery_country_code"`
+	// delivery country name
+	DeliveryCountryName string `form:"delivery_country_name" json:"delivery_country_name" xml:"delivery_country_name"`
+	// delivery province code
+	DeliveryProvinceCode *string `form:"delivery_province_code,omitempty" json:"delivery_province_code,omitempty" xml:"delivery_province_code,omitempty"`
+	// delivery province name
+	DeliveryProvinceName *string `form:"delivery_province_name,omitempty" json:"delivery_province_name,omitempty" xml:"delivery_province_name,omitempty"`
+	// delivery city code
+	DeliveryCityCode *string `form:"delivery_city_code,omitempty" json:"delivery_city_code,omitempty" xml:"delivery_city_code,omitempty"`
+	// delivery city name
+	DeliveryCityName *string `form:"delivery_city_name,omitempty" json:"delivery_city_name,omitempty" xml:"delivery_city_name,omitempty"`
+	// dest area
+	DestArea int `form:"dest_area" json:"dest_area" xml:"dest_area"`
+	// dest country code
+	DestCountryCode string `form:"dest_country_code" json:"dest_country_code" xml:"dest_country_code"`
+	// dest country name
+	DestCountryName string `form:"dest_country_name" json:"dest_country_name" xml:"dest_country_name"`
+	// dest province code
+	DestProvinceCode *string `form:"dest_province_code,omitempty" json:"dest_province_code,omitempty" xml:"dest_province_code,omitempty"`
+	// dest province name
+	DestProvinceName *string `form:"dest_province_name,omitempty" json:"dest_province_name,omitempty" xml:"dest_province_name,omitempty"`
+	// dest city code
+	DestCityCode *string `form:"dest_city_code,omitempty" json:"dest_city_code,omitempty" xml:"dest_city_code,omitempty"`
+	// dest city name
+	DestCityName *string `form:"dest_city_name,omitempty" json:"dest_city_name,omitempty" xml:"dest_city_name,omitempty"`
+}
+
 // GetResponseBody is the type of the "quote" service "get" endpoint HTTP
 // response body.
-type GetResponseBody []*QuoteResponse
+type GetResponseBody struct {
+	// data
+	Data *QuoteInfoResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
+
+// PostResponseBody is the type of the "quote" service "post" endpoint HTTP
+// response body.
+type PostResponseBody struct {
+	// data
+	Data *UserDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
 
 // GetUnauthorizedResponseBody is the type of the "quote" service "get"
 // endpoint HTTP response body for the "Unauthorized" error.
@@ -35,8 +88,32 @@ type GetUnauthorizedResponseBody struct {
 	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
 }
 
-// QuoteResponse is used to define fields on response body types.
-type QuoteResponse struct {
+// PostUnauthorizedResponseBody is the type of the "quote" service "post"
+// endpoint HTTP response body for the "Unauthorized" error.
+type PostUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// QuoteInfoResponseBody is used to define fields on response body types.
+type QuoteInfoResponseBody struct {
+	// fees
+	List []*QuoteResponseBody `form:"list,omitempty" json:"list,omitempty" xml:"list,omitempty"`
+}
+
+// QuoteResponseBody is used to define fields on response body types.
+type QuoteResponseBody struct {
 	// Channel Display Name
 	ChannelName *string `form:"channel_name,omitempty" json:"channel_name,omitempty" xml:"channel_name,omitempty"`
 	// Channel ID
@@ -54,12 +131,44 @@ type QuoteResponse struct {
 	Weight *int `form:"weight,omitempty" json:"weight,omitempty" xml:"weight,omitempty"`
 }
 
-// NewGetQuoteOK builds a "quote" service "get" endpoint result from a HTTP
+// UserDataResponseBody is used to define fields on response body types.
+type UserDataResponseBody struct {
+	// status
+	Status *int `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+}
+
+// NewPostRequestBody builds the HTTP request body from the payload of the
+// "post" endpoint of the "quote" service.
+func NewPostRequestBody(p *quote.PostQuote) *PostRequestBody {
+	body := &PostRequestBody{
+		ID:                   p.ID,
+		DeliveryArea:         p.DeliveryArea,
+		DeliveryCountryCode:  p.DeliveryCountryCode,
+		DeliveryCountryName:  p.DeliveryCountryName,
+		DeliveryProvinceCode: p.DeliveryProvinceCode,
+		DeliveryProvinceName: p.DeliveryProvinceName,
+		DeliveryCityCode:     p.DeliveryCityCode,
+		DeliveryCityName:     p.DeliveryCityName,
+		DestArea:             p.DestArea,
+		DestCountryCode:      p.DestCountryCode,
+		DestCountryName:      p.DestCountryName,
+		DestProvinceCode:     p.DestProvinceCode,
+		DestProvinceName:     p.DestProvinceName,
+		DestCityCode:         p.DestCityCode,
+		DestCityName:         p.DestCityName,
+	}
+	return body
+}
+
+// NewGetQuoteRspOK builds a "quote" service "get" endpoint result from a HTTP
 // "OK" response.
-func NewGetQuoteOK(body []*QuoteResponse) []*quote.Quote {
-	v := make([]*quote.Quote, len(body))
-	for i, val := range body {
-		v[i] = unmarshalQuoteResponseToQuoteQuote(val)
+func NewGetQuoteRspOK(body *GetResponseBody) *quote.QuoteRsp {
+	v := &quote.QuoteRsp{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalQuoteInfoResponseBodyToQuoteQuoteInfo(body.Data)
 	}
 
 	return v
@@ -77,6 +186,66 @@ func NewGetUnauthorized(body *GetUnauthorizedResponseBody) *goa.ServiceError {
 	}
 
 	return v
+}
+
+// NewPostUserRspOK builds a "quote" service "post" endpoint result from a HTTP
+// "OK" response.
+func NewPostUserRspOK(body *PostResponseBody) *quote.UserRsp {
+	v := &quote.UserRsp{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalUserDataResponseBodyToQuoteUserData(body.Data)
+	}
+
+	return v
+}
+
+// NewPostUnauthorized builds a quote service post endpoint Unauthorized error.
+func NewPostUnauthorized(body *PostUnauthorizedResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// ValidateGetResponseBody runs the validations defined on GetResponseBody
+func ValidateGetResponseBody(body *GetResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateQuoteInfoResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidatePostResponseBody runs the validations defined on PostResponseBody
+func ValidatePostResponseBody(body *PostResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateUserDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
 }
 
 // ValidateGetUnauthorizedResponseBody runs the validations defined on
@@ -103,8 +272,48 @@ func ValidateGetUnauthorizedResponseBody(body *GetUnauthorizedResponseBody) (err
 	return
 }
 
-// ValidateQuoteResponse runs the validations defined on QuoteResponse
-func ValidateQuoteResponse(body *QuoteResponse) (err error) {
+// ValidatePostUnauthorizedResponseBody runs the validations defined on
+// post_Unauthorized_response_body
+func ValidatePostUnauthorizedResponseBody(body *PostUnauthorizedResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateQuoteInfoResponseBody runs the validations defined on
+// QuoteInfoResponseBody
+func ValidateQuoteInfoResponseBody(body *QuoteInfoResponseBody) (err error) {
+	if body.List == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("list", "body"))
+	}
+	for _, e := range body.List {
+		if e != nil {
+			if err2 := ValidateQuoteResponseBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// ValidateQuoteResponseBody runs the validations defined on QuoteResponseBody
+func ValidateQuoteResponseBody(body *QuoteResponseBody) (err error) {
 	if body.ChannelName == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("channel_name", "body"))
 	}
@@ -128,6 +337,15 @@ func ValidateQuoteResponse(body *QuoteResponse) (err error) {
 	}
 	if body.Weight == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("weight", "body"))
+	}
+	return
+}
+
+// ValidateUserDataResponseBody runs the validations defined on
+// UserDataResponseBody
+func ValidateUserDataResponseBody(body *UserDataResponseBody) (err error) {
+	if body.Status == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
 	}
 	return
 }

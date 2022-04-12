@@ -12,6 +12,7 @@ import (
 	"errors"
 	file "goa/gen/file"
 	"net/http"
+	"strings"
 
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
@@ -21,7 +22,7 @@ import (
 // file upload_image endpoint.
 func EncodeUploadImageResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
 	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
-		res, _ := v.(*file.ImageURL)
+		res, _ := v.(*file.UploadURL)
 		enc := encoder(ctx, w)
 		body := NewUploadImageResponseBody(res)
 		w.WriteHeader(http.StatusOK)
@@ -33,9 +34,16 @@ func EncodeUploadImageResponse(encoder func(context.Context, http.ResponseWriter
 // upload_image endpoint.
 func DecodeUploadImageRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
 	return func(r *http.Request) (interface{}, error) {
-		var payload *file.ImageFile
+		var payload *file.UploadFile
 		if err := decoder(r).Decode(&payload); err != nil {
 			return nil, goa.DecodePayloadError(err.Error())
+		}
+		if payload.Token != nil {
+			if strings.Contains(*payload.Token, " ") {
+				// Remove authorization scheme prefix (e.g. "Bearer")
+				cred := strings.SplitN(*payload.Token, " ", 2)[1]
+				payload.Token = &cred
+			}
 		}
 
 		return payload, nil
@@ -51,10 +59,25 @@ func NewFileUploadImageDecoder(mux goahttp.Muxer, fileUploadImageDecoderFn FileU
 			if merr != nil {
 				return merr
 			}
-			p := v.(**file.ImageFile)
+			p := v.(**file.UploadFile)
 			if err := fileUploadImageDecoderFn(mr, p); err != nil {
 				return err
 			}
+
+			var (
+				authorization *string
+				token         *string
+			)
+			authorizationRaw := r.Header.Get("Authorization")
+			if authorizationRaw != "" {
+				authorization = &authorizationRaw
+			}
+			tokenRaw := r.Header.Get("Authorization")
+			if tokenRaw != "" {
+				token = &tokenRaw
+			}
+			(*p).Authorization = authorization
+			(*p).Token = token
 			return nil
 		})
 	}
@@ -87,4 +110,17 @@ func EncodeUploadImageError(encoder func(context.Context, http.ResponseWriter) g
 			return encodeError(ctx, w, v)
 		}
 	}
+}
+
+// marshalFileUploadURLDataToUploadURLDataResponseBody builds a value of type
+// *UploadURLDataResponseBody from a value of type *file.UploadURLData.
+func marshalFileUploadURLDataToUploadURLDataResponseBody(v *file.UploadURLData) *UploadURLDataResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &UploadURLDataResponseBody{
+		URL: v.URL,
+	}
+
+	return res
 }

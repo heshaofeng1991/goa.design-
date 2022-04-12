@@ -13,8 +13,8 @@ import (
 	. "goa.design/goa/v3/dsl"
 ) //nolint:revive
 
-var ImageFile = Type("ImageFile", func() {
-	Description("ImageFile describes the upload image file")
+var UploadFile = Type("UploadFile", func() {
+	Description("File describes the upload image file")
 	Field(1, "file", Bytes, "file", func() {
 		Example("1.jpg")
 		MaxLength(864000)
@@ -23,13 +23,19 @@ var ImageFile = Type("ImageFile", func() {
 		Example("xxx")
 		MaxLength(50)
 	})
-
+	Extend(AuthToken)
 	Required("file", "file_name")
 })
 
-var ImageUrl = Type("ImageUrl", func() {
-	Description("ImageUrl describes the image url")
-	Field(1, "url", String, "image URL", func() {
+var UploadUrl = Type("UploadUrl", func() {
+	Description("UploadUrl describes the image url")
+	Extend(BaseResponse)
+	Field(1, "data", UploadUrlData, "data")
+})
+
+var UploadUrlData = Type("UploadUrlData", func() {
+	Description("UploadUrlData describes the file url")
+	Field(1, "url", String, "file URL", func() {
 		Example("http://images.example")
 		MaxLength(300)
 	})

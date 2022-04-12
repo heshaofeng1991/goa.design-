@@ -20,6 +20,9 @@ type Client struct {
 	// Get Doer is the HTTP client used to make requests to the get endpoint.
 	GetDoer goahttp.Doer
 
+	// Post Doer is the HTTP client used to make requests to the post endpoint.
+	PostDoer goahttp.Doer
+
 	// CORS Doer is the HTTP client used to make requests to the  endpoint.
 	CORSDoer goahttp.Doer
 
@@ -44,6 +47,7 @@ func NewClient(
 ) *Client {
 	return &Client{
 		GetDoer:             doer,
+		PostDoer:            doer,
 		CORSDoer:            doer,
 		RestoreResponseBody: restoreBody,
 		scheme:              scheme,
@@ -72,6 +76,30 @@ func (c *Client) Get() goa.Endpoint {
 		resp, err := c.GetDoer.Do(req)
 		if err != nil {
 			return nil, goahttp.ErrRequestError("quote", "get", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// Post returns an endpoint that makes HTTP requests to the quote service post
+// server.
+func (c *Client) Post() goa.Endpoint {
+	var (
+		encodeRequest  = EncodePostRequest(c.encoder)
+		decodeResponse = DecodePostResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildPostRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.PostDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("quote", "post", err)
 		}
 		return decodeResponse(resp)
 	}

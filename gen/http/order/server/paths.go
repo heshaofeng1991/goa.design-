@@ -7,37 +7,96 @@
 
 package server
 
+import (
+	"fmt"
+)
+
 // CreateInboundOrderOrderPath returns the URL path to the order service create_inbound_order HTTP endpoint.
 func CreateInboundOrderOrderPath() string {
-	return "/inbound-orders"
+	return "/v1/inbound-orders"
 }
 
 // UpdateInboundOrderOrderPath returns the URL path to the order service update_inbound_order HTTP endpoint.
 func UpdateInboundOrderOrderPath() string {
-	return "/inbound-orders"
-}
-
-// CreateOutboundOrderOrderPath returns the URL path to the order service create_outbound_order HTTP endpoint.
-func CreateOutboundOrderOrderPath() string {
-	return "/outbound-orders"
-}
-
-// UpdateOutboundOrderOrderPath returns the URL path to the order service update_outbound_order HTTP endpoint.
-func UpdateOutboundOrderOrderPath() string {
-	return "/outbound-orders"
+	return "/v1/inbound-orders"
 }
 
 // CreatePickupOrderOrderPath returns the URL path to the order service create_pickup_order HTTP endpoint.
 func CreatePickupOrderOrderPath() string {
-	return "/pickup-orders"
+	return "/v1/pickup-orders"
+}
+
+// BatchQueryInboundOrderOrderPath returns the URL path to the order service batch_query_inbound_order HTTP endpoint.
+func BatchQueryInboundOrderOrderPath() string {
+	return "/v1/inbound-orders"
 }
 
 // GetInboundOrderOrderPath returns the URL path to the order service get_inbound_order HTTP endpoint.
-func GetInboundOrderOrderPath() string {
-	return "/inbound-orders"
+func GetInboundOrderOrderPath(orderNumber string) string {
+	return fmt.Sprintf("/v1/inbound-orders/%v", orderNumber)
+}
+
+// CreateOutboundOrderOrderPath returns the URL path to the order service create_outbound_order HTTP endpoint.
+func CreateOutboundOrderOrderPath() string {
+	return "/v1/outbound-orders"
+}
+
+// UpdateOutboundOrderOrderPath returns the URL path to the order service update_outbound_order HTTP endpoint.
+func UpdateOutboundOrderOrderPath(id int32) string {
+	return fmt.Sprintf("/v1/outbound-orders/%v", id)
+}
+
+// BatchUpdateOutboundOrderOrderPath returns the URL path to the order service batch_update_outbound_order HTTP endpoint.
+func BatchUpdateOutboundOrderOrderPath() string {
+	return "/v1/outbound-orders"
+}
+
+// CreateOutboundOrderItemOrderPath returns the URL path to the order service create_outbound_order_item HTTP endpoint.
+func CreateOutboundOrderItemOrderPath() string {
+	return "/v1/outbound-order-items"
+}
+
+// UpdateOutboundOrderItemOrderPath returns the URL path to the order service update_outbound_order_item HTTP endpoint.
+func UpdateOutboundOrderItemOrderPath(id int64) string {
+	return fmt.Sprintf("/v1/outbound-order-items/%v", id)
+}
+
+// DeleteOutboundOrderItemOrderPath returns the URL path to the order service delete_outbound_order_item HTTP endpoint.
+func DeleteOutboundOrderItemOrderPath(id int64) string {
+	return fmt.Sprintf("/v1/outbound-order-items/%v", id)
+}
+
+// BatchQueryOutboundOrderOrderPath returns the URL path to the order service batch_query_outbound_order HTTP endpoint.
+func BatchQueryOutboundOrderOrderPath() string {
+	return "/v1/outbound-orders"
 }
 
 // GetOutboundOrderOrderPath returns the URL path to the order service get_outbound_order HTTP endpoint.
-func GetOutboundOrderOrderPath() string {
-	return "/outbound-orders"
+func GetOutboundOrderOrderPath(id string) string {
+	return fmt.Sprintf("/v1/outbound-orders/%v", id)
+}
+
+// GetOutboundOrderListFiltersOrderPath returns the URL path to the order service get_outbound_order_list_filters HTTP endpoint.
+func GetOutboundOrderListFiltersOrderPath() string {
+	return "/v1/outbound-orders/filters"
+}
+
+// GetOutboundOrderCountOrderPath returns the URL path to the order service get_outbound_order_count HTTP endpoint.
+func GetOutboundOrderCountOrderPath() string {
+	return "/v1/outbound-orders/counts"
+}
+
+// GetOutboundOrderListOrderPath returns the URL path to the order service get_outbound_order_list HTTP endpoint.
+func GetOutboundOrderListOrderPath() string {
+	return "/v1/outbound-orders/list"
+}
+
+// UploadOutboundOrdersOrderPath returns the URL path to the order service upload_outbound_orders HTTP endpoint.
+func UploadOutboundOrdersOrderPath() string {
+	return "/v1/outbound-orders/upload"
+}
+
+// ExportOutboundOrdersOrderPath returns the URL path to the order service export_outbound_orders HTTP endpoint.
+func ExportOutboundOrdersOrderPath() string {
+	return "/v1/outbound-orders/export"
 }

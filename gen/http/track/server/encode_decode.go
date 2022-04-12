@@ -12,63 +12,54 @@ import (
 	"errors"
 	track "goa/gen/track"
 	"net/http"
-	"strconv"
+	"unicode/utf8"
 
 	goahttp "goa.design/goa/v3/http"
 	goa "goa.design/goa/v3/pkg"
 )
 
-// EncodeGetResponse returns an encoder for responses returned by the track get
-// endpoint.
-func EncodeGetResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+// EncodeBatchQueryTrackInfoResponse returns an encoder for responses returned
+// by the track batch_query_track_info endpoint.
+func EncodeBatchQueryTrackInfoResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
 	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
-		res, _ := v.([]*track.Track)
+		res, _ := v.(*track.QueryTrackRsp)
 		enc := encoder(ctx, w)
-		body := NewGetResponseBody(res)
+		body := NewBatchQueryTrackInfoResponseBody(res)
 		w.WriteHeader(http.StatusOK)
 		return enc.Encode(body)
 	}
 }
 
-// DecodeGetRequest returns a decoder for requests sent to the track get
-// endpoint.
-func DecodeGetRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+// DecodeBatchQueryTrackInfoRequest returns a decoder for requests sent to the
+// track batch_query_track_info endpoint.
+func DecodeBatchQueryTrackInfoRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
 	return func(r *http.Request) (interface{}, error) {
 		var (
-			trackingNumber string
-			type_          int
-			err            error
+			trackingNumbers []string
+			err             error
 		)
-		trackingNumber = r.URL.Query().Get("tracking_number")
-		if trackingNumber == "" {
-			err = goa.MergeErrors(err, goa.MissingFieldError("tracking_number", "query string"))
+		trackingNumbers = r.URL.Query()["tracking_numbers"]
+		if trackingNumbers == nil {
+			err = goa.MergeErrors(err, goa.MissingFieldError("tracking_numbers", "query string"))
 		}
-		{
-			type_Raw := r.URL.Query().Get("type")
-			if type_Raw == "" {
-				err = goa.MergeErrors(err, goa.MissingFieldError("type", "query string"))
-			}
-			v, err2 := strconv.ParseInt(type_Raw, 10, strconv.IntSize)
-			if err2 != nil {
-				err = goa.MergeErrors(err, goa.InvalidFieldTypeError("type_", type_Raw, "integer"))
-			}
-			type_ = int(v)
+		if len(trackingNumbers) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("trackingNumbers", trackingNumbers, len(trackingNumbers), 1, true))
 		}
-		if !(type_ == 1 || type_ == 2) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("type_", type_, []interface{}{1, 2}))
+		if len(trackingNumbers) > 50 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("trackingNumbers", trackingNumbers, len(trackingNumbers), 50, false))
 		}
 		if err != nil {
 			return nil, err
 		}
-		payload := NewGetTrack(trackingNumber, type_)
+		payload := NewBatchQueryTrackInfoBatchQueryTrackPayload(trackingNumbers)
 
 		return payload, nil
 	}
 }
 
-// EncodeGetError returns an encoder for errors returned by the get track
-// endpoint.
-func EncodeGetError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+// EncodeBatchQueryTrackInfoError returns an encoder for errors returned by the
+// batch_query_track_info track endpoint.
+func EncodeBatchQueryTrackInfoError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
 	encodeError := goahttp.ErrorEncoder(encoder, formatter)
 	return func(ctx context.Context, w http.ResponseWriter, v error) error {
 		var en ErrorNamer
@@ -84,7 +75,7 @@ func EncodeGetError(encoder func(context.Context, http.ResponseWriter) goahttp.E
 			if formatter != nil {
 				body = formatter(res)
 			} else {
-				body = NewGetUnauthorizedResponseBody(res)
+				body = NewBatchQueryTrackInfoUnauthorizedResponseBody(res)
 			}
 			w.Header().Set("goa-error", res.ErrorName())
 			w.WriteHeader(http.StatusUnauthorized)
@@ -95,30 +86,109 @@ func EncodeGetError(encoder func(context.Context, http.ResponseWriter) goahttp.E
 	}
 }
 
-// marshalTrackTrackToTrackResponse builds a value of type *TrackResponse from
-// a value of type *track.Track.
-func marshalTrackTrackToTrackResponse(v *track.Track) *TrackResponse {
-	res := &TrackResponse{
-		TrackingNumber: v.TrackingNumber,
-		TrackingURL:    v.TrackingURL,
-		Status:         v.Status,
-		Type:           v.Type,
-		OrderID:        v.OrderID,
+// EncodeGetTrackResponse returns an encoder for responses returned by the
+// track get_track endpoint.
+func EncodeGetTrackResponse(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder) func(context.Context, http.ResponseWriter, interface{}) error {
+	return func(ctx context.Context, w http.ResponseWriter, v interface{}) error {
+		res, _ := v.(*track.TrackRsp)
+		enc := encoder(ctx, w)
+		body := NewGetTrackResponseBody(res)
+		w.WriteHeader(http.StatusOK)
+		return enc.Encode(body)
 	}
-	if v.Details != nil {
-		res.Details = make([]*TrackItemResponse, len(v.Details))
-		for i, val := range v.Details {
-			res.Details[i] = marshalTrackTrackItemToTrackItemResponse(val)
+}
+
+// DecodeGetTrackRequest returns a decoder for requests sent to the track
+// get_track endpoint.
+func DecodeGetTrackRequest(mux goahttp.Muxer, decoder func(*http.Request) goahttp.Decoder) func(*http.Request) (interface{}, error) {
+	return func(r *http.Request) (interface{}, error) {
+		var (
+			trackingNumber string
+			err            error
+
+			params = mux.Vars(r)
+		)
+		trackingNumber = params["tracking_number"]
+		if utf8.RuneCountInString(trackingNumber) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("trackingNumber", trackingNumber, utf8.RuneCountInString(trackingNumber), 1, true))
+		}
+		if err != nil {
+			return nil, err
+		}
+		payload := NewGetTrackQueryTrackPayload(trackingNumber)
+
+		return payload, nil
+	}
+}
+
+// EncodeGetTrackError returns an encoder for errors returned by the get_track
+// track endpoint.
+func EncodeGetTrackError(encoder func(context.Context, http.ResponseWriter) goahttp.Encoder, formatter func(err error) goahttp.Statuser) func(context.Context, http.ResponseWriter, error) error {
+	encodeError := goahttp.ErrorEncoder(encoder, formatter)
+	return func(ctx context.Context, w http.ResponseWriter, v error) error {
+		var en ErrorNamer
+		if !errors.As(v, &en) {
+			return encodeError(ctx, w, v)
+		}
+		switch en.ErrorName() {
+		case "Unauthorized":
+			var res *goa.ServiceError
+			errors.As(v, &res)
+			enc := encoder(ctx, w)
+			var body interface{}
+			if formatter != nil {
+				body = formatter(res)
+			} else {
+				body = NewGetTrackUnauthorizedResponseBody(res)
+			}
+			w.Header().Set("goa-error", res.ErrorName())
+			w.WriteHeader(http.StatusUnauthorized)
+			return enc.Encode(body)
+		default:
+			return encodeError(ctx, w, v)
+		}
+	}
+}
+
+// marshalTrackTrackInfoToTrackInfoResponseBody builds a value of type
+// *TrackInfoResponseBody from a value of type *track.TrackInfo.
+func marshalTrackTrackInfoToTrackInfoResponseBody(v *track.TrackInfo) *TrackInfoResponseBody {
+	if v == nil {
+		return nil
+	}
+	res := &TrackInfoResponseBody{}
+	if v.List != nil {
+		res.List = make([]*TrackResponseBody, len(v.List))
+		for i, val := range v.List {
+			res.List[i] = marshalTrackTrackToTrackResponseBody(val)
 		}
 	}
 
 	return res
 }
 
-// marshalTrackTrackItemToTrackItemResponse builds a value of type
-// *TrackItemResponse from a value of type *track.TrackItem.
-func marshalTrackTrackItemToTrackItemResponse(v *track.TrackItem) *TrackItemResponse {
-	res := &TrackItemResponse{
+// marshalTrackTrackToTrackResponseBody builds a value of type
+// *TrackResponseBody from a value of type *track.Track.
+func marshalTrackTrackToTrackResponseBody(v *track.Track) *TrackResponseBody {
+	res := &TrackResponseBody{
+		TrackingNumber: v.TrackingNumber,
+		TrackingURL:    v.TrackingURL,
+		Status:         v.Status,
+	}
+	if v.Details != nil {
+		res.Details = make([]*TrackItemResponseBody, len(v.Details))
+		for i, val := range v.Details {
+			res.Details[i] = marshalTrackTrackItemToTrackItemResponseBody(val)
+		}
+	}
+
+	return res
+}
+
+// marshalTrackTrackItemToTrackItemResponseBody builds a value of type
+// *TrackItemResponseBody from a value of type *track.TrackItem.
+func marshalTrackTrackItemToTrackItemResponseBody(v *track.TrackItem) *TrackItemResponseBody {
+	res := &TrackItemResponseBody{
 		Content:   v.Content,
 		Timestamp: v.Timestamp,
 	}

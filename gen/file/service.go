@@ -11,12 +11,19 @@ import (
 	"context"
 
 	goa "goa.design/goa/v3/pkg"
+	"goa.design/goa/v3/security"
 )
 
 // The file service performs operations on file
 type Service interface {
 	// UploadImage implements upload_image.
-	UploadImage(context.Context, *ImageFile) (res *ImageURL, err error)
+	UploadImage(context.Context, *UploadFile) (res *UploadURL, err error)
+}
+
+// Auther defines the authorization functions to be implemented by the service.
+type Auther interface {
+	// JWTAuth implements the authorization logic for the JWT security scheme.
+	JWTAuth(ctx context.Context, token string, schema *security.JWTScheme) (context.Context, error)
 }
 
 // ServiceName is the name of the service as defined in the design. This is the
@@ -29,17 +36,31 @@ const ServiceName = "file"
 // MethodKey key.
 var MethodNames = [1]string{"upload_image"}
 
-// ImageFile is the payload type of the file service upload_image method.
-type ImageFile struct {
+// UploadFile is the payload type of the file service upload_image method.
+type UploadFile struct {
 	// file
 	File []byte
 	// file name
 	FileName string
+	// Authorization
+	Authorization *string
+	// JWT used for authentication
+	Token *string
 }
 
-// ImageURL is the result type of the file service upload_image method.
-type ImageURL struct {
-	// image URL
+// UploadURL is the result type of the file service upload_image method.
+type UploadURL struct {
+	// data
+	Data *UploadURLData
+	// code
+	Code int
+	// message
+	Message string
+}
+
+// UploadUrlData describes the file url
+type UploadURLData struct {
+	// file URL
 	URL string
 }
 

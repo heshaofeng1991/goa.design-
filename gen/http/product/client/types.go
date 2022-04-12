@@ -24,32 +24,32 @@ type BatchesCreateProductRequestBody struct {
 // UpdateProductRequestBody is the type of the "product" service
 // "update_product" endpoint HTTP request body.
 type UpdateProductRequestBody struct {
-	// product image
-	ProductImage []string `form:"product_image,omitempty" json:"product_image,omitempty" xml:"product_image,omitempty"`
-	// product sku
-	ProductSku string `form:"product_sku" json:"product_sku" xml:"product_sku"`
-	// product name
-	ProductName string `form:"product_name" json:"product_name" xml:"product_name"`
+	// images
+	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	// sku
+	Sku string `form:"sku" json:"sku" xml:"sku"`
+	// name
+	Name string `form:"name" json:"name" xml:"name"`
 	// declared en name
 	DeclaredEnName string `form:"declared_en_name" json:"declared_en_name" xml:"declared_en_name"`
 	// declared cn name
 	DeclaredCnName string `form:"declared_cn_name" json:"declared_cn_name" xml:"declared_cn_name"`
 	// declared value in usd（$）
 	DeclaredValueInUsd float64 `form:"declared_value_in_usd" json:"declared_value_in_usd" xml:"declared_value_in_usd"`
-	// product weight（g）
-	ProductWeight float64 `form:"product_weight" json:"product_weight" xml:"product_weight"`
-	// product length（mm）
-	ProductLength float64 `form:"product_length" json:"product_length" xml:"product_length"`
-	// product width（mm）
-	ProductWidth float64 `form:"product_width" json:"product_width" xml:"product_width"`
-	// product height（mm）
-	ProductHeight float64 `form:"product_height" json:"product_height" xml:"product_height"`
+	// weight（g）
+	Weight float64 `form:"weight" json:"weight" xml:"weight"`
+	// length（mm）
+	Length float64 `form:"length" json:"length" xml:"length"`
+	// width（mm）
+	Width float64 `form:"width" json:"width" xml:"width"`
+	// height（mm）
+	Height float64 `form:"height" json:"height" xml:"height"`
 	// hs code
 	HsCode string `form:"hs_code" json:"hs_code" xml:"hs_code"`
-	// product_barcode
-	ProductBarcode string `form:"product_barcode" json:"product_barcode" xml:"product_barcode"`
-	// product attributes
-	ProductAttributes []string `form:"product_attributes" json:"product_attributes" xml:"product_attributes"`
+	// barcode
+	Barcode string `form:"barcode" json:"barcode" xml:"barcode"`
+	// attributes
+	Attributes []string `form:"attributes" json:"attributes" xml:"attributes"`
 	// quality
 	Qty *int `form:"qty,omitempty" json:"qty,omitempty" xml:"qty,omitempty"`
 	// need use nss barcode
@@ -61,44 +61,104 @@ type UpdateProductRequestBody struct {
 	// id
 	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// barcode_service
-	BarcodeService bool `form:"barcode_service" json:"barcode_service" xml:"barcode_service"`
+	BarcodeService *bool `form:"barcode_service,omitempty" json:"barcode_service,omitempty" xml:"barcode_service,omitempty"`
+	// error message
+	ErrorMessage *string `form:"error_message,omitempty" json:"error_message,omitempty" xml:"error_message,omitempty"`
+	// Material
+	Material string `form:"material" json:"material" xml:"material"`
+	// Purpose
+	Purpose string `form:"purpose" json:"purpose" xml:"purpose"`
 }
 
-// GenerateTokenRequestBody is the type of the "product" service
-// "generate_token" endpoint HTTP request body.
-type GenerateTokenRequestBody struct {
-	// user_id
-	ID int64 `form:"id" json:"id" xml:"id"`
-	// tenantID
-	TenantID int64 `form:"tenant_id" json:"tenant_id" xml:"tenant_id"`
+// UploadProductRequestBody is the type of the "product" service
+// "upload_product" endpoint HTTP request body.
+type UploadProductRequestBody struct {
+	// file
+	File []byte `form:"file,omitempty" json:"file,omitempty" xml:"file,omitempty"`
+}
+
+// UploadProductUpdateRequestBody is the type of the "product" service
+// "upload_product_update" endpoint HTTP request body.
+type UploadProductUpdateRequestBody struct {
+	// file
+	File []byte `form:"file,omitempty" json:"file,omitempty" xml:"file,omitempty"`
 }
 
 // BatchesCreateProductResponseBody is the type of the "product" service
 // "batches_create_product" endpoint HTTP response body.
 type BatchesCreateProductResponseBody struct {
-	// results
-	Results []*MultiProductDataResponseBody `form:"results,omitempty" json:"results,omitempty" xml:"results,omitempty"`
+	// data
+	Data *MultiProductInfoResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
 }
 
 // UpdateProductResponseBody is the type of the "product" service
 // "update_product" endpoint HTTP response body.
 type UpdateProductResponseBody struct {
-	// status
-	Status *int32 `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+	// data
+	Data *UpdateResponseDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
+
+// UploadProductResponseBody is the type of the "product" service
+// "upload_product" endpoint HTTP response body.
+type UploadProductResponseBody struct {
+	// data
+	Data *UploadProductResponseDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
+
+// UploadProductUpdateResponseBody is the type of the "product" service
+// "upload_product_update" endpoint HTTP response body.
+type UploadProductUpdateResponseBody struct {
+	// data
+	Data *UploadProductResponseDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
 }
 
 // GenerateBarcodeResponseBody is the type of the "product" service
 // "generate_barcode" endpoint HTTP response body.
 type GenerateBarcodeResponseBody struct {
-	// barcode
-	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+	// data
+	Data *BarCodeDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
 }
 
-// GenerateTokenResponseBody is the type of the "product" service
-// "generate_token" endpoint HTTP response body.
-type GenerateTokenResponseBody struct {
-	// token
-	Token *string `form:"token,omitempty" json:"token,omitempty" xml:"token,omitempty"`
+// ProductsQueryResponseBody is the type of the "product" service
+// "products_query" endpoint HTTP response body.
+type ProductsQueryResponseBody struct {
+	// data
+	Data *ProductsQueryDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
+
+// ProductDetailResponseBody is the type of the "product" service
+// "product_detail" endpoint HTTP response body.
+type ProductDetailResponseBody struct {
+	// data
+	Data *ProductDetailDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
 }
 
 // BatchesCreateProductUnauthorizedResponseBody is the type of the "product"
@@ -138,6 +198,117 @@ type UpdateProductUnauthorizedResponseBody struct {
 	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
 }
 
+// ExportProductUnauthorizedResponseBody is the type of the "product" service
+// "export_product" endpoint HTTP response body for the "Unauthorized" error.
+type ExportProductUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// ExportProductInternalErrorResponseBody is the type of the "product" service
+// "export_product" endpoint HTTP response body for the "internal_error" error.
+type ExportProductInternalErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// DownloadTemplatesUnauthorizedResponseBody is the type of the "product"
+// service "download_templates" endpoint HTTP response body for the
+// "Unauthorized" error.
+type DownloadTemplatesUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// DownloadTemplatesInternalErrorResponseBody is the type of the "product"
+// service "download_templates" endpoint HTTP response body for the
+// "internal_error" error.
+type DownloadTemplatesInternalErrorResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// UploadProductUnauthorizedResponseBody is the type of the "product" service
+// "upload_product" endpoint HTTP response body for the "Unauthorized" error.
+type UploadProductUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// UploadProductUpdateUnauthorizedResponseBody is the type of the "product"
+// service "upload_product_update" endpoint HTTP response body for the
+// "Unauthorized" error.
+type UploadProductUpdateUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
 // GenerateBarcodeUnauthorizedResponseBody is the type of the "product" service
 // "generate_barcode" endpoint HTTP response body for the "Unauthorized" error.
 type GenerateBarcodeUnauthorizedResponseBody struct {
@@ -156,9 +327,27 @@ type GenerateBarcodeUnauthorizedResponseBody struct {
 	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
 }
 
-// GenerateTokenUnauthorizedResponseBody is the type of the "product" service
-// "generate_token" endpoint HTTP response body for the "Unauthorized" error.
-type GenerateTokenUnauthorizedResponseBody struct {
+// ProductsQueryUnauthorizedResponseBody is the type of the "product" service
+// "products_query" endpoint HTTP response body for the "Unauthorized" error.
+type ProductsQueryUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// ProductDetailUnauthorizedResponseBody is the type of the "product" service
+// "product_detail" endpoint HTTP response body for the "Unauthorized" error.
+type ProductDetailUnauthorizedResponseBody struct {
 	// Name is the name of this class of errors.
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// ID is a unique identifier for this particular occurrence of the problem.
@@ -176,32 +365,32 @@ type GenerateTokenUnauthorizedResponseBody struct {
 
 // ProductRequestBody is used to define fields on request body types.
 type ProductRequestBody struct {
-	// product image
-	ProductImage []string `form:"product_image,omitempty" json:"product_image,omitempty" xml:"product_image,omitempty"`
-	// product sku
-	ProductSku string `form:"product_sku" json:"product_sku" xml:"product_sku"`
-	// product name
-	ProductName string `form:"product_name" json:"product_name" xml:"product_name"`
+	// images
+	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	// sku
+	Sku string `form:"sku" json:"sku" xml:"sku"`
+	// name
+	Name string `form:"name" json:"name" xml:"name"`
 	// declared en name
 	DeclaredEnName string `form:"declared_en_name" json:"declared_en_name" xml:"declared_en_name"`
 	// declared cn name
 	DeclaredCnName string `form:"declared_cn_name" json:"declared_cn_name" xml:"declared_cn_name"`
 	// declared value in usd（$）
 	DeclaredValueInUsd float64 `form:"declared_value_in_usd" json:"declared_value_in_usd" xml:"declared_value_in_usd"`
-	// product weight（g）
-	ProductWeight float64 `form:"product_weight" json:"product_weight" xml:"product_weight"`
-	// product length（mm）
-	ProductLength float64 `form:"product_length" json:"product_length" xml:"product_length"`
-	// product width（mm）
-	ProductWidth float64 `form:"product_width" json:"product_width" xml:"product_width"`
-	// product height（mm）
-	ProductHeight float64 `form:"product_height" json:"product_height" xml:"product_height"`
+	// weight（g）
+	Weight float64 `form:"weight" json:"weight" xml:"weight"`
+	// length（mm）
+	Length float64 `form:"length" json:"length" xml:"length"`
+	// width（mm）
+	Width float64 `form:"width" json:"width" xml:"width"`
+	// height（mm）
+	Height float64 `form:"height" json:"height" xml:"height"`
 	// hs code
 	HsCode string `form:"hs_code" json:"hs_code" xml:"hs_code"`
-	// product_barcode
-	ProductBarcode string `form:"product_barcode" json:"product_barcode" xml:"product_barcode"`
-	// product attributes
-	ProductAttributes []string `form:"product_attributes" json:"product_attributes" xml:"product_attributes"`
+	// barcode
+	Barcode string `form:"barcode" json:"barcode" xml:"barcode"`
+	// attributes
+	Attributes []string `form:"attributes" json:"attributes" xml:"attributes"`
 	// quality
 	Qty *int `form:"qty,omitempty" json:"qty,omitempty" xml:"qty,omitempty"`
 	// need use nss barcode
@@ -213,7 +402,23 @@ type ProductRequestBody struct {
 	// id
 	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
 	// barcode_service
-	BarcodeService bool `form:"barcode_service" json:"barcode_service" xml:"barcode_service"`
+	BarcodeService *bool `form:"barcode_service,omitempty" json:"barcode_service,omitempty" xml:"barcode_service,omitempty"`
+	// error message
+	ErrorMessage *string `form:"error_message,omitempty" json:"error_message,omitempty" xml:"error_message,omitempty"`
+	// Material
+	Material string `form:"material" json:"material" xml:"material"`
+	// Purpose
+	Purpose string `form:"purpose" json:"purpose" xml:"purpose"`
+	// Authorization
+	Authorization *string `form:"Authorization,omitempty" json:"Authorization,omitempty" xml:"Authorization,omitempty"`
+	// JWT used for authentication
+	Token *string `form:"token,omitempty" json:"token,omitempty" xml:"token,omitempty"`
+}
+
+// MultiProductInfoResponseBody is used to define fields on response body types.
+type MultiProductInfoResponseBody struct {
+	// product info
+	Products []*MultiProductDataResponseBody `form:"products,omitempty" json:"products,omitempty" xml:"products,omitempty"`
 }
 
 // MultiProductDataResponseBody is used to define fields on response body types.
@@ -230,6 +435,114 @@ type MultiProductDataResponseBody struct {
 	Sku *string `form:"sku,omitempty" json:"sku,omitempty" xml:"sku,omitempty"`
 	// product_name
 	ProductName *string `form:"product_name,omitempty" json:"product_name,omitempty" xml:"product_name,omitempty"`
+}
+
+// UpdateResponseDataResponseBody is used to define fields on response body
+// types.
+type UpdateResponseDataResponseBody struct {
+	// status
+	Status *int32 `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+}
+
+// UploadProductResponseDataResponseBody is used to define fields on response
+// body types.
+type UploadProductResponseDataResponseBody struct {
+	// Total Count
+	TotalCount *int `form:"total_count,omitempty" json:"total_count,omitempty" xml:"total_count,omitempty"`
+	// Success Count
+	SuccessCount *int `form:"success_count,omitempty" json:"success_count,omitempty" xml:"success_count,omitempty"`
+	// Fail Count
+	FailCount *int `form:"fail_count,omitempty" json:"fail_count,omitempty" xml:"fail_count,omitempty"`
+	// Result File
+	ResultFile *string `form:"result_file,omitempty" json:"result_file,omitempty" xml:"result_file,omitempty"`
+}
+
+// BarCodeDataResponseBody is used to define fields on response body types.
+type BarCodeDataResponseBody struct {
+	// barcode
+	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+}
+
+// ProductsQueryDataResponseBody is used to define fields on response body
+// types.
+type ProductsQueryDataResponseBody struct {
+	// list
+	List []*ProductItemResponseBody `form:"list,omitempty" json:"list,omitempty" xml:"list,omitempty"`
+	// meta
+	Meta *MetaDataResponseBody `form:"meta,omitempty" json:"meta,omitempty" xml:"meta,omitempty"`
+}
+
+// ProductItemResponseBody is used to define fields on response body types.
+type ProductItemResponseBody struct {
+	// id
+	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// status
+	Status *int `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+	// barcode
+	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+	// sku
+	Sku *string `form:"sku,omitempty" json:"sku,omitempty" xml:"sku,omitempty"`
+	// name
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// attributes
+	Attributes []string `form:"attributes,omitempty" json:"attributes,omitempty" xml:"attributes,omitempty"`
+	// images
+	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	// inventory
+	Inventory *int `form:"inventory,omitempty" json:"inventory,omitempty" xml:"inventory,omitempty"`
+	// weight
+	Weight *float64 `form:"weight,omitempty" json:"weight,omitempty" xml:"weight,omitempty"`
+	// inbound_ eight
+	InboundWeight *float64 `form:"inbound_weight,omitempty" json:"inbound_weight,omitempty" xml:"inbound_weight,omitempty"`
+	// length
+	Length *float64 `form:"length,omitempty" json:"length,omitempty" xml:"length,omitempty"`
+	// width
+	Width *float64 `form:"width,omitempty" json:"width,omitempty" xml:"width,omitempty"`
+	// height
+	Height *float64 `form:"height,omitempty" json:"height,omitempty" xml:"height,omitempty"`
+}
+
+// MetaDataResponseBody is used to define fields on response body types.
+type MetaDataResponseBody struct {
+	// current
+	Current *int `form:"current,omitempty" json:"current,omitempty" xml:"current,omitempty"`
+	// page_size
+	PageSize *int `form:"page_size,omitempty" json:"page_size,omitempty" xml:"page_size,omitempty"`
+	// total
+	Total *int `form:"total,omitempty" json:"total,omitempty" xml:"total,omitempty"`
+}
+
+// ProductDetailDataResponseBody is used to define fields on response body
+// types.
+type ProductDetailDataResponseBody struct {
+	// id
+	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// status
+	Status *int `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
+	// barcode
+	Barcode *string `form:"barcode,omitempty" json:"barcode,omitempty" xml:"barcode,omitempty"`
+	// sku
+	Sku *string `form:"sku,omitempty" json:"sku,omitempty" xml:"sku,omitempty"`
+	// name
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// attributes
+	Attributes []string `form:"attributes,omitempty" json:"attributes,omitempty" xml:"attributes,omitempty"`
+	// images
+	Images []string `form:"images,omitempty" json:"images,omitempty" xml:"images,omitempty"`
+	// weight
+	Weight *float64 `form:"weight,omitempty" json:"weight,omitempty" xml:"weight,omitempty"`
+	// hs_code
+	HsCode *string `form:"hs_code,omitempty" json:"hs_code,omitempty" xml:"hs_code,omitempty"`
+	// declared_cn_name
+	DeclaredCnName *string `form:"declared_cn_name,omitempty" json:"declared_cn_name,omitempty" xml:"declared_cn_name,omitempty"`
+	// declare_en_name
+	DeclaredEnName *string `form:"declared_en_name,omitempty" json:"declared_en_name,omitempty" xml:"declared_en_name,omitempty"`
+	// declared_value_in_usd
+	DeclaredValueInUsd *float64 `form:"declared_value_in_usd,omitempty" json:"declared_value_in_usd,omitempty" xml:"declared_value_in_usd,omitempty"`
+	// declared_value_in_eur
+	DeclaredValueInEur *float64 `form:"declared_value_in_eur,omitempty" json:"declared_value_in_eur,omitempty" xml:"declared_value_in_eur,omitempty"`
+	// barcode_service
+	BarcodeService *bool `form:"barcode_service,omitempty" json:"barcode_service,omitempty" xml:"barcode_service,omitempty"`
 }
 
 // NewBatchesCreateProductRequestBody builds the HTTP request body from the
@@ -249,45 +562,68 @@ func NewBatchesCreateProductRequestBody(p *product.MultiProduct) *BatchesCreateP
 // the "update_product" endpoint of the "product" service.
 func NewUpdateProductRequestBody(p *product.Product) *UpdateProductRequestBody {
 	body := &UpdateProductRequestBody{
-		ProductSku:         p.ProductSku,
-		ProductName:        p.ProductName,
+		Sku:                p.Sku,
+		Name:               p.Name,
 		DeclaredEnName:     p.DeclaredEnName,
 		DeclaredCnName:     p.DeclaredCnName,
 		DeclaredValueInUsd: p.DeclaredValueInUsd,
-		ProductWeight:      p.ProductWeight,
-		ProductLength:      p.ProductLength,
-		ProductWidth:       p.ProductWidth,
-		ProductHeight:      p.ProductHeight,
+		Weight:             p.Weight,
+		Length:             p.Length,
+		Width:              p.Width,
+		Height:             p.Height,
 		HsCode:             p.HsCode,
-		ProductBarcode:     p.ProductBarcode,
+		Barcode:            p.Barcode,
 		Qty:                p.Qty,
 		EnabledNssBarcode:  p.EnabledNssBarcode,
 		DeclaredValueInEur: p.DeclaredValueInEur,
 		CustomerCode:       p.CustomerCode,
 		ID:                 p.ID,
 		BarcodeService:     p.BarcodeService,
+		ErrorMessage:       p.ErrorMessage,
+		Material:           p.Material,
+		Purpose:            p.Purpose,
 	}
-	if p.ProductImage != nil {
-		body.ProductImage = make([]string, len(p.ProductImage))
-		for i, val := range p.ProductImage {
-			body.ProductImage[i] = val
+	if p.Images != nil {
+		body.Images = make([]string, len(p.Images))
+		for i, val := range p.Images {
+			body.Images[i] = val
 		}
 	}
-	if p.ProductAttributes != nil {
-		body.ProductAttributes = make([]string, len(p.ProductAttributes))
-		for i, val := range p.ProductAttributes {
-			body.ProductAttributes[i] = val
+	if p.Attributes != nil {
+		body.Attributes = make([]string, len(p.Attributes))
+		for i, val := range p.Attributes {
+			body.Attributes[i] = val
+		}
+	}
+	{
+		var zero string
+		if body.Material == zero {
+			body.Material = ""
+		}
+	}
+	{
+		var zero string
+		if body.Purpose == zero {
+			body.Purpose = ""
 		}
 	}
 	return body
 }
 
-// NewGenerateTokenRequestBody builds the HTTP request body from the payload of
-// the "generate_token" endpoint of the "product" service.
-func NewGenerateTokenRequestBody(p *product.GenerateTokenReq) *GenerateTokenRequestBody {
-	body := &GenerateTokenRequestBody{
-		ID:       p.ID,
-		TenantID: p.TenantID,
+// NewUploadProductRequestBody builds the HTTP request body from the payload of
+// the "upload_product" endpoint of the "product" service.
+func NewUploadProductRequestBody(p *product.UploadProductPayload) *UploadProductRequestBody {
+	body := &UploadProductRequestBody{
+		File: p.File,
+	}
+	return body
+}
+
+// NewUploadProductUpdateRequestBody builds the HTTP request body from the
+// payload of the "upload_product_update" endpoint of the "product" service.
+func NewUploadProductUpdateRequestBody(p *product.UploadProductPayload) *UploadProductUpdateRequestBody {
+	body := &UploadProductUpdateRequestBody{
+		File: p.File,
 	}
 	return body
 }
@@ -295,10 +631,12 @@ func NewGenerateTokenRequestBody(p *product.GenerateTokenReq) *GenerateTokenRequ
 // NewBatchesCreateProductMultiProductRspOK builds a "product" service
 // "batches_create_product" endpoint result from a HTTP "OK" response.
 func NewBatchesCreateProductMultiProductRspOK(body *BatchesCreateProductResponseBody) *product.MultiProductRsp {
-	v := &product.MultiProductRsp{}
-	v.Results = make([]*product.MultiProductData, len(body.Results))
-	for i, val := range body.Results {
-		v.Results[i] = unmarshalMultiProductDataResponseBodyToProductMultiProductData(val)
+	v := &product.MultiProductRsp{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalMultiProductInfoResponseBodyToProductMultiProductInfo(body.Data)
 	}
 
 	return v
@@ -323,7 +661,11 @@ func NewBatchesCreateProductUnauthorized(body *BatchesCreateProductUnauthorizedR
 // endpoint result from a HTTP "OK" response.
 func NewUpdateProductUpdateResponseOK(body *UpdateProductResponseBody) *product.UpdateResponse {
 	v := &product.UpdateResponse{
-		Status: *body.Status,
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalUpdateResponseDataResponseBodyToProductUpdateResponseData(body.Data)
 	}
 
 	return v
@@ -344,11 +686,151 @@ func NewUpdateProductUnauthorized(body *UpdateProductUnauthorizedResponseBody) *
 	return v
 }
 
+// NewExportProductResultOK builds a "product" service "export_product"
+// endpoint result from a HTTP "OK" response.
+func NewExportProductResultOK(length int64) *product.ExportProductResult {
+	v := &product.ExportProductResult{}
+	v.Length = length
+
+	return v
+}
+
+// NewExportProductUnauthorized builds a product service export_product
+// endpoint Unauthorized error.
+func NewExportProductUnauthorized(body *ExportProductUnauthorizedResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// NewExportProductInternalError builds a product service export_product
+// endpoint internal_error error.
+func NewExportProductInternalError(body *ExportProductInternalErrorResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// NewDownloadTemplatesExportProductResultOK builds a "product" service
+// "download_templates" endpoint result from a HTTP "OK" response.
+func NewDownloadTemplatesExportProductResultOK(length int64) *product.ExportProductResult {
+	v := &product.ExportProductResult{}
+	v.Length = length
+
+	return v
+}
+
+// NewDownloadTemplatesUnauthorized builds a product service download_templates
+// endpoint Unauthorized error.
+func NewDownloadTemplatesUnauthorized(body *DownloadTemplatesUnauthorizedResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// NewDownloadTemplatesInternalError builds a product service
+// download_templates endpoint internal_error error.
+func NewDownloadTemplatesInternalError(body *DownloadTemplatesInternalErrorResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// NewUploadProductResponseOK builds a "product" service "upload_product"
+// endpoint result from a HTTP "OK" response.
+func NewUploadProductResponseOK(body *UploadProductResponseBody) *product.UploadProductResponse {
+	v := &product.UploadProductResponse{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalUploadProductResponseDataResponseBodyToProductUploadProductResponseData(body.Data)
+	}
+
+	return v
+}
+
+// NewUploadProductUnauthorized builds a product service upload_product
+// endpoint Unauthorized error.
+func NewUploadProductUnauthorized(body *UploadProductUnauthorizedResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// NewUploadProductUpdateUploadProductResponseOK builds a "product" service
+// "upload_product_update" endpoint result from a HTTP "OK" response.
+func NewUploadProductUpdateUploadProductResponseOK(body *UploadProductUpdateResponseBody) *product.UploadProductResponse {
+	v := &product.UploadProductResponse{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalUploadProductResponseDataResponseBodyToProductUploadProductResponseData(body.Data)
+	}
+
+	return v
+}
+
+// NewUploadProductUpdateUnauthorized builds a product service
+// upload_product_update endpoint Unauthorized error.
+func NewUploadProductUpdateUnauthorized(body *UploadProductUpdateUnauthorizedResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
 // NewGenerateBarcodeBarCodeRspOK builds a "product" service "generate_barcode"
 // endpoint result from a HTTP "OK" response.
 func NewGenerateBarcodeBarCodeRspOK(body *GenerateBarcodeResponseBody) *product.BarCodeRsp {
 	v := &product.BarCodeRsp{
-		Barcode: *body.Barcode,
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalBarCodeDataResponseBodyToProductBarCodeData(body.Data)
 	}
 
 	return v
@@ -369,19 +851,52 @@ func NewGenerateBarcodeUnauthorized(body *GenerateBarcodeUnauthorizedResponseBod
 	return v
 }
 
-// NewGenerateTokenRspOK builds a "product" service "generate_token" endpoint
+// NewProductsQueryRspOK builds a "product" service "products_query" endpoint
 // result from a HTTP "OK" response.
-func NewGenerateTokenRspOK(body *GenerateTokenResponseBody) *product.GenerateTokenRsp {
-	v := &product.GenerateTokenRsp{
-		Token: *body.Token,
+func NewProductsQueryRspOK(body *ProductsQueryResponseBody) *product.ProductsQueryRsp {
+	v := &product.ProductsQueryRsp{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalProductsQueryDataResponseBodyToProductProductsQueryData(body.Data)
 	}
 
 	return v
 }
 
-// NewGenerateTokenUnauthorized builds a product service generate_token
+// NewProductsQueryUnauthorized builds a product service products_query
 // endpoint Unauthorized error.
-func NewGenerateTokenUnauthorized(body *GenerateTokenUnauthorizedResponseBody) *goa.ServiceError {
+func NewProductsQueryUnauthorized(body *ProductsQueryUnauthorizedResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// NewProductDetailRspOK builds a "product" service "product_detail" endpoint
+// result from a HTTP "OK" response.
+func NewProductDetailRspOK(body *ProductDetailResponseBody) *product.ProductDetailRsp {
+	v := &product.ProductDetailRsp{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalProductDetailDataResponseBodyToProductProductDetailData(body.Data)
+	}
+
+	return v
+}
+
+// NewProductDetailUnauthorized builds a product service product_detail
+// endpoint Unauthorized error.
+func NewProductDetailUnauthorized(body *ProductDetailUnauthorizedResponseBody) *goa.ServiceError {
 	v := &goa.ServiceError{
 		Name:      *body.Name,
 		ID:        *body.ID,
@@ -397,14 +912,15 @@ func NewGenerateTokenUnauthorized(body *GenerateTokenUnauthorizedResponseBody) *
 // ValidateBatchesCreateProductResponseBody runs the validations defined on
 // batches_create_product_response_body
 func ValidateBatchesCreateProductResponseBody(body *BatchesCreateProductResponseBody) (err error) {
-	if body.Results == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("results", "body"))
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
 	}
-	for _, e := range body.Results {
-		if e != nil {
-			if err2 := ValidateMultiProductDataResponseBody(e); err2 != nil {
-				err = goa.MergeErrors(err, err2)
-			}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateMultiProductInfoResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
 		}
 	}
 	return
@@ -413,12 +929,49 @@ func ValidateBatchesCreateProductResponseBody(body *BatchesCreateProductResponse
 // ValidateUpdateProductResponseBody runs the validations defined on
 // update_product_response_body
 func ValidateUpdateProductResponseBody(body *UpdateProductResponseBody) (err error) {
-	if body.Status == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
 	}
-	if body.Status != nil {
-		if !(*body.Status == 0 || *body.Status == 1) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.status", *body.Status, []interface{}{0, 1}))
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateUpdateResponseDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidateUploadProductResponseBody runs the validations defined on
+// upload_product_response_body
+func ValidateUploadProductResponseBody(body *UploadProductResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateUploadProductResponseDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidateUploadProductUpdateResponseBody runs the validations defined on
+// upload_product_update_response_body
+func ValidateUploadProductUpdateResponseBody(body *UploadProductUpdateResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateUploadProductResponseDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
 		}
 	}
 	return
@@ -427,17 +980,50 @@ func ValidateUpdateProductResponseBody(body *UpdateProductResponseBody) (err err
 // ValidateGenerateBarcodeResponseBody runs the validations defined on
 // generate_barcode_response_body
 func ValidateGenerateBarcodeResponseBody(body *GenerateBarcodeResponseBody) (err error) {
-	if body.Barcode == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("barcode", "body"))
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateBarCodeDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
 	}
 	return
 }
 
-// ValidateGenerateTokenResponseBody runs the validations defined on
-// generate_token_response_body
-func ValidateGenerateTokenResponseBody(body *GenerateTokenResponseBody) (err error) {
-	if body.Token == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("token", "body"))
+// ValidateProductsQueryResponseBody runs the validations defined on
+// products_query_response_body
+func ValidateProductsQueryResponseBody(body *ProductsQueryResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateProductsQueryDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidateProductDetailResponseBody runs the validations defined on
+// product_detail_response_body
+func ValidateProductDetailResponseBody(body *ProductDetailResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateProductDetailDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
 	}
 	return
 }
@@ -490,6 +1076,150 @@ func ValidateUpdateProductUnauthorizedResponseBody(body *UpdateProductUnauthoriz
 	return
 }
 
+// ValidateExportProductUnauthorizedResponseBody runs the validations defined
+// on export_product_Unauthorized_response_body
+func ValidateExportProductUnauthorizedResponseBody(body *ExportProductUnauthorizedResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateExportProductInternalErrorResponseBody runs the validations defined
+// on export_product_internal_error_response_body
+func ValidateExportProductInternalErrorResponseBody(body *ExportProductInternalErrorResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateDownloadTemplatesUnauthorizedResponseBody runs the validations
+// defined on download_templates_Unauthorized_response_body
+func ValidateDownloadTemplatesUnauthorizedResponseBody(body *DownloadTemplatesUnauthorizedResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateDownloadTemplatesInternalErrorResponseBody runs the validations
+// defined on download_templates_internal_error_response_body
+func ValidateDownloadTemplatesInternalErrorResponseBody(body *DownloadTemplatesInternalErrorResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateUploadProductUnauthorizedResponseBody runs the validations defined
+// on upload_product_Unauthorized_response_body
+func ValidateUploadProductUnauthorizedResponseBody(body *UploadProductUnauthorizedResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateUploadProductUpdateUnauthorizedResponseBody runs the validations
+// defined on upload_product_update_Unauthorized_response_body
+func ValidateUploadProductUpdateUnauthorizedResponseBody(body *UploadProductUpdateUnauthorizedResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
 // ValidateGenerateBarcodeUnauthorizedResponseBody runs the validations defined
 // on generate_barcode_Unauthorized_response_body
 func ValidateGenerateBarcodeUnauthorizedResponseBody(body *GenerateBarcodeUnauthorizedResponseBody) (err error) {
@@ -514,9 +1244,33 @@ func ValidateGenerateBarcodeUnauthorizedResponseBody(body *GenerateBarcodeUnauth
 	return
 }
 
-// ValidateGenerateTokenUnauthorizedResponseBody runs the validations defined
-// on generate_token_Unauthorized_response_body
-func ValidateGenerateTokenUnauthorizedResponseBody(body *GenerateTokenUnauthorizedResponseBody) (err error) {
+// ValidateProductsQueryUnauthorizedResponseBody runs the validations defined
+// on products_query_Unauthorized_response_body
+func ValidateProductsQueryUnauthorizedResponseBody(body *ProductsQueryUnauthorizedResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateProductDetailUnauthorizedResponseBody runs the validations defined
+// on product_detail_Unauthorized_response_body
+func ValidateProductDetailUnauthorizedResponseBody(body *ProductDetailUnauthorizedResponseBody) (err error) {
 	if body.Name == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
 	}
@@ -540,14 +1294,14 @@ func ValidateGenerateTokenUnauthorizedResponseBody(body *GenerateTokenUnauthoriz
 
 // ValidateProductRequestBody runs the validations defined on ProductRequestBody
 func ValidateProductRequestBody(body *ProductRequestBody) (err error) {
-	if body.ProductAttributes == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("product_attributes", "body"))
+	if body.Attributes == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("attributes", "body"))
 	}
-	if utf8.RuneCountInString(body.ProductSku) > 50 {
-		err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_sku", body.ProductSku, utf8.RuneCountInString(body.ProductSku), 50, false))
+	if utf8.RuneCountInString(body.Sku) > 50 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError("body.sku", body.Sku, utf8.RuneCountInString(body.Sku), 50, false))
 	}
-	if utf8.RuneCountInString(body.ProductName) > 50 {
-		err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_name", body.ProductName, utf8.RuneCountInString(body.ProductName), 50, false))
+	if utf8.RuneCountInString(body.Name) > 50 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError("body.name", body.Name, utf8.RuneCountInString(body.Name), 50, false))
 	}
 	if utf8.RuneCountInString(body.DeclaredEnName) > 50 {
 		err = goa.MergeErrors(err, goa.InvalidLengthError("body.declared_en_name", body.DeclaredEnName, utf8.RuneCountInString(body.DeclaredEnName), 50, false))
@@ -561,8 +1315,8 @@ func ValidateProductRequestBody(body *ProductRequestBody) (err error) {
 	if utf8.RuneCountInString(body.HsCode) > 50 {
 		err = goa.MergeErrors(err, goa.InvalidLengthError("body.hs_code", body.HsCode, utf8.RuneCountInString(body.HsCode), 50, false))
 	}
-	if utf8.RuneCountInString(body.ProductBarcode) > 50 {
-		err = goa.MergeErrors(err, goa.InvalidLengthError("body.product_barcode", body.ProductBarcode, utf8.RuneCountInString(body.ProductBarcode), 50, false))
+	if utf8.RuneCountInString(body.Barcode) > 50 {
+		err = goa.MergeErrors(err, goa.InvalidLengthError("body.barcode", body.Barcode, utf8.RuneCountInString(body.Barcode), 50, false))
 	}
 	if body.EnabledNssBarcode != nil {
 		if !(*body.EnabledNssBarcode == false || *body.EnabledNssBarcode == true) {
@@ -580,8 +1334,26 @@ func ValidateProductRequestBody(body *ProductRequestBody) (err error) {
 			err = goa.MergeErrors(err, goa.InvalidRangeError("body.id", *body.ID, 1, true))
 		}
 	}
-	if !(body.BarcodeService == false || body.BarcodeService == true) {
-		err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.barcode_service", body.BarcodeService, []interface{}{false, true}))
+	if body.BarcodeService != nil {
+		if !(*body.BarcodeService == false || *body.BarcodeService == true) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.barcode_service", *body.BarcodeService, []interface{}{false, true}))
+		}
+	}
+	return
+}
+
+// ValidateMultiProductInfoResponseBody runs the validations defined on
+// MultiProductInfoResponseBody
+func ValidateMultiProductInfoResponseBody(body *MultiProductInfoResponseBody) (err error) {
+	if body.Products == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("products", "body"))
+	}
+	for _, e := range body.Products {
+		if e != nil {
+			if err2 := ValidateMultiProductDataResponseBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
 	}
 	return
 }
@@ -606,6 +1378,177 @@ func ValidateMultiProductDataResponseBody(body *MultiProductDataResponseBody) (e
 	}
 	if body.ProductName == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("product_name", "body"))
+	}
+	return
+}
+
+// ValidateUpdateResponseDataResponseBody runs the validations defined on
+// UpdateResponseDataResponseBody
+func ValidateUpdateResponseDataResponseBody(body *UpdateResponseDataResponseBody) (err error) {
+	if body.Status == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
+	}
+	if body.Status != nil {
+		if !(*body.Status == 0 || *body.Status == 1) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.status", *body.Status, []interface{}{0, 1}))
+		}
+	}
+	return
+}
+
+// ValidateUploadProductResponseDataResponseBody runs the validations defined
+// on UploadProductResponseDataResponseBody
+func ValidateUploadProductResponseDataResponseBody(body *UploadProductResponseDataResponseBody) (err error) {
+	if body.ResultFile == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("result_file", "body"))
+	}
+	return
+}
+
+// ValidateBarCodeDataResponseBody runs the validations defined on
+// BarCodeDataResponseBody
+func ValidateBarCodeDataResponseBody(body *BarCodeDataResponseBody) (err error) {
+	if body.Barcode == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("barcode", "body"))
+	}
+	return
+}
+
+// ValidateProductsQueryDataResponseBody runs the validations defined on
+// ProductsQueryDataResponseBody
+func ValidateProductsQueryDataResponseBody(body *ProductsQueryDataResponseBody) (err error) {
+	if body.List == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("list", "body"))
+	}
+	for _, e := range body.List {
+		if e != nil {
+			if err2 := ValidateProductItemResponseBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	if body.Meta != nil {
+		if err2 := ValidateMetaDataResponseBody(body.Meta); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidateProductItemResponseBody runs the validations defined on
+// ProductItemResponseBody
+func ValidateProductItemResponseBody(body *ProductItemResponseBody) (err error) {
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Status == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
+	}
+	if body.Barcode == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("barcode", "body"))
+	}
+	if body.Sku == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("sku", "body"))
+	}
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.Attributes == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("attributes", "body"))
+	}
+	if body.Images == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("images", "body"))
+	}
+	if body.Inventory == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("inventory", "body"))
+	}
+	if body.Weight == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("weight", "body"))
+	}
+	if body.InboundWeight == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("inbound_weight", "body"))
+	}
+	if body.Length == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("length", "body"))
+	}
+	if body.Width == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("width", "body"))
+	}
+	if body.Height == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("height", "body"))
+	}
+	return
+}
+
+// ValidateMetaDataResponseBody runs the validations defined on
+// MetaDataResponseBody
+func ValidateMetaDataResponseBody(body *MetaDataResponseBody) (err error) {
+	if body.Current == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("current", "body"))
+	}
+	if body.PageSize == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("page_size", "body"))
+	}
+	if body.Total == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("total", "body"))
+	}
+	if body.Current != nil {
+		if *body.Current < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.current", *body.Current, 1, true))
+		}
+	}
+	if body.PageSize != nil {
+		if *body.PageSize < 1 {
+			err = goa.MergeErrors(err, goa.InvalidRangeError("body.page_size", *body.PageSize, 1, true))
+		}
+	}
+	return
+}
+
+// ValidateProductDetailDataResponseBody runs the validations defined on
+// ProductDetailDataResponseBody
+func ValidateProductDetailDataResponseBody(body *ProductDetailDataResponseBody) (err error) {
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Status == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
+	}
+	if body.Barcode == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("barcode", "body"))
+	}
+	if body.Sku == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("sku", "body"))
+	}
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.Attributes == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("attributes", "body"))
+	}
+	if body.Images == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("images", "body"))
+	}
+	if body.HsCode == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("hs_code", "body"))
+	}
+	if body.DeclaredCnName == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("declared_cn_name", "body"))
+	}
+	if body.DeclaredEnName == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("declared_en_name", "body"))
+	}
+	if body.DeclaredValueInUsd == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("declared_value_in_usd", "body"))
+	}
+	if body.DeclaredValueInEur == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("declared_value_in_eur", "body"))
+	}
+	if body.BarcodeService == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("barcode_service", "body"))
+	}
+	if body.Weight == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("weight", "body"))
 	}
 	return
 }

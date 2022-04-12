@@ -26,11 +26,11 @@ func NewClient(uploadImage goa.Endpoint) *Client {
 }
 
 // UploadImage calls the "upload_image" endpoint of the "file" service.
-func (c *Client) UploadImage(ctx context.Context, p *ImageFile) (res *ImageURL, err error) {
+func (c *Client) UploadImage(ctx context.Context, p *UploadFile) (res *UploadURL, err error) {
 	var ires interface{}
 	ires, err = c.UploadImageEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*ImageURL), nil
+	return ires.(*UploadURL), nil
 }

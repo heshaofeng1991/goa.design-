@@ -9,6 +9,8 @@ package client
 
 import (
 	"context"
+	product "goa/gen/product"
+	"mime/multipart"
 	"net/http"
 
 	goahttp "goa.design/goa/v3/http"
@@ -25,13 +27,33 @@ type Client struct {
 	// update_product endpoint.
 	UpdateProductDoer goahttp.Doer
 
+	// ExportProduct Doer is the HTTP client used to make requests to the
+	// export_product endpoint.
+	ExportProductDoer goahttp.Doer
+
+	// DownloadTemplates Doer is the HTTP client used to make requests to the
+	// download_templates endpoint.
+	DownloadTemplatesDoer goahttp.Doer
+
+	// UploadProduct Doer is the HTTP client used to make requests to the
+	// upload_product endpoint.
+	UploadProductDoer goahttp.Doer
+
+	// UploadProductUpdate Doer is the HTTP client used to make requests to the
+	// upload_product_update endpoint.
+	UploadProductUpdateDoer goahttp.Doer
+
 	// GenerateBarcode Doer is the HTTP client used to make requests to the
 	// generate_barcode endpoint.
 	GenerateBarcodeDoer goahttp.Doer
 
-	// GenerateToken Doer is the HTTP client used to make requests to the
-	// generate_token endpoint.
-	GenerateTokenDoer goahttp.Doer
+	// ProductsQuery Doer is the HTTP client used to make requests to the
+	// products_query endpoint.
+	ProductsQueryDoer goahttp.Doer
+
+	// ProductDetail Doer is the HTTP client used to make requests to the
+	// product_detail endpoint.
+	ProductDetailDoer goahttp.Doer
 
 	// CORS Doer is the HTTP client used to make requests to the  endpoint.
 	CORSDoer goahttp.Doer
@@ -46,6 +68,14 @@ type Client struct {
 	decoder func(*http.Response) goahttp.Decoder
 }
 
+// ProductUploadProductEncoderFunc is the type to encode multipart request for
+// the "product" service "upload_product" endpoint.
+type ProductUploadProductEncoderFunc func(*multipart.Writer, *product.UploadProductPayload) error
+
+// ProductUploadProductUpdateEncoderFunc is the type to encode multipart
+// request for the "product" service "upload_product_update" endpoint.
+type ProductUploadProductUpdateEncoderFunc func(*multipart.Writer, *product.UploadProductPayload) error
+
 // NewClient instantiates HTTP clients for all the product service servers.
 func NewClient(
 	scheme string,
@@ -58,8 +88,13 @@ func NewClient(
 	return &Client{
 		BatchesCreateProductDoer: doer,
 		UpdateProductDoer:        doer,
+		ExportProductDoer:        doer,
+		DownloadTemplatesDoer:    doer,
+		UploadProductDoer:        doer,
+		UploadProductUpdateDoer:  doer,
 		GenerateBarcodeDoer:      doer,
-		GenerateTokenDoer:        doer,
+		ProductsQueryDoer:        doer,
+		ProductDetailDoer:        doer,
 		CORSDoer:                 doer,
 		RestoreResponseBody:      restoreBody,
 		scheme:                   scheme,
@@ -117,14 +152,125 @@ func (c *Client) UpdateProduct() goa.Endpoint {
 	}
 }
 
+// ExportProduct returns an endpoint that makes HTTP requests to the product
+// service export_product server.
+func (c *Client) ExportProduct() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeExportProductRequest(c.encoder)
+		decodeResponse = DecodeExportProductResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildExportProductRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.ExportProductDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("product", "export_product", err)
+		}
+		res, err := decodeResponse(resp)
+		if err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		return &product.ExportProductResponseData{Result: res.(*product.ExportProductResult), Body: resp.Body}, nil
+	}
+}
+
+// DownloadTemplates returns an endpoint that makes HTTP requests to the
+// product service download_templates server.
+func (c *Client) DownloadTemplates() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeDownloadTemplatesRequest(c.encoder)
+		decodeResponse = DecodeDownloadTemplatesResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildDownloadTemplatesRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.DownloadTemplatesDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("product", "download_templates", err)
+		}
+		res, err := decodeResponse(resp)
+		if err != nil {
+			resp.Body.Close()
+			return nil, err
+		}
+		return &product.DownloadTemplatesResponseData{Result: res.(*product.ExportProductResult), Body: resp.Body}, nil
+	}
+}
+
+// UploadProduct returns an endpoint that makes HTTP requests to the product
+// service upload_product server.
+func (c *Client) UploadProduct(productUploadProductEncoderFn ProductUploadProductEncoderFunc) goa.Endpoint {
+	var (
+		encodeRequest  = EncodeUploadProductRequest(NewProductUploadProductEncoder(productUploadProductEncoderFn))
+		decodeResponse = DecodeUploadProductResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildUploadProductRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.UploadProductDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("product", "upload_product", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// UploadProductUpdate returns an endpoint that makes HTTP requests to the
+// product service upload_product_update server.
+func (c *Client) UploadProductUpdate(productUploadProductUpdateEncoderFn ProductUploadProductUpdateEncoderFunc) goa.Endpoint {
+	var (
+		encodeRequest  = EncodeUploadProductUpdateRequest(NewProductUploadProductUpdateEncoder(productUploadProductUpdateEncoderFn))
+		decodeResponse = DecodeUploadProductUpdateResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildUploadProductUpdateRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.UploadProductUpdateDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("product", "upload_product_update", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
 // GenerateBarcode returns an endpoint that makes HTTP requests to the product
 // service generate_barcode server.
 func (c *Client) GenerateBarcode() goa.Endpoint {
 	var (
+		encodeRequest  = EncodeGenerateBarcodeRequest(c.encoder)
 		decodeResponse = DecodeGenerateBarcodeResponse(c.decoder, c.RestoreResponseBody)
 	)
 	return func(ctx context.Context, v interface{}) (interface{}, error) {
 		req, err := c.BuildGenerateBarcodeRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
 		if err != nil {
 			return nil, err
 		}
@@ -136,15 +282,15 @@ func (c *Client) GenerateBarcode() goa.Endpoint {
 	}
 }
 
-// GenerateToken returns an endpoint that makes HTTP requests to the product
-// service generate_token server.
-func (c *Client) GenerateToken() goa.Endpoint {
+// ProductsQuery returns an endpoint that makes HTTP requests to the product
+// service products_query server.
+func (c *Client) ProductsQuery() goa.Endpoint {
 	var (
-		encodeRequest  = EncodeGenerateTokenRequest(c.encoder)
-		decodeResponse = DecodeGenerateTokenResponse(c.decoder, c.RestoreResponseBody)
+		encodeRequest  = EncodeProductsQueryRequest(c.encoder)
+		decodeResponse = DecodeProductsQueryResponse(c.decoder, c.RestoreResponseBody)
 	)
 	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildGenerateTokenRequest(ctx, v)
+		req, err := c.BuildProductsQueryRequest(ctx, v)
 		if err != nil {
 			return nil, err
 		}
@@ -152,9 +298,33 @@ func (c *Client) GenerateToken() goa.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		resp, err := c.GenerateTokenDoer.Do(req)
+		resp, err := c.ProductsQueryDoer.Do(req)
 		if err != nil {
-			return nil, goahttp.ErrRequestError("product", "generate_token", err)
+			return nil, goahttp.ErrRequestError("product", "products_query", err)
+		}
+		return decodeResponse(resp)
+	}
+}
+
+// ProductDetail returns an endpoint that makes HTTP requests to the product
+// service product_detail server.
+func (c *Client) ProductDetail() goa.Endpoint {
+	var (
+		encodeRequest  = EncodeProductDetailRequest(c.encoder)
+		decodeResponse = DecodeProductDetailResponse(c.decoder, c.RestoreResponseBody)
+	)
+	return func(ctx context.Context, v interface{}) (interface{}, error) {
+		req, err := c.BuildProductDetailRequest(ctx, v)
+		if err != nil {
+			return nil, err
+		}
+		err = encodeRequest(req, v)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := c.ProductDetailDoer.Do(req)
+		if err != nil {
+			return nil, goahttp.ErrRequestError("product", "product_detail", err)
 		}
 		return decodeResponse(resp)
 	}

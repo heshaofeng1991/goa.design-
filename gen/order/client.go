@@ -9,31 +9,54 @@ package order
 
 import (
 	"context"
+	"io"
 
 	goa "goa.design/goa/v3/pkg"
 )
 
 // Client is the "order" service client.
 type Client struct {
-	CreateInboundOrderEndpoint  goa.Endpoint
-	UpdateInboundOrderEndpoint  goa.Endpoint
-	CreateOutboundOrderEndpoint goa.Endpoint
-	UpdateOutboundOrderEndpoint goa.Endpoint
-	CreatePickupOrderEndpoint   goa.Endpoint
-	GetInboundOrderEndpoint     goa.Endpoint
-	GetOutboundOrderEndpoint    goa.Endpoint
+	CreateInboundOrderEndpoint          goa.Endpoint
+	UpdateInboundOrderEndpoint          goa.Endpoint
+	CreatePickupOrderEndpoint           goa.Endpoint
+	BatchQueryInboundOrderEndpoint      goa.Endpoint
+	GetInboundOrderEndpoint             goa.Endpoint
+	CreateOutboundOrderEndpoint         goa.Endpoint
+	UpdateOutboundOrderEndpoint         goa.Endpoint
+	BatchUpdateOutboundOrderEndpoint    goa.Endpoint
+	CreateOutboundOrderItemEndpoint     goa.Endpoint
+	UpdateOutboundOrderItemEndpoint     goa.Endpoint
+	DeleteOutboundOrderItemEndpoint     goa.Endpoint
+	BatchQueryOutboundOrderEndpoint     goa.Endpoint
+	GetOutboundOrderEndpoint            goa.Endpoint
+	GetOutboundOrderListFiltersEndpoint goa.Endpoint
+	GetOutboundOrderCountEndpoint       goa.Endpoint
+	GetOutboundOrderListEndpoint        goa.Endpoint
+	UploadOutboundOrdersEndpoint        goa.Endpoint
+	ExportOutboundOrdersEndpoint        goa.Endpoint
 }
 
 // NewClient initializes a "order" service client given the endpoints.
-func NewClient(createInboundOrder, updateInboundOrder, createOutboundOrder, updateOutboundOrder, createPickupOrder, getInboundOrder, getOutboundOrder goa.Endpoint) *Client {
+func NewClient(createInboundOrder, updateInboundOrder, createPickupOrder, batchQueryInboundOrder, getInboundOrder, createOutboundOrder, updateOutboundOrder, batchUpdateOutboundOrder, createOutboundOrderItem, updateOutboundOrderItem, deleteOutboundOrderItem, batchQueryOutboundOrder, getOutboundOrder, getOutboundOrderListFilters, getOutboundOrderCount, getOutboundOrderList, uploadOutboundOrders, exportOutboundOrders goa.Endpoint) *Client {
 	return &Client{
-		CreateInboundOrderEndpoint:  createInboundOrder,
-		UpdateInboundOrderEndpoint:  updateInboundOrder,
-		CreateOutboundOrderEndpoint: createOutboundOrder,
-		UpdateOutboundOrderEndpoint: updateOutboundOrder,
-		CreatePickupOrderEndpoint:   createPickupOrder,
-		GetInboundOrderEndpoint:     getInboundOrder,
-		GetOutboundOrderEndpoint:    getOutboundOrder,
+		CreateInboundOrderEndpoint:          createInboundOrder,
+		UpdateInboundOrderEndpoint:          updateInboundOrder,
+		CreatePickupOrderEndpoint:           createPickupOrder,
+		BatchQueryInboundOrderEndpoint:      batchQueryInboundOrder,
+		GetInboundOrderEndpoint:             getInboundOrder,
+		CreateOutboundOrderEndpoint:         createOutboundOrder,
+		UpdateOutboundOrderEndpoint:         updateOutboundOrder,
+		BatchUpdateOutboundOrderEndpoint:    batchUpdateOutboundOrder,
+		CreateOutboundOrderItemEndpoint:     createOutboundOrderItem,
+		UpdateOutboundOrderItemEndpoint:     updateOutboundOrderItem,
+		DeleteOutboundOrderItemEndpoint:     deleteOutboundOrderItem,
+		BatchQueryOutboundOrderEndpoint:     batchQueryOutboundOrder,
+		GetOutboundOrderEndpoint:            getOutboundOrder,
+		GetOutboundOrderListFiltersEndpoint: getOutboundOrderListFilters,
+		GetOutboundOrderCountEndpoint:       getOutboundOrderCount,
+		GetOutboundOrderListEndpoint:        getOutboundOrderList,
+		UploadOutboundOrdersEndpoint:        uploadOutboundOrders,
+		ExportOutboundOrdersEndpoint:        exportOutboundOrders,
 	}
 }
 
@@ -59,6 +82,39 @@ func (c *Client) UpdateInboundOrder(ctx context.Context, p *InboundOrder) (res *
 	return ires.(*UpdateResponse), nil
 }
 
+// CreatePickupOrder calls the "create_pickup_order" endpoint of the "order"
+// service.
+func (c *Client) CreatePickupOrder(ctx context.Context, p *PickupOrder) (res *PickupOrderRsp, err error) {
+	var ires interface{}
+	ires, err = c.CreatePickupOrderEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*PickupOrderRsp), nil
+}
+
+// BatchQueryInboundOrder calls the "batch_query_inbound_order" endpoint of the
+// "order" service.
+func (c *Client) BatchQueryInboundOrder(ctx context.Context, p *GetOrder) (res *InboundOrderResponse, err error) {
+	var ires interface{}
+	ires, err = c.BatchQueryInboundOrderEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*InboundOrderResponse), nil
+}
+
+// GetInboundOrder calls the "get_inbound_order" endpoint of the "order"
+// service.
+func (c *Client) GetInboundOrder(ctx context.Context, p *QueryOrder) (res *QueryInboundOrderRsp, err error) {
+	var ires interface{}
+	ires, err = c.GetInboundOrderEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*QueryInboundOrderRsp), nil
+}
+
 // CreateOutboundOrder calls the "create_outbound_order" endpoint of the
 // "order" service.
 func (c *Client) CreateOutboundOrder(ctx context.Context, p *OutboundOrder) (res *OutboundOrderRsp, err error) {
@@ -72,7 +128,7 @@ func (c *Client) CreateOutboundOrder(ctx context.Context, p *OutboundOrder) (res
 
 // UpdateOutboundOrder calls the "update_outbound_order" endpoint of the
 // "order" service.
-func (c *Client) UpdateOutboundOrder(ctx context.Context, p *OutboundOrder) (res *UpdateResponse, err error) {
+func (c *Client) UpdateOutboundOrder(ctx context.Context, p *OutboundOrderUpdateRequest) (res *UpdateResponse, err error) {
 	var ires interface{}
 	ires, err = c.UpdateOutboundOrderEndpoint(ctx, p)
 	if err != nil {
@@ -81,35 +137,127 @@ func (c *Client) UpdateOutboundOrder(ctx context.Context, p *OutboundOrder) (res
 	return ires.(*UpdateResponse), nil
 }
 
-// CreatePickupOrder calls the "create_pickup_order" endpoint of the "order"
-// service.
-func (c *Client) CreatePickupOrder(ctx context.Context, p *PickupOrder) (res *PickupOrderRsp, err error) {
+// BatchUpdateOutboundOrder calls the "batch_update_outbound_order" endpoint of
+// the "order" service.
+func (c *Client) BatchUpdateOutboundOrder(ctx context.Context, p *BatchUpdateOrderRequest) (res *BatchUpdateOrderResponse, err error) {
 	var ires interface{}
-	ires, err = c.CreatePickupOrderEndpoint(ctx, p)
+	ires, err = c.BatchUpdateOutboundOrderEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.(*PickupOrderRsp), nil
+	return ires.(*BatchUpdateOrderResponse), nil
 }
 
-// GetInboundOrder calls the "get_inbound_order" endpoint of the "order"
-// service.
-func (c *Client) GetInboundOrder(ctx context.Context, p *GetOrder) (res []*InboundOrderResponse, err error) {
+// CreateOutboundOrderItem calls the "create_outbound_order_item" endpoint of
+// the "order" service.
+func (c *Client) CreateOutboundOrderItem(ctx context.Context, p *OutboundOrderItemCreateRequest) (res *BaseResponse, err error) {
 	var ires interface{}
-	ires, err = c.GetInboundOrderEndpoint(ctx, p)
+	ires, err = c.CreateOutboundOrderItemEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.([]*InboundOrderResponse), nil
+	return ires.(*BaseResponse), nil
+}
+
+// UpdateOutboundOrderItem calls the "update_outbound_order_item" endpoint of
+// the "order" service.
+func (c *Client) UpdateOutboundOrderItem(ctx context.Context, p *OutboundOrderItemUpdateRequest) (res *BaseResponse, err error) {
+	var ires interface{}
+	ires, err = c.UpdateOutboundOrderItemEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*BaseResponse), nil
+}
+
+// DeleteOutboundOrderItem calls the "delete_outbound_order_item" endpoint of
+// the "order" service.
+func (c *Client) DeleteOutboundOrderItem(ctx context.Context, p *DeleteOutboundItemRequest) (res *BaseResponse, err error) {
+	var ires interface{}
+	ires, err = c.DeleteOutboundOrderItemEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*BaseResponse), nil
+}
+
+// BatchQueryOutboundOrder calls the "batch_query_outbound_order" endpoint of
+// the "order" service.
+func (c *Client) BatchQueryOutboundOrder(ctx context.Context, p *GetOrder) (res *OrderRsp, err error) {
+	var ires interface{}
+	ires, err = c.BatchQueryOutboundOrderEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*OrderRsp), nil
 }
 
 // GetOutboundOrder calls the "get_outbound_order" endpoint of the "order"
 // service.
-func (c *Client) GetOutboundOrder(ctx context.Context, p *GetOrder) (res []*OrderRsp, err error) {
+func (c *Client) GetOutboundOrder(ctx context.Context, p *QueryOutOrder) (res *QueryOrderRsp, err error) {
 	var ires interface{}
 	ires, err = c.GetOutboundOrderEndpoint(ctx, p)
 	if err != nil {
 		return
 	}
-	return ires.([]*OrderRsp), nil
+	return ires.(*QueryOrderRsp), nil
+}
+
+// GetOutboundOrderListFilters calls the "get_outbound_order_list_filters"
+// endpoint of the "order" service.
+func (c *Client) GetOutboundOrderListFilters(ctx context.Context, p *AuthToken) (res *OrderListFilters, err error) {
+	var ires interface{}
+	ires, err = c.GetOutboundOrderListFiltersEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*OrderListFilters), nil
+}
+
+// GetOutboundOrderCount calls the "get_outbound_order_count" endpoint of the
+// "order" service.
+func (c *Client) GetOutboundOrderCount(ctx context.Context, p *OrderQueryPayload) (res *OrderCountResult, err error) {
+	var ires interface{}
+	ires, err = c.GetOutboundOrderCountEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*OrderCountResult), nil
+}
+
+// GetOutboundOrderList calls the "get_outbound_order_list" endpoint of the
+// "order" service.
+func (c *Client) GetOutboundOrderList(ctx context.Context, p *OrderQueryPayload) (res *GetOrderListResult, err error) {
+	var ires interface{}
+	ires, err = c.GetOutboundOrderListEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*GetOrderListResult), nil
+}
+
+// UploadOutboundOrders calls the "upload_outbound_orders" endpoint of the
+// "order" service.
+func (c *Client) UploadOutboundOrders(ctx context.Context, p *UploadOrdersPayload) (res *UploadOrdersResult, err error) {
+	var ires interface{}
+	ires, err = c.UploadOutboundOrdersEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	return ires.(*UploadOrdersResult), nil
+}
+
+// ExportOutboundOrders calls the "export_outbound_orders" endpoint of the
+// "order" service.
+// ExportOutboundOrders may return the following errors:
+//	- "internal_error" (type *goa.ServiceError): Fault while processing download.
+//	- error: internal error
+func (c *Client) ExportOutboundOrders(ctx context.Context, p *OrderQueryPayload) (res *ExportOrderResult, resp io.ReadCloser, err error) {
+	var ires interface{}
+	ires, err = c.ExportOutboundOrdersEndpoint(ctx, p)
+	if err != nil {
+		return
+	}
+	o := ires.(*ExportOutboundOrdersResponseData)
+	return o.Result, o.Body, nil
 }

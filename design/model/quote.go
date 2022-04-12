@@ -59,9 +59,10 @@ var GetQuote = Type("GetQuote", func() {
 		Example("2022-02-14")
 		MaxLength(30)
 	})
+	Extend(AuthToken)
 
 	Required("origin_country", "dest_country", "dest_state", "dest_zip_code", "weight",
-		"length", "width", "height", "product_attributes")
+		"length", "width", "height")
 })
 
 // Quote 运费试算返回出参.
@@ -92,4 +93,38 @@ var Quote = Type("Quote", func() {
 	})
 
 	Required("channel_name", "channel_id", "type", "min_normal_days", "max_normal_days", "total_cost", "currency", "weight")
+})
+
+var QuoteInfo = Type("QuoteInfo", func() {
+	Field(1, "list", ArrayOf(Quote), "fees")
+	Required("list")
+})
+
+var QuoteRsp = Type("QuoteRsp", func() {
+	Description("QuoteRsp describes the fee info")
+	Extend(BaseResponse)
+	Field(1, "data", QuoteInfo, "data")
+})
+
+var PostQuote = Type("PostQuote", func() {
+	Field(1, "id", Int32, "channel cost id")
+	Field(4, "delivery_area", Int, "delivery area")
+	Field(5, "delivery_country_code", String, "delivery country code")
+	Field(6, "delivery_country_name", String, "delivery country name")
+	Field(7, "delivery_province_code", String, "delivery province code")
+	Field(8, "delivery_province_name", String, "delivery province name")
+	Field(9, "delivery_city_code", String, "delivery city code")
+	Field(10, "delivery_city_name", String, "delivery city name")
+	Field(11, "dest_area", Int, "dest area")
+	Field(12, "dest_country_code", String, "dest country code")
+	Field(13, "dest_country_name", String, "dest country name")
+	Field(14, "dest_province_code", String, "dest province code")
+	Field(15, "dest_province_name", String, "dest province name")
+	Field(16, "dest_city_code", String, "dest city code")
+	Field(17, "dest_city_name", String, "dest city name")
+	Extend(AuthToken)
+
+	Required("id", "delivery_area", "delivery_country_code",
+		"delivery_country_name", "dest_area",
+		"dest_country_code", "dest_country_name")
 })

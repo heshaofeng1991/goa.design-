@@ -8,38 +8,56 @@
 package client
 
 import (
+	"encoding/json"
 	"fmt"
 	track "goa/gen/track"
-	"strconv"
+	"unicode/utf8"
 
 	goa "goa.design/goa/v3/pkg"
 )
 
-// BuildGetPayload builds the payload for the track get endpoint from CLI flags.
-func BuildGetPayload(trackGetTrackingNumber string, trackGetType string) (*track.GetTrack, error) {
+// BuildBatchQueryTrackInfoPayload builds the payload for the track
+// batch_query_track_info endpoint from CLI flags.
+func BuildBatchQueryTrackInfoPayload(trackBatchQueryTrackInfoTrackingNumbers string) (*track.BatchQueryTrackPayload, error) {
 	var err error
-	var trackingNumber string
+	var trackingNumbers []string
 	{
-		trackingNumber = trackGetTrackingNumber
-	}
-	var type_ int
-	{
-		var v int64
-		v, err = strconv.ParseInt(trackGetType, 10, 64)
-		type_ = int(v)
+		err = json.Unmarshal([]byte(trackBatchQueryTrackInfoTrackingNumbers), &trackingNumbers)
 		if err != nil {
-			return nil, fmt.Errorf("invalid value for type_, must be INT")
+			return nil, fmt.Errorf("invalid JSON for trackingNumbers, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"Quia porro quis.\",\n      \"Cum sit laudantium.\",\n      \"Explicabo et qui autem eligendi voluptate deserunt.\"\n   ]'")
 		}
-		if !(type_ == 1 || type_ == 2) {
-			err = goa.MergeErrors(err, goa.InvalidEnumValueError("type_", type_, []interface{}{1, 2}))
+		if len(trackingNumbers) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("trackingNumbers", trackingNumbers, len(trackingNumbers), 1, true))
+		}
+		if len(trackingNumbers) > 50 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("trackingNumbers", trackingNumbers, len(trackingNumbers), 50, false))
 		}
 		if err != nil {
 			return nil, err
 		}
 	}
-	v := &track.GetTrack{}
+	v := &track.BatchQueryTrackPayload{}
+	v.TrackingNumbers = trackingNumbers
+
+	return v, nil
+}
+
+// BuildGetTrackPayload builds the payload for the track get_track endpoint
+// from CLI flags.
+func BuildGetTrackPayload(trackGetTrackTrackingNumber string) (*track.QueryTrackPayload, error) {
+	var err error
+	var trackingNumber string
+	{
+		trackingNumber = trackGetTrackTrackingNumber
+		if utf8.RuneCountInString(trackingNumber) < 1 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("trackingNumber", trackingNumber, utf8.RuneCountInString(trackingNumber), 1, true))
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	v := &track.QueryTrackPayload{}
 	v.TrackingNumber = trackingNumber
-	v.Type = type_
 
 	return v, nil
 }

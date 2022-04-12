@@ -13,13 +13,32 @@ import (
 	goa "goa.design/goa/v3/pkg"
 )
 
-// GetResponseBody is the type of the "track" service "get" endpoint HTTP
-// response body.
-type GetResponseBody []*TrackResponse
+// BatchQueryTrackInfoResponseBody is the type of the "track" service
+// "batch_query_track_info" endpoint HTTP response body.
+type BatchQueryTrackInfoResponseBody struct {
+	// data
+	Data *TrackInfoResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
 
-// GetUnauthorizedResponseBody is the type of the "track" service "get"
-// endpoint HTTP response body for the "Unauthorized" error.
-type GetUnauthorizedResponseBody struct {
+// GetTrackResponseBody is the type of the "track" service "get_track" endpoint
+// HTTP response body.
+type GetTrackResponseBody struct {
+	// data
+	Data *TrackResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+}
+
+// BatchQueryTrackInfoUnauthorizedResponseBody is the type of the "track"
+// service "batch_query_track_info" endpoint HTTP response body for the
+// "Unauthorized" error.
+type BatchQueryTrackInfoUnauthorizedResponseBody struct {
 	// Name is the name of this class of errors.
 	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
 	// ID is a unique identifier for this particular occurrence of the problem.
@@ -35,43 +54,67 @@ type GetUnauthorizedResponseBody struct {
 	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
 }
 
-// TrackResponse is used to define fields on response body types.
-type TrackResponse struct {
+// GetTrackUnauthorizedResponseBody is the type of the "track" service
+// "get_track" endpoint HTTP response body for the "Unauthorized" error.
+type GetTrackUnauthorizedResponseBody struct {
+	// Name is the name of this class of errors.
+	Name *string `form:"name,omitempty" json:"name,omitempty" xml:"name,omitempty"`
+	// ID is a unique identifier for this particular occurrence of the problem.
+	ID *string `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
+	// Message is a human-readable explanation specific to this occurrence of the
+	// problem.
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
+	// Is the error temporary?
+	Temporary *bool `form:"temporary,omitempty" json:"temporary,omitempty" xml:"temporary,omitempty"`
+	// Is the error a timeout?
+	Timeout *bool `form:"timeout,omitempty" json:"timeout,omitempty" xml:"timeout,omitempty"`
+	// Is the error a server-side fault?
+	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
+}
+
+// TrackInfoResponseBody is used to define fields on response body types.
+type TrackInfoResponseBody struct {
+	// tracks
+	List []*TrackResponseBody `form:"list,omitempty" json:"list,omitempty" xml:"list,omitempty"`
+}
+
+// TrackResponseBody is used to define fields on response body types.
+type TrackResponseBody struct {
 	// tracking number of order
 	TrackingNumber *string `form:"tracking_number,omitempty" json:"tracking_number,omitempty" xml:"tracking_number,omitempty"`
 	// tracking url
 	TrackingURL *string `form:"tracking_url,omitempty" json:"tracking_url,omitempty" xml:"tracking_url,omitempty"`
 	// tracking details
-	Details []*TrackItemResponse `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
+	Details []*TrackItemResponseBody `form:"details,omitempty" json:"details,omitempty" xml:"details,omitempty"`
 	// status
 	Status *int `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
-	// type
-	Type *int `form:"type,omitempty" json:"type,omitempty" xml:"type,omitempty"`
-	// order_id
-	OrderID *string `form:"order_id,omitempty" json:"order_id,omitempty" xml:"order_id,omitempty"`
 }
 
-// TrackItemResponse is used to define fields on response body types.
-type TrackItemResponse struct {
+// TrackItemResponseBody is used to define fields on response body types.
+type TrackItemResponseBody struct {
 	// tracking description
 	Content *string `form:"content,omitempty" json:"content,omitempty" xml:"content,omitempty"`
 	// tracking timestamp
 	Timestamp *string `form:"timestamp,omitempty" json:"timestamp,omitempty" xml:"timestamp,omitempty"`
 }
 
-// NewGetTrackOK builds a "track" service "get" endpoint result from a HTTP
-// "OK" response.
-func NewGetTrackOK(body []*TrackResponse) []*track.Track {
-	v := make([]*track.Track, len(body))
-	for i, val := range body {
-		v[i] = unmarshalTrackResponseToTrackTrack(val)
+// NewBatchQueryTrackInfoQueryTrackRspOK builds a "track" service
+// "batch_query_track_info" endpoint result from a HTTP "OK" response.
+func NewBatchQueryTrackInfoQueryTrackRspOK(body *BatchQueryTrackInfoResponseBody) *track.QueryTrackRsp {
+	v := &track.QueryTrackRsp{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalTrackInfoResponseBodyToTrackTrackInfo(body.Data)
 	}
 
 	return v
 }
 
-// NewGetUnauthorized builds a track service get endpoint Unauthorized error.
-func NewGetUnauthorized(body *GetUnauthorizedResponseBody) *goa.ServiceError {
+// NewBatchQueryTrackInfoUnauthorized builds a track service
+// batch_query_track_info endpoint Unauthorized error.
+func NewBatchQueryTrackInfoUnauthorized(body *BatchQueryTrackInfoUnauthorizedResponseBody) *goa.ServiceError {
 	v := &goa.ServiceError{
 		Name:      *body.Name,
 		ID:        *body.ID,
@@ -84,9 +127,72 @@ func NewGetUnauthorized(body *GetUnauthorizedResponseBody) *goa.ServiceError {
 	return v
 }
 
-// ValidateGetUnauthorizedResponseBody runs the validations defined on
-// get_Unauthorized_response_body
-func ValidateGetUnauthorizedResponseBody(body *GetUnauthorizedResponseBody) (err error) {
+// NewGetTrackTrackRspOK builds a "track" service "get_track" endpoint result
+// from a HTTP "OK" response.
+func NewGetTrackTrackRspOK(body *GetTrackResponseBody) *track.TrackRsp {
+	v := &track.TrackRsp{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalTrackResponseBodyToTrackTrack(body.Data)
+	}
+
+	return v
+}
+
+// NewGetTrackUnauthorized builds a track service get_track endpoint
+// Unauthorized error.
+func NewGetTrackUnauthorized(body *GetTrackUnauthorizedResponseBody) *goa.ServiceError {
+	v := &goa.ServiceError{
+		Name:      *body.Name,
+		ID:        *body.ID,
+		Message:   *body.Message,
+		Temporary: *body.Temporary,
+		Timeout:   *body.Timeout,
+		Fault:     *body.Fault,
+	}
+
+	return v
+}
+
+// ValidateBatchQueryTrackInfoResponseBody runs the validations defined on
+// batch_query_track_info_response_body
+func ValidateBatchQueryTrackInfoResponseBody(body *BatchQueryTrackInfoResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateTrackInfoResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidateGetTrackResponseBody runs the validations defined on
+// get_track_response_body
+func ValidateGetTrackResponseBody(body *GetTrackResponseBody) (err error) {
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateTrackResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
+		}
+	}
+	return
+}
+
+// ValidateBatchQueryTrackInfoUnauthorizedResponseBody runs the validations
+// defined on batch_query_track_info_Unauthorized_response_body
+func ValidateBatchQueryTrackInfoUnauthorizedResponseBody(body *BatchQueryTrackInfoUnauthorizedResponseBody) (err error) {
 	if body.Name == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
 	}
@@ -108,19 +214,59 @@ func ValidateGetUnauthorizedResponseBody(body *GetUnauthorizedResponseBody) (err
 	return
 }
 
-// ValidateTrackResponse runs the validations defined on TrackResponse
-func ValidateTrackResponse(body *TrackResponse) (err error) {
+// ValidateGetTrackUnauthorizedResponseBody runs the validations defined on
+// get_track_Unauthorized_response_body
+func ValidateGetTrackUnauthorizedResponseBody(body *GetTrackUnauthorizedResponseBody) (err error) {
+	if body.Name == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("name", "body"))
+	}
+	if body.ID == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+	}
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Temporary == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("temporary", "body"))
+	}
+	if body.Timeout == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("timeout", "body"))
+	}
+	if body.Fault == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateTrackInfoResponseBody runs the validations defined on
+// TrackInfoResponseBody
+func ValidateTrackInfoResponseBody(body *TrackInfoResponseBody) (err error) {
+	if body.List == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("list", "body"))
+	}
+	for _, e := range body.List {
+		if e != nil {
+			if err2 := ValidateTrackResponseBody(e); err2 != nil {
+				err = goa.MergeErrors(err, err2)
+			}
+		}
+	}
+	return
+}
+
+// ValidateTrackResponseBody runs the validations defined on TrackResponseBody
+func ValidateTrackResponseBody(body *TrackResponseBody) (err error) {
 	if body.TrackingNumber == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("tracking_number", "body"))
+	}
+	if body.TrackingURL == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("tracking_url", "body"))
 	}
 	if body.Details == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("details", "body"))
 	}
 	if body.Status == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
-	}
-	if body.Type == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("type", "body"))
 	}
 	return
 }

@@ -9,25 +9,57 @@ package product
 
 import (
 	"context"
+	"io"
 
 	goa "goa.design/goa/v3/pkg"
+	"goa.design/goa/v3/security"
 )
 
 // Endpoints wraps the "product" service endpoints.
 type Endpoints struct {
 	BatchesCreateProduct goa.Endpoint
 	UpdateProduct        goa.Endpoint
+	ExportProduct        goa.Endpoint
+	DownloadTemplates    goa.Endpoint
+	UploadProduct        goa.Endpoint
+	UploadProductUpdate  goa.Endpoint
 	GenerateBarcode      goa.Endpoint
-	GenerateToken        goa.Endpoint
+	ProductsQuery        goa.Endpoint
+	ProductDetail        goa.Endpoint
+}
+
+// ExportProductResponseData holds both the result and the HTTP response body
+// reader of the "export_product" method.
+type ExportProductResponseData struct {
+	// Result is the method result.
+	Result *ExportProductResult
+	// Body streams the HTTP response body.
+	Body io.ReadCloser
+}
+
+// DownloadTemplatesResponseData holds both the result and the HTTP response
+// body reader of the "download_templates" method.
+type DownloadTemplatesResponseData struct {
+	// Result is the method result.
+	Result *ExportProductResult
+	// Body streams the HTTP response body.
+	Body io.ReadCloser
 }
 
 // NewEndpoints wraps the methods of the "product" service with endpoints.
 func NewEndpoints(s Service) *Endpoints {
+	// Casting service to Auther interface
+	a := s.(Auther)
 	return &Endpoints{
-		BatchesCreateProduct: NewBatchesCreateProductEndpoint(s),
-		UpdateProduct:        NewUpdateProductEndpoint(s),
-		GenerateBarcode:      NewGenerateBarcodeEndpoint(s),
-		GenerateToken:        NewGenerateTokenEndpoint(s),
+		BatchesCreateProduct: NewBatchesCreateProductEndpoint(s, a.JWTAuth),
+		UpdateProduct:        NewUpdateProductEndpoint(s, a.JWTAuth),
+		ExportProduct:        NewExportProductEndpoint(s, a.JWTAuth),
+		DownloadTemplates:    NewDownloadTemplatesEndpoint(s, a.JWTAuth),
+		UploadProduct:        NewUploadProductEndpoint(s, a.JWTAuth),
+		UploadProductUpdate:  NewUploadProductUpdateEndpoint(s, a.JWTAuth),
+		GenerateBarcode:      NewGenerateBarcodeEndpoint(s, a.JWTAuth),
+		ProductsQuery:        NewProductsQueryEndpoint(s, a.JWTAuth),
+		ProductDetail:        NewProductDetailEndpoint(s, a.JWTAuth),
 	}
 }
 
@@ -35,42 +67,226 @@ func NewEndpoints(s Service) *Endpoints {
 func (e *Endpoints) Use(m func(goa.Endpoint) goa.Endpoint) {
 	e.BatchesCreateProduct = m(e.BatchesCreateProduct)
 	e.UpdateProduct = m(e.UpdateProduct)
+	e.ExportProduct = m(e.ExportProduct)
+	e.DownloadTemplates = m(e.DownloadTemplates)
+	e.UploadProduct = m(e.UploadProduct)
+	e.UploadProductUpdate = m(e.UploadProductUpdate)
 	e.GenerateBarcode = m(e.GenerateBarcode)
-	e.GenerateToken = m(e.GenerateToken)
+	e.ProductsQuery = m(e.ProductsQuery)
+	e.ProductDetail = m(e.ProductDetail)
 }
 
 // NewBatchesCreateProductEndpoint returns an endpoint function that calls the
 // method "batches_create_product" of service "product".
-func NewBatchesCreateProductEndpoint(s Service) goa.Endpoint {
+func NewBatchesCreateProductEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
 		p := req.(*MultiProduct)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
 		return s.BatchesCreateProduct(ctx, p)
 	}
 }
 
 // NewUpdateProductEndpoint returns an endpoint function that calls the method
 // "update_product" of service "product".
-func NewUpdateProductEndpoint(s Service) goa.Endpoint {
+func NewUpdateProductEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
 		p := req.(*Product)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
 		return s.UpdateProduct(ctx, p)
+	}
+}
+
+// NewExportProductEndpoint returns an endpoint function that calls the method
+// "export_product" of service "product".
+func NewExportProductEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		p := req.(*ProductQueryPayload)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
+		res, body, err := s.ExportProduct(ctx, p)
+		if err != nil {
+			return nil, err
+		}
+		return &ExportProductResponseData{Result: res, Body: body}, nil
+	}
+}
+
+// NewDownloadTemplatesEndpoint returns an endpoint function that calls the
+// method "download_templates" of service "product".
+func NewDownloadTemplatesEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		p := req.(*DownloadTemplatesReq)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
+		res, body, err := s.DownloadTemplates(ctx, p)
+		if err != nil {
+			return nil, err
+		}
+		return &DownloadTemplatesResponseData{Result: res, Body: body}, nil
+	}
+}
+
+// NewUploadProductEndpoint returns an endpoint function that calls the method
+// "upload_product" of service "product".
+func NewUploadProductEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		p := req.(*UploadProductPayload)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
+		return s.UploadProduct(ctx, p)
+	}
+}
+
+// NewUploadProductUpdateEndpoint returns an endpoint function that calls the
+// method "upload_product_update" of service "product".
+func NewUploadProductUpdateEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		p := req.(*UploadProductPayload)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
+		return s.UploadProductUpdate(ctx, p)
 	}
 }
 
 // NewGenerateBarcodeEndpoint returns an endpoint function that calls the
 // method "generate_barcode" of service "product".
-func NewGenerateBarcodeEndpoint(s Service) goa.Endpoint {
+func NewGenerateBarcodeEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*BarCode)
+		p := req.(*AuthToken)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
 		return s.GenerateBarcode(ctx, p)
 	}
 }
 
-// NewGenerateTokenEndpoint returns an endpoint function that calls the method
-// "generate_token" of service "product".
-func NewGenerateTokenEndpoint(s Service) goa.Endpoint {
+// NewProductsQueryEndpoint returns an endpoint function that calls the method
+// "products_query" of service "product".
+func NewProductsQueryEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-		p := req.(*GenerateTokenReq)
-		return s.GenerateToken(ctx, p)
+		p := req.(*ProductsQueryReq)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
+		return s.ProductsQuery(ctx, p)
+	}
+}
+
+// NewProductDetailEndpoint returns an endpoint function that calls the method
+// "product_detail" of service "product".
+func NewProductDetailEndpoint(s Service, authJWTFn security.AuthJWTFunc) goa.Endpoint {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		p := req.(*ProductDetailReq)
+		var err error
+		sc := security.JWTScheme{
+			Name:           "jwt",
+			Scopes:         []string{"api:read", "api:write"},
+			RequiredScopes: []string{},
+		}
+		var token string
+		if p.Token != nil {
+			token = *p.Token
+		}
+		ctx, err = authJWTFn(ctx, token, &sc)
+		if err != nil {
+			return nil, err
+		}
+		return s.ProductDetail(ctx, p)
 	}
 }

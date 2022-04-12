@@ -26,8 +26,12 @@ type UploadImageRequestBody struct {
 // UploadImageResponseBody is the type of the "file" service "upload_image"
 // endpoint HTTP response body.
 type UploadImageResponseBody struct {
-	// image URL
-	URL *string `form:"url,omitempty" json:"url,omitempty" xml:"url,omitempty"`
+	// data
+	Data *UploadURLDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	// code
+	Code *int `form:"code,omitempty" json:"code,omitempty" xml:"code,omitempty"`
+	// message
+	Message *string `form:"message,omitempty" json:"message,omitempty" xml:"message,omitempty"`
 }
 
 // UploadImageUnauthorizedResponseBody is the type of the "file" service
@@ -48,9 +52,15 @@ type UploadImageUnauthorizedResponseBody struct {
 	Fault *bool `form:"fault,omitempty" json:"fault,omitempty" xml:"fault,omitempty"`
 }
 
+// UploadURLDataResponseBody is used to define fields on response body types.
+type UploadURLDataResponseBody struct {
+	// file URL
+	URL *string `form:"url,omitempty" json:"url,omitempty" xml:"url,omitempty"`
+}
+
 // NewUploadImageRequestBody builds the HTTP request body from the payload of
 // the "upload_image" endpoint of the "file" service.
-func NewUploadImageRequestBody(p *file.ImageFile) *UploadImageRequestBody {
+func NewUploadImageRequestBody(p *file.UploadFile) *UploadImageRequestBody {
 	body := &UploadImageRequestBody{
 		File:     p.File,
 		FileName: p.FileName,
@@ -58,11 +68,15 @@ func NewUploadImageRequestBody(p *file.ImageFile) *UploadImageRequestBody {
 	return body
 }
 
-// NewUploadImageImageURLOK builds a "file" service "upload_image" endpoint
+// NewUploadImageUploadURLOK builds a "file" service "upload_image" endpoint
 // result from a HTTP "OK" response.
-func NewUploadImageImageURLOK(body *UploadImageResponseBody) *file.ImageURL {
-	v := &file.ImageURL{
-		URL: *body.URL,
+func NewUploadImageUploadURLOK(body *UploadImageResponseBody) *file.UploadURL {
+	v := &file.UploadURL{
+		Code:    *body.Code,
+		Message: *body.Message,
+	}
+	if body.Data != nil {
+		v.Data = unmarshalUploadURLDataResponseBodyToFileUploadURLData(body.Data)
 	}
 
 	return v
@@ -86,12 +100,15 @@ func NewUploadImageUnauthorized(body *UploadImageUnauthorizedResponseBody) *goa.
 // ValidateUploadImageResponseBody runs the validations defined on
 // upload_image_response_body
 func ValidateUploadImageResponseBody(body *UploadImageResponseBody) (err error) {
-	if body.URL == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("url", "body"))
+	if body.Code == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("code", "body"))
 	}
-	if body.URL != nil {
-		if utf8.RuneCountInString(*body.URL) > 300 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("body.url", *body.URL, utf8.RuneCountInString(*body.URL), 300, false))
+	if body.Message == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("message", "body"))
+	}
+	if body.Data != nil {
+		if err2 := ValidateUploadURLDataResponseBody(body.Data); err2 != nil {
+			err = goa.MergeErrors(err, err2)
 		}
 	}
 	return
@@ -117,6 +134,20 @@ func ValidateUploadImageUnauthorizedResponseBody(body *UploadImageUnauthorizedRe
 	}
 	if body.Fault == nil {
 		err = goa.MergeErrors(err, goa.MissingFieldError("fault", "body"))
+	}
+	return
+}
+
+// ValidateUploadURLDataResponseBody runs the validations defined on
+// UploadUrlDataResponseBody
+func ValidateUploadURLDataResponseBody(body *UploadURLDataResponseBody) (err error) {
+	if body.URL == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("url", "body"))
+	}
+	if body.URL != nil {
+		if utf8.RuneCountInString(*body.URL) > 300 {
+			err = goa.MergeErrors(err, goa.InvalidLengthError("body.url", *body.URL, utf8.RuneCountInString(*body.URL), 300, false))
+		}
 	}
 	return
 }
