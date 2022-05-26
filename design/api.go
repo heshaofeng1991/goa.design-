@@ -23,7 +23,7 @@ var _ = API("test", func() {
 
 		// List the services hosted by this server.
 		Services([]string{
-			"quote",
+			"channel",
 		}...)
 
 		// List the Hosts and their transport URLs.

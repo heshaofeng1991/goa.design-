@@ -5,7 +5,7 @@ import (
 	"goa/design/model"
 )
 
-var _ = Service("quote", func() {
+var _ = Service("channel", func() {
 	Description("The quote service performs operations on quotation")
 
 	Security(JWTAuth)
