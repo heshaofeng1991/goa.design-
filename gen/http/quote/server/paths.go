@@ -7,12 +7,7 @@
 
 package server
 
-// GetQuotePath returns the URL path to the quote service get HTTP endpoint.
-func GetQuotePath() string {
-	return "/v1/shipping-estimate"
-}
-
-// PostQuotePath returns the URL path to the quote service post HTTP endpoint.
-func PostQuotePath() string {
-	return "/v1/shipping-estimate"
+// UpdateChannelCostStatusQuotePath returns the URL path to the quote service UpdateChannelCostStatus HTTP endpoint.
+func UpdateChannelCostStatusQuotePath() string {
+	return "/costs"
 }

@@ -11,207 +11,59 @@ import (
 	"encoding/json"
 	"fmt"
 	quote "goa/gen/quote"
-	"strconv"
-	"unicode/utf8"
 
 	goa "goa.design/goa/v3/pkg"
 )
 
-// BuildGetPayload builds the payload for the quote get endpoint from CLI flags.
-func BuildGetPayload(quoteGetOriginCountry string, quoteGetDestCountry string, quoteGetDestState string, quoteGetDestZipCode string, quoteGetWeight string, quoteGetLength string, quoteGetWidth string, quoteGetHeight string, quoteGetProductAttributes string, quoteGetFactory string, quoteGetDate string, quoteGetAuthorization string, quoteGetToken string) (*quote.GetQuote, error) {
+// BuildUpdateChannelCostStatusPayload builds the payload for the quote
+// UpdateChannelCostStatus endpoint from CLI flags.
+func BuildUpdateChannelCostStatusPayload(quoteUpdateChannelCostStatusBody string, quoteUpdateChannelCostStatusAuthorization string, quoteUpdateChannelCostStatusToken string) (*quote.UpdateChannelCostStatusReq, error) {
 	var err error
-	var originCountry string
+	var body UpdateChannelCostStatusRequestBody
 	{
-		originCountry = quoteGetOriginCountry
-		if utf8.RuneCountInString(originCountry) < 2 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("originCountry", originCountry, utf8.RuneCountInString(originCountry), 2, true))
+		err = json.Unmarshal([]byte(quoteUpdateChannelCostStatusBody), &body)
+		if err != nil {
+			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"country_codes\": [\n         \"US\",\n         \"UK\"\n      ],\n      \"ids\": [\n         1,\n         2\n      ],\n      \"status\": true\n   }'")
 		}
-		if utf8.RuneCountInString(originCountry) > 2 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("originCountry", originCountry, utf8.RuneCountInString(originCountry), 2, false))
+		if body.Ids == nil {
+			err = goa.MergeErrors(err, goa.MissingFieldError("ids", "body"))
+		}
+		if body.CountryCodes == nil {
+			err = goa.MergeErrors(err, goa.MissingFieldError("country_codes", "body"))
+		}
+		if !(body.Status == false || body.Status == true) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.status", body.Status, []interface{}{false, true}))
 		}
 		if err != nil {
 			return nil, err
-		}
-	}
-	var destCountry string
-	{
-		destCountry = quoteGetDestCountry
-		if utf8.RuneCountInString(destCountry) < 2 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("destCountry", destCountry, utf8.RuneCountInString(destCountry), 2, true))
-		}
-		if utf8.RuneCountInString(destCountry) > 2 {
-			err = goa.MergeErrors(err, goa.InvalidLengthError("destCountry", destCountry, utf8.RuneCountInString(destCountry), 2, false))
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	var destState string
-	{
-		destState = quoteGetDestState
-	}
-	var destZipCode string
-	{
-		destZipCode = quoteGetDestZipCode
-	}
-	var weight int
-	{
-		var v int64
-		v, err = strconv.ParseInt(quoteGetWeight, 10, 64)
-		weight = int(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for weight, must be INT")
-		}
-		if weight < 1 {
-			err = goa.MergeErrors(err, goa.InvalidRangeError("weight", weight, 1, true))
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	var length int
-	{
-		var v int64
-		v, err = strconv.ParseInt(quoteGetLength, 10, 64)
-		length = int(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for length, must be INT")
-		}
-		if length < 1 {
-			err = goa.MergeErrors(err, goa.InvalidRangeError("length", length, 1, true))
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	var width int
-	{
-		var v int64
-		v, err = strconv.ParseInt(quoteGetWidth, 10, 64)
-		width = int(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for width, must be INT")
-		}
-		if width < 1 {
-			err = goa.MergeErrors(err, goa.InvalidRangeError("width", width, 1, true))
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	var height int
-	{
-		var v int64
-		v, err = strconv.ParseInt(quoteGetHeight, 10, 64)
-		height = int(v)
-		if err != nil {
-			return nil, fmt.Errorf("invalid value for height, must be INT")
-		}
-		if height < 1 {
-			err = goa.MergeErrors(err, goa.InvalidRangeError("height", height, 1, true))
-		}
-		if err != nil {
-			return nil, err
-		}
-	}
-	var productAttributes []string
-	{
-		if quoteGetProductAttributes != "" {
-			err = json.Unmarshal([]byte(quoteGetProductAttributes), &productAttributes)
-			if err != nil {
-				return nil, fmt.Errorf("invalid JSON for productAttributes, \nerror: %s, \nexample of valid JSON:\n%s", err, "'[\n      \"battery\",\n      \"cosmetic\",\n      \"liquid\",\n      \"magnetic\"\n   ]'")
-			}
-		}
-	}
-	var factory *string
-	{
-		if quoteGetFactory != "" {
-			factory = &quoteGetFactory
-		}
-	}
-	var date *string
-	{
-		if quoteGetDate != "" {
-			date = &quoteGetDate
-			if date != nil {
-				if utf8.RuneCountInString(*date) > 30 {
-					err = goa.MergeErrors(err, goa.InvalidLengthError("date", *date, utf8.RuneCountInString(*date), 30, false))
-				}
-			}
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	var authorization *string
 	{
-		if quoteGetAuthorization != "" {
-			authorization = &quoteGetAuthorization
+		if quoteUpdateChannelCostStatusAuthorization != "" {
+			authorization = &quoteUpdateChannelCostStatusAuthorization
 		}
 	}
 	var token *string
 	{
-		if quoteGetToken != "" {
-			token = &quoteGetToken
+		if quoteUpdateChannelCostStatusToken != "" {
+			token = &quoteUpdateChannelCostStatusToken
 		}
 	}
-	v := &quote.GetQuote{}
-	v.OriginCountry = originCountry
-	v.DestCountry = destCountry
-	v.DestState = destState
-	v.DestZipCode = destZipCode
-	v.Weight = weight
-	v.Length = length
-	v.Width = width
-	v.Height = height
-	v.ProductAttributes = productAttributes
-	v.Factory = factory
-	v.Date = date
-	v.Authorization = authorization
-	v.Token = token
-
-	return v, nil
-}
-
-// BuildPostPayload builds the payload for the quote post endpoint from CLI
-// flags.
-func BuildPostPayload(quotePostBody string, quotePostAuthorization string, quotePostToken string) (*quote.PostQuote, error) {
-	var err error
-	var body PostRequestBody
-	{
-		err = json.Unmarshal([]byte(quotePostBody), &body)
-		if err != nil {
-			return nil, fmt.Errorf("invalid JSON for body, \nerror: %s, \nexample of valid JSON:\n%s", err, "'{\n      \"delivery_area\": 4558231424970667987,\n      \"delivery_city_code\": \"Ut adipisci sint.\",\n      \"delivery_city_name\": \"Iusto aut aut ut velit sequi nemo.\",\n      \"delivery_country_code\": \"Consequatur optio rerum amet.\",\n      \"delivery_country_name\": \"Consequatur illum ipsam aut eos natus.\",\n      \"delivery_province_code\": \"Cupiditate aspernatur qui.\",\n      \"delivery_province_name\": \"Modi corporis.\",\n      \"dest_area\": 5670275367545471786,\n      \"dest_city_code\": \"Ratione alias sunt nulla excepturi.\",\n      \"dest_city_name\": \"Quidem est iusto consequuntur excepturi dolores.\",\n      \"dest_country_code\": \"In laudantium enim enim perspiciatis at.\",\n      \"dest_country_name\": \"Vitae facilis at quasi error.\",\n      \"dest_province_code\": \"Qui voluptatem est.\",\n      \"dest_province_name\": \"Aliquid aperiam eius velit.\",\n      \"id\": 1343392620\n   }'")
+	v := &quote.UpdateChannelCostStatusReq{
+		Status: body.Status,
+	}
+	if body.Ids != nil {
+		v.Ids = make([]int64, len(body.Ids))
+		for i, val := range body.Ids {
+			v.Ids[i] = val
 		}
 	}
-	var authorization *string
-	{
-		if quotePostAuthorization != "" {
-			authorization = &quotePostAuthorization
+	if body.CountryCodes != nil {
+		v.CountryCodes = make([]string, len(body.CountryCodes))
+		for i, val := range body.CountryCodes {
+			v.CountryCodes[i] = val
 		}
-	}
-	var token *string
-	{
-		if quotePostToken != "" {
-			token = &quotePostToken
-		}
-	}
-	v := &quote.PostQuote{
-		ID:                   body.ID,
-		DeliveryArea:         body.DeliveryArea,
-		DeliveryCountryCode:  body.DeliveryCountryCode,
-		DeliveryCountryName:  body.DeliveryCountryName,
-		DeliveryProvinceCode: body.DeliveryProvinceCode,
-		DeliveryProvinceName: body.DeliveryProvinceName,
-		DeliveryCityCode:     body.DeliveryCityCode,
-		DeliveryCityName:     body.DeliveryCityName,
-		DestArea:             body.DestArea,
-		DestCountryCode:      body.DestCountryCode,
-		DestCountryName:      body.DestCountryName,
-		DestProvinceCode:     body.DestProvinceCode,
-		DestProvinceName:     body.DestProvinceName,
-		DestCityCode:         body.DestCityCode,
-		DestCityName:         body.DestCityName,
 	}
 	v.Authorization = authorization
 	v.Token = token

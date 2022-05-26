@@ -13,66 +13,32 @@ import (
 	goa "goa.design/goa/v3/pkg"
 )
 
-// PostRequestBody is the type of the "quote" service "post" endpoint HTTP
-// request body.
-type PostRequestBody struct {
-	// channel cost id
-	ID *int32 `form:"id,omitempty" json:"id,omitempty" xml:"id,omitempty"`
-	// delivery area
-	DeliveryArea *int `form:"delivery_area,omitempty" json:"delivery_area,omitempty" xml:"delivery_area,omitempty"`
-	// delivery country code
-	DeliveryCountryCode *string `form:"delivery_country_code,omitempty" json:"delivery_country_code,omitempty" xml:"delivery_country_code,omitempty"`
-	// delivery country name
-	DeliveryCountryName *string `form:"delivery_country_name,omitempty" json:"delivery_country_name,omitempty" xml:"delivery_country_name,omitempty"`
-	// delivery province code
-	DeliveryProvinceCode *string `form:"delivery_province_code,omitempty" json:"delivery_province_code,omitempty" xml:"delivery_province_code,omitempty"`
-	// delivery province name
-	DeliveryProvinceName *string `form:"delivery_province_name,omitempty" json:"delivery_province_name,omitempty" xml:"delivery_province_name,omitempty"`
-	// delivery city code
-	DeliveryCityCode *string `form:"delivery_city_code,omitempty" json:"delivery_city_code,omitempty" xml:"delivery_city_code,omitempty"`
-	// delivery city name
-	DeliveryCityName *string `form:"delivery_city_name,omitempty" json:"delivery_city_name,omitempty" xml:"delivery_city_name,omitempty"`
-	// dest area
-	DestArea *int `form:"dest_area,omitempty" json:"dest_area,omitempty" xml:"dest_area,omitempty"`
-	// dest country code
-	DestCountryCode *string `form:"dest_country_code,omitempty" json:"dest_country_code,omitempty" xml:"dest_country_code,omitempty"`
-	// dest country name
-	DestCountryName *string `form:"dest_country_name,omitempty" json:"dest_country_name,omitempty" xml:"dest_country_name,omitempty"`
-	// dest province code
-	DestProvinceCode *string `form:"dest_province_code,omitempty" json:"dest_province_code,omitempty" xml:"dest_province_code,omitempty"`
-	// dest province name
-	DestProvinceName *string `form:"dest_province_name,omitempty" json:"dest_province_name,omitempty" xml:"dest_province_name,omitempty"`
-	// dest city code
-	DestCityCode *string `form:"dest_city_code,omitempty" json:"dest_city_code,omitempty" xml:"dest_city_code,omitempty"`
-	// dest city name
-	DestCityName *string `form:"dest_city_name,omitempty" json:"dest_city_name,omitempty" xml:"dest_city_name,omitempty"`
+// UpdateChannelCostStatusRequestBody is the type of the "quote" service
+// "UpdateChannelCostStatus" endpoint HTTP request body.
+type UpdateChannelCostStatusRequestBody struct {
+	// 渠道ID
+	Ids []int64 `form:"ids,omitempty" json:"ids,omitempty" xml:"ids,omitempty"`
+	// 排除国际二字码
+	CountryCodes []string `form:"country_codes,omitempty" json:"country_codes,omitempty" xml:"country_codes,omitempty"`
+	// 状态（0 不启用 1 启用）
+	Status *bool `form:"status,omitempty" json:"status,omitempty" xml:"status,omitempty"`
 }
 
-// GetResponseBody is the type of the "quote" service "get" endpoint HTTP
-// response body.
-type GetResponseBody struct {
+// UpdateChannelCostStatusResponseBody is the type of the "quote" service
+// "UpdateChannelCostStatus" endpoint HTTP response body.
+type UpdateChannelCostStatusResponseBody struct {
 	// data
-	Data *QuoteInfoResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
+	Data *UpdateCustomerConfigDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
 	// code
 	Code int `form:"code" json:"code" xml:"code"`
 	// message
 	Message string `form:"message" json:"message" xml:"message"`
 }
 
-// PostResponseBody is the type of the "quote" service "post" endpoint HTTP
-// response body.
-type PostResponseBody struct {
-	// data
-	Data *UserDataResponseBody `form:"data,omitempty" json:"data,omitempty" xml:"data,omitempty"`
-	// code
-	Code int `form:"code" json:"code" xml:"code"`
-	// message
-	Message string `form:"message" json:"message" xml:"message"`
-}
-
-// GetUnauthorizedResponseBody is the type of the "quote" service "get"
-// endpoint HTTP response body for the "Unauthorized" error.
-type GetUnauthorizedResponseBody struct {
+// UpdateChannelCostStatusUnauthorizedResponseBody is the type of the "quote"
+// service "UpdateChannelCostStatus" endpoint HTTP response body for the
+// "Unauthorized" error.
+type UpdateChannelCostStatusUnauthorizedResponseBody struct {
 	// Name is the name of this class of errors.
 	Name string `form:"name" json:"name" xml:"name"`
 	// ID is a unique identifier for this particular occurrence of the problem.
@@ -88,85 +54,31 @@ type GetUnauthorizedResponseBody struct {
 	Fault bool `form:"fault" json:"fault" xml:"fault"`
 }
 
-// PostUnauthorizedResponseBody is the type of the "quote" service "post"
-// endpoint HTTP response body for the "Unauthorized" error.
-type PostUnauthorizedResponseBody struct {
-	// Name is the name of this class of errors.
-	Name string `form:"name" json:"name" xml:"name"`
-	// ID is a unique identifier for this particular occurrence of the problem.
-	ID string `form:"id" json:"id" xml:"id"`
-	// Message is a human-readable explanation specific to this occurrence of the
-	// problem.
-	Message string `form:"message" json:"message" xml:"message"`
-	// Is the error temporary?
-	Temporary bool `form:"temporary" json:"temporary" xml:"temporary"`
-	// Is the error a timeout?
-	Timeout bool `form:"timeout" json:"timeout" xml:"timeout"`
-	// Is the error a server-side fault?
-	Fault bool `form:"fault" json:"fault" xml:"fault"`
+// UpdateCustomerConfigDataResponseBody is used to define fields on response
+// body types.
+type UpdateCustomerConfigDataResponseBody struct {
+	// 状态（0 更新成功 1 更新失败）
+	Status int32 `form:"status" json:"status" xml:"status"`
 }
 
-// QuoteInfoResponseBody is used to define fields on response body types.
-type QuoteInfoResponseBody struct {
-	// fees
-	List []*QuoteResponseBody `form:"list" json:"list" xml:"list"`
-}
-
-// QuoteResponseBody is used to define fields on response body types.
-type QuoteResponseBody struct {
-	// Channel Display Name
-	ChannelName string `form:"channel_name" json:"channel_name" xml:"channel_name"`
-	// Channel ID
-	ChannelID int32 `form:"channel_id" json:"channel_id" xml:"channel_id"`
-	// Channel type
-	Type int `form:"type" json:"type" xml:"type"`
-	// Min Normal Days
-	MinNormalDays int32 `form:"min_normal_days" json:"min_normal_days" xml:"min_normal_days"`
-	// Max Normal Days
-	MaxNormalDays int32 `form:"max_normal_days" json:"max_normal_days" xml:"max_normal_days"`
-	// Total cost (decimal(15,2))
-	TotalCost float64 `form:"total_cost" json:"total_cost" xml:"total_cost"`
-	Currency  string  `form:"currency" json:"currency" xml:"currency"`
-	// weight(unit g)
-	Weight int `form:"weight" json:"weight" xml:"weight"`
-}
-
-// UserDataResponseBody is used to define fields on response body types.
-type UserDataResponseBody struct {
-	// status
-	Status int `form:"status" json:"status" xml:"status"`
-}
-
-// NewGetResponseBody builds the HTTP response body from the result of the
-// "get" endpoint of the "quote" service.
-func NewGetResponseBody(res *quote.QuoteRsp) *GetResponseBody {
-	body := &GetResponseBody{
+// NewUpdateChannelCostStatusResponseBody builds the HTTP response body from
+// the result of the "UpdateChannelCostStatus" endpoint of the "quote" service.
+func NewUpdateChannelCostStatusResponseBody(res *quote.UpdateChannelCostStatusRsp) *UpdateChannelCostStatusResponseBody {
+	body := &UpdateChannelCostStatusResponseBody{
 		Code:    res.Code,
 		Message: res.Message,
 	}
 	if res.Data != nil {
-		body.Data = marshalQuoteQuoteInfoToQuoteInfoResponseBody(res.Data)
+		body.Data = marshalQuoteUpdateCustomerConfigDataToUpdateCustomerConfigDataResponseBody(res.Data)
 	}
 	return body
 }
 
-// NewPostResponseBody builds the HTTP response body from the result of the
-// "post" endpoint of the "quote" service.
-func NewPostResponseBody(res *quote.UserRsp) *PostResponseBody {
-	body := &PostResponseBody{
-		Code:    res.Code,
-		Message: res.Message,
-	}
-	if res.Data != nil {
-		body.Data = marshalQuoteUserDataToUserDataResponseBody(res.Data)
-	}
-	return body
-}
-
-// NewGetUnauthorizedResponseBody builds the HTTP response body from the result
-// of the "get" endpoint of the "quote" service.
-func NewGetUnauthorizedResponseBody(res *goa.ServiceError) *GetUnauthorizedResponseBody {
-	body := &GetUnauthorizedResponseBody{
+// NewUpdateChannelCostStatusUnauthorizedResponseBody builds the HTTP response
+// body from the result of the "UpdateChannelCostStatus" endpoint of the
+// "quote" service.
+func NewUpdateChannelCostStatusUnauthorizedResponseBody(res *goa.ServiceError) *UpdateChannelCostStatusUnauthorizedResponseBody {
+	body := &UpdateChannelCostStatusUnauthorizedResponseBody{
 		Name:      res.Name,
 		ID:        res.ID,
 		Message:   res.Message,
@@ -177,58 +89,19 @@ func NewGetUnauthorizedResponseBody(res *goa.ServiceError) *GetUnauthorizedRespo
 	return body
 }
 
-// NewPostUnauthorizedResponseBody builds the HTTP response body from the
-// result of the "post" endpoint of the "quote" service.
-func NewPostUnauthorizedResponseBody(res *goa.ServiceError) *PostUnauthorizedResponseBody {
-	body := &PostUnauthorizedResponseBody{
-		Name:      res.Name,
-		ID:        res.ID,
-		Message:   res.Message,
-		Temporary: res.Temporary,
-		Timeout:   res.Timeout,
-		Fault:     res.Fault,
+// NewUpdateChannelCostStatusReq builds a quote service UpdateChannelCostStatus
+// endpoint payload.
+func NewUpdateChannelCostStatusReq(body *UpdateChannelCostStatusRequestBody, authorization *string, token *string) *quote.UpdateChannelCostStatusReq {
+	v := &quote.UpdateChannelCostStatusReq{
+		Status: *body.Status,
 	}
-	return body
-}
-
-// NewGetQuote builds a quote service get endpoint payload.
-func NewGetQuote(originCountry string, destCountry string, destState string, destZipCode string, weight int, length int, width int, height int, productAttributes []string, factory *string, date *string, authorization *string, token *string) *quote.GetQuote {
-	v := &quote.GetQuote{}
-	v.OriginCountry = originCountry
-	v.DestCountry = destCountry
-	v.DestState = destState
-	v.DestZipCode = destZipCode
-	v.Weight = weight
-	v.Length = length
-	v.Width = width
-	v.Height = height
-	v.ProductAttributes = productAttributes
-	v.Factory = factory
-	v.Date = date
-	v.Authorization = authorization
-	v.Token = token
-
-	return v
-}
-
-// NewPostQuote builds a quote service post endpoint payload.
-func NewPostQuote(body *PostRequestBody, authorization *string, token *string) *quote.PostQuote {
-	v := &quote.PostQuote{
-		ID:                   *body.ID,
-		DeliveryArea:         *body.DeliveryArea,
-		DeliveryCountryCode:  *body.DeliveryCountryCode,
-		DeliveryCountryName:  *body.DeliveryCountryName,
-		DeliveryProvinceCode: body.DeliveryProvinceCode,
-		DeliveryProvinceName: body.DeliveryProvinceName,
-		DeliveryCityCode:     body.DeliveryCityCode,
-		DeliveryCityName:     body.DeliveryCityName,
-		DestArea:             *body.DestArea,
-		DestCountryCode:      *body.DestCountryCode,
-		DestCountryName:      *body.DestCountryName,
-		DestProvinceCode:     body.DestProvinceCode,
-		DestProvinceName:     body.DestProvinceName,
-		DestCityCode:         body.DestCityCode,
-		DestCityName:         body.DestCityName,
+	v.Ids = make([]int64, len(body.Ids))
+	for i, val := range body.Ids {
+		v.Ids[i] = val
+	}
+	v.CountryCodes = make([]string, len(body.CountryCodes))
+	for i, val := range body.CountryCodes {
+		v.CountryCodes[i] = val
 	}
 	v.Authorization = authorization
 	v.Token = token
@@ -236,28 +109,22 @@ func NewPostQuote(body *PostRequestBody, authorization *string, token *string) *
 	return v
 }
 
-// ValidatePostRequestBody runs the validations defined on PostRequestBody
-func ValidatePostRequestBody(body *PostRequestBody) (err error) {
-	if body.ID == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("id", "body"))
+// ValidateUpdateChannelCostStatusRequestBody runs the validations defined on
+// UpdateChannelCostStatusRequestBody
+func ValidateUpdateChannelCostStatusRequestBody(body *UpdateChannelCostStatusRequestBody) (err error) {
+	if body.Ids == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("ids", "body"))
 	}
-	if body.DeliveryArea == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("delivery_area", "body"))
+	if body.CountryCodes == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("country_codes", "body"))
 	}
-	if body.DeliveryCountryCode == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("delivery_country_code", "body"))
+	if body.Status == nil {
+		err = goa.MergeErrors(err, goa.MissingFieldError("status", "body"))
 	}
-	if body.DeliveryCountryName == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("delivery_country_name", "body"))
-	}
-	if body.DestArea == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("dest_area", "body"))
-	}
-	if body.DestCountryCode == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("dest_country_code", "body"))
-	}
-	if body.DestCountryName == nil {
-		err = goa.MergeErrors(err, goa.MissingFieldError("dest_country_name", "body"))
+	if body.Status != nil {
+		if !(*body.Status == false || *body.Status == true) {
+			err = goa.MergeErrors(err, goa.InvalidEnumValueError("body.status", *body.Status, []interface{}{false, true}))
+		}
 	}
 	return
 }

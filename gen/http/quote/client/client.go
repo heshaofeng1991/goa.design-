@@ -17,11 +17,9 @@ import (
 
 // Client lists the quote service endpoint HTTP clients.
 type Client struct {
-	// Get Doer is the HTTP client used to make requests to the get endpoint.
-	GetDoer goahttp.Doer
-
-	// Post Doer is the HTTP client used to make requests to the post endpoint.
-	PostDoer goahttp.Doer
+	// UpdateChannelCostStatus Doer is the HTTP client used to make requests to the
+	// UpdateChannelCostStatus endpoint.
+	UpdateChannelCostStatusDoer goahttp.Doer
 
 	// CORS Doer is the HTTP client used to make requests to the  endpoint.
 	CORSDoer goahttp.Doer
@@ -46,26 +44,25 @@ func NewClient(
 	restoreBody bool,
 ) *Client {
 	return &Client{
-		GetDoer:             doer,
-		PostDoer:            doer,
-		CORSDoer:            doer,
-		RestoreResponseBody: restoreBody,
-		scheme:              scheme,
-		host:                host,
-		decoder:             dec,
-		encoder:             enc,
+		UpdateChannelCostStatusDoer: doer,
+		CORSDoer:                    doer,
+		RestoreResponseBody:         restoreBody,
+		scheme:                      scheme,
+		host:                        host,
+		decoder:                     dec,
+		encoder:                     enc,
 	}
 }
 
-// Get returns an endpoint that makes HTTP requests to the quote service get
-// server.
-func (c *Client) Get() goa.Endpoint {
+// UpdateChannelCostStatus returns an endpoint that makes HTTP requests to the
+// quote service UpdateChannelCostStatus server.
+func (c *Client) UpdateChannelCostStatus() goa.Endpoint {
 	var (
-		encodeRequest  = EncodeGetRequest(c.encoder)
-		decodeResponse = DecodeGetResponse(c.decoder, c.RestoreResponseBody)
+		encodeRequest  = EncodeUpdateChannelCostStatusRequest(c.encoder)
+		decodeResponse = DecodeUpdateChannelCostStatusResponse(c.decoder, c.RestoreResponseBody)
 	)
 	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildGetRequest(ctx, v)
+		req, err := c.BuildUpdateChannelCostStatusRequest(ctx, v)
 		if err != nil {
 			return nil, err
 		}
@@ -73,33 +70,9 @@ func (c *Client) Get() goa.Endpoint {
 		if err != nil {
 			return nil, err
 		}
-		resp, err := c.GetDoer.Do(req)
+		resp, err := c.UpdateChannelCostStatusDoer.Do(req)
 		if err != nil {
-			return nil, goahttp.ErrRequestError("quote", "get", err)
-		}
-		return decodeResponse(resp)
-	}
-}
-
-// Post returns an endpoint that makes HTTP requests to the quote service post
-// server.
-func (c *Client) Post() goa.Endpoint {
-	var (
-		encodeRequest  = EncodePostRequest(c.encoder)
-		decodeResponse = DecodePostResponse(c.decoder, c.RestoreResponseBody)
-	)
-	return func(ctx context.Context, v interface{}) (interface{}, error) {
-		req, err := c.BuildPostRequest(ctx, v)
-		if err != nil {
-			return nil, err
-		}
-		err = encodeRequest(req, v)
-		if err != nil {
-			return nil, err
-		}
-		resp, err := c.PostDoer.Do(req)
-		if err != nil {
-			return nil, goahttp.ErrRequestError("quote", "post", err)
+			return nil, goahttp.ErrRequestError("quote", "UpdateChannelCostStatus", err)
 		}
 		return decodeResponse(resp)
 	}

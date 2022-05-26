@@ -10,8 +10,8 @@
 package service
 
 import (
-	. "goa.design/goa/v3/dsl" //nolint:revive
-) //nolint:revive
+	. "goa.design/goa/v3/dsl"
+)
 
 // JWTAuth defines a security scheme that uses JWT tokens.
 var JWTAuth = JWTSecurity("jwt", func() {

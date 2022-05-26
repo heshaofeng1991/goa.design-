@@ -16,10 +16,8 @@ import (
 
 // The quote service performs operations on quotation
 type Service interface {
-	// Get implements get.
-	Get(context.Context, *GetQuote) (res *QuoteRsp, err error)
-	// Post implements post.
-	Post(context.Context, *PostQuote) (res *UserRsp, err error)
+	// UpdateChannelCostStatus implements UpdateChannelCostStatus.
+	UpdateChannelCostStatus(context.Context, *UpdateChannelCostStatusReq) (res *UpdateChannelCostStatusRsp, err error)
 }
 
 // Auther defines the authorization functions to be implemented by the service.
@@ -36,122 +34,37 @@ const ServiceName = "quote"
 // MethodNames lists the service method names as defined in the design. These
 // are the same values that are set in the endpoint request contexts under the
 // MethodKey key.
-var MethodNames = [2]string{"get", "post"}
+var MethodNames = [1]string{"UpdateChannelCostStatus"}
 
-// GetQuote is the payload type of the quote service get method.
-type GetQuote struct {
-	// Origin country code (two-letter codes)
-	OriginCountry string
-	// Destination country code (two-letter codes)
-	DestCountry string
-	// State of destination country
-	DestState string
-	// Destination post code
-	DestZipCode string
-	// total weight of the package, unit(g)
-	Weight int
-	// the length of the package, unit(mm)
-	Length int
-	// the width of the package, unit(mm)
-	Width int
-	// the height of the package, unit(mm)
-	Height int
-	// Product attributes
-	ProductAttributes []string
-	// address of factory
-	Factory *string
-	// date
-	Date *string
+// UpdateChannelCostStatusReq is the payload type of the quote service
+// UpdateChannelCostStatus method.
+type UpdateChannelCostStatusReq struct {
+	// 渠道ID
+	Ids []int64
+	// 排除国际二字码
+	CountryCodes []string
+	// 状态（0 不启用 1 启用）
+	Status bool
 	// Authorization
 	Authorization *string
 	// JWT used for authentication
 	Token *string
 }
 
-// PostQuote is the payload type of the quote service post method.
-type PostQuote struct {
-	// channel cost id
-	ID int32
-	// delivery area
-	DeliveryArea int
-	// delivery country code
-	DeliveryCountryCode string
-	// delivery country name
-	DeliveryCountryName string
-	// delivery province code
-	DeliveryProvinceCode *string
-	// delivery province name
-	DeliveryProvinceName *string
-	// delivery city code
-	DeliveryCityCode *string
-	// delivery city name
-	DeliveryCityName *string
-	// dest area
-	DestArea int
-	// dest country code
-	DestCountryCode string
-	// dest country name
-	DestCountryName string
-	// dest province code
-	DestProvinceCode *string
-	// dest province name
-	DestProvinceName *string
-	// dest city code
-	DestCityCode *string
-	// dest city name
-	DestCityName *string
-	// Authorization
-	Authorization *string
-	// JWT used for authentication
-	Token *string
-}
-
-type Quote struct {
-	// Channel Display Name
-	ChannelName string
-	// Channel ID
-	ChannelID int32
-	// Channel type
-	Type int
-	// Min Normal Days
-	MinNormalDays int32
-	// Max Normal Days
-	MaxNormalDays int32
-	// Total cost (decimal(15,2))
-	TotalCost float64
-	Currency  string
-	// weight(unit g)
-	Weight int
-}
-
-type QuoteInfo struct {
-	// fees
-	List []*Quote
-}
-
-// QuoteRsp is the result type of the quote service get method.
-type QuoteRsp struct {
+// UpdateChannelCostStatusRsp is the result type of the quote service
+// UpdateChannelCostStatus method.
+type UpdateChannelCostStatusRsp struct {
 	// data
-	Data *QuoteInfo
+	Data *UpdateCustomerConfigData
 	// code
 	Code int
 	// message
 	Message string
 }
 
-type UserData struct {
-	// status
-	Status int
-}
-
-// UserRsp is the result type of the quote service post method.
-type UserRsp struct {
-	// data
-	Data *UserData
-	// code
-	Code int
-	// message
-	Message string
+type UpdateCustomerConfigData struct {
+	// 状态（0 更新成功 1 更新失败）
+	Status int32
 }
 
 // MakeUnauthorized builds a goa.ServiceError from an error.

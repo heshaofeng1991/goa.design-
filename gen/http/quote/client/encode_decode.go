@@ -10,7 +10,6 @@ package client
 import (
 	"bytes"
 	"context"
-	"fmt"
 	quote "goa/gen/quote"
 	"io/ioutil"
 	"net/http"
@@ -20,13 +19,14 @@ import (
 	goahttp "goa.design/goa/v3/http"
 )
 
-// BuildGetRequest instantiates a HTTP request object with method and path set
-// to call the "quote" service "get" endpoint
-func (c *Client) BuildGetRequest(ctx context.Context, v interface{}) (*http.Request, error) {
-	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: GetQuotePath()}
+// BuildUpdateChannelCostStatusRequest instantiates a HTTP request object with
+// method and path set to call the "quote" service "UpdateChannelCostStatus"
+// endpoint
+func (c *Client) BuildUpdateChannelCostStatusRequest(ctx context.Context, v interface{}) (*http.Request, error) {
+	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: UpdateChannelCostStatusQuotePath()}
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, goahttp.ErrInvalidURL("quote", "get", u.String(), err)
+		return nil, goahttp.ErrInvalidURL("quote", "UpdateChannelCostStatus", u.String(), err)
 	}
 	if ctx != nil {
 		req = req.WithContext(ctx)
@@ -35,13 +35,13 @@ func (c *Client) BuildGetRequest(ctx context.Context, v interface{}) (*http.Requ
 	return req, nil
 }
 
-// EncodeGetRequest returns an encoder for requests sent to the quote get
-// server.
-func EncodeGetRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
+// EncodeUpdateChannelCostStatusRequest returns an encoder for requests sent to
+// the quote UpdateChannelCostStatus server.
+func EncodeUpdateChannelCostStatusRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
 	return func(req *http.Request, v interface{}) error {
-		p, ok := v.(*quote.GetQuote)
+		p, ok := v.(*quote.UpdateChannelCostStatusReq)
 		if !ok {
-			return goahttp.ErrInvalidType("quote", "get", "*quote.GetQuote", v)
+			return goahttp.ErrInvalidType("quote", "UpdateChannelCostStatus", "*quote.UpdateChannelCostStatusReq", v)
 		}
 		if p.Authorization != nil {
 			head := *p.Authorization
@@ -59,140 +59,21 @@ func EncodeGetRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Re
 				req.Header.Set("Authorization", head)
 			}
 		}
-		values := req.URL.Query()
-		values.Add("origin_country", p.OriginCountry)
-		values.Add("dest_country", p.DestCountry)
-		values.Add("dest_state", p.DestState)
-		values.Add("dest_zip_code", p.DestZipCode)
-		values.Add("weight", fmt.Sprintf("%v", p.Weight))
-		values.Add("length", fmt.Sprintf("%v", p.Length))
-		values.Add("width", fmt.Sprintf("%v", p.Width))
-		values.Add("height", fmt.Sprintf("%v", p.Height))
-		for _, value := range p.ProductAttributes {
-			values.Add("product_attributes", value)
-		}
-		if p.Factory != nil {
-			values.Add("factory", *p.Factory)
-		}
-		if p.Date != nil {
-			values.Add("date", *p.Date)
-		}
-		req.URL.RawQuery = values.Encode()
-		return nil
-	}
-}
-
-// DecodeGetResponse returns a decoder for responses returned by the quote get
-// endpoint. restoreBody controls whether the response body should be restored
-// after having been read.
-// DecodeGetResponse may return the following errors:
-//	- "Unauthorized" (type *goa.ServiceError): http.StatusUnauthorized
-//	- error: internal error
-func DecodeGetResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
-	return func(resp *http.Response) (interface{}, error) {
-		if restoreBody {
-			b, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				return nil, err
-			}
-			resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
-			defer func() {
-				resp.Body = ioutil.NopCloser(bytes.NewBuffer(b))
-			}()
-		} else {
-			defer resp.Body.Close()
-		}
-		switch resp.StatusCode {
-		case http.StatusOK:
-			var (
-				body GetResponseBody
-				err  error
-			)
-			err = decoder(resp).Decode(&body)
-			if err != nil {
-				return nil, goahttp.ErrDecodingError("quote", "get", err)
-			}
-			err = ValidateGetResponseBody(&body)
-			if err != nil {
-				return nil, goahttp.ErrValidationError("quote", "get", err)
-			}
-			res := NewGetQuoteRspOK(&body)
-			return res, nil
-		case http.StatusUnauthorized:
-			var (
-				body GetUnauthorizedResponseBody
-				err  error
-			)
-			err = decoder(resp).Decode(&body)
-			if err != nil {
-				return nil, goahttp.ErrDecodingError("quote", "get", err)
-			}
-			err = ValidateGetUnauthorizedResponseBody(&body)
-			if err != nil {
-				return nil, goahttp.ErrValidationError("quote", "get", err)
-			}
-			return nil, NewGetUnauthorized(&body)
-		default:
-			body, _ := ioutil.ReadAll(resp.Body)
-			return nil, goahttp.ErrInvalidResponse("quote", "get", resp.StatusCode, string(body))
-		}
-	}
-}
-
-// BuildPostRequest instantiates a HTTP request object with method and path set
-// to call the "quote" service "post" endpoint
-func (c *Client) BuildPostRequest(ctx context.Context, v interface{}) (*http.Request, error) {
-	u := &url.URL{Scheme: c.scheme, Host: c.host, Path: PostQuotePath()}
-	req, err := http.NewRequest("POST", u.String(), nil)
-	if err != nil {
-		return nil, goahttp.ErrInvalidURL("quote", "post", u.String(), err)
-	}
-	if ctx != nil {
-		req = req.WithContext(ctx)
-	}
-
-	return req, nil
-}
-
-// EncodePostRequest returns an encoder for requests sent to the quote post
-// server.
-func EncodePostRequest(encoder func(*http.Request) goahttp.Encoder) func(*http.Request, interface{}) error {
-	return func(req *http.Request, v interface{}) error {
-		p, ok := v.(*quote.PostQuote)
-		if !ok {
-			return goahttp.ErrInvalidType("quote", "post", "*quote.PostQuote", v)
-		}
-		if p.Authorization != nil {
-			head := *p.Authorization
-			if !strings.Contains(head, " ") {
-				req.Header.Set("Authorization", "Bearer "+head)
-			} else {
-				req.Header.Set("Authorization", head)
-			}
-		}
-		if p.Token != nil {
-			head := *p.Token
-			if !strings.Contains(head, " ") {
-				req.Header.Set("Authorization", "Bearer "+head)
-			} else {
-				req.Header.Set("Authorization", head)
-			}
-		}
-		body := NewPostRequestBody(p)
+		body := NewUpdateChannelCostStatusRequestBody(p)
 		if err := encoder(req).Encode(&body); err != nil {
-			return goahttp.ErrEncodingError("quote", "post", err)
+			return goahttp.ErrEncodingError("quote", "UpdateChannelCostStatus", err)
 		}
 		return nil
 	}
 }
 
-// DecodePostResponse returns a decoder for responses returned by the quote
-// post endpoint. restoreBody controls whether the response body should be
-// restored after having been read.
-// DecodePostResponse may return the following errors:
+// DecodeUpdateChannelCostStatusResponse returns a decoder for responses
+// returned by the quote UpdateChannelCostStatus endpoint. restoreBody controls
+// whether the response body should be restored after having been read.
+// DecodeUpdateChannelCostStatusResponse may return the following errors:
 //	- "Unauthorized" (type *goa.ServiceError): http.StatusUnauthorized
 //	- error: internal error
-func DecodePostResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
+func DecodeUpdateChannelCostStatusResponse(decoder func(*http.Response) goahttp.Decoder, restoreBody bool) func(*http.Response) (interface{}, error) {
 	return func(resp *http.Response) (interface{}, error) {
 		if restoreBody {
 			b, err := ioutil.ReadAll(resp.Body)
@@ -209,79 +90,48 @@ func DecodePostResponse(decoder func(*http.Response) goahttp.Decoder, restoreBod
 		switch resp.StatusCode {
 		case http.StatusOK:
 			var (
-				body PostResponseBody
+				body UpdateChannelCostStatusResponseBody
 				err  error
 			)
 			err = decoder(resp).Decode(&body)
 			if err != nil {
-				return nil, goahttp.ErrDecodingError("quote", "post", err)
+				return nil, goahttp.ErrDecodingError("quote", "UpdateChannelCostStatus", err)
 			}
-			err = ValidatePostResponseBody(&body)
+			err = ValidateUpdateChannelCostStatusResponseBody(&body)
 			if err != nil {
-				return nil, goahttp.ErrValidationError("quote", "post", err)
+				return nil, goahttp.ErrValidationError("quote", "UpdateChannelCostStatus", err)
 			}
-			res := NewPostUserRspOK(&body)
+			res := NewUpdateChannelCostStatusRspOK(&body)
 			return res, nil
 		case http.StatusUnauthorized:
 			var (
-				body PostUnauthorizedResponseBody
+				body UpdateChannelCostStatusUnauthorizedResponseBody
 				err  error
 			)
 			err = decoder(resp).Decode(&body)
 			if err != nil {
-				return nil, goahttp.ErrDecodingError("quote", "post", err)
+				return nil, goahttp.ErrDecodingError("quote", "UpdateChannelCostStatus", err)
 			}
-			err = ValidatePostUnauthorizedResponseBody(&body)
+			err = ValidateUpdateChannelCostStatusUnauthorizedResponseBody(&body)
 			if err != nil {
-				return nil, goahttp.ErrValidationError("quote", "post", err)
+				return nil, goahttp.ErrValidationError("quote", "UpdateChannelCostStatus", err)
 			}
-			return nil, NewPostUnauthorized(&body)
+			return nil, NewUpdateChannelCostStatusUnauthorized(&body)
 		default:
 			body, _ := ioutil.ReadAll(resp.Body)
-			return nil, goahttp.ErrInvalidResponse("quote", "post", resp.StatusCode, string(body))
+			return nil, goahttp.ErrInvalidResponse("quote", "UpdateChannelCostStatus", resp.StatusCode, string(body))
 		}
 	}
 }
 
-// unmarshalQuoteInfoResponseBodyToQuoteQuoteInfo builds a value of type
-// *quote.QuoteInfo from a value of type *QuoteInfoResponseBody.
-func unmarshalQuoteInfoResponseBodyToQuoteQuoteInfo(v *QuoteInfoResponseBody) *quote.QuoteInfo {
+// unmarshalUpdateCustomerConfigDataResponseBodyToQuoteUpdateCustomerConfigData
+// builds a value of type *quote.UpdateCustomerConfigData from a value of type
+// *UpdateCustomerConfigDataResponseBody.
+func unmarshalUpdateCustomerConfigDataResponseBodyToQuoteUpdateCustomerConfigData(v *UpdateCustomerConfigDataResponseBody) *quote.UpdateCustomerConfigData {
 	if v == nil {
 		return nil
 	}
-	res := &quote.QuoteInfo{}
-	res.List = make([]*quote.Quote, len(v.List))
-	for i, val := range v.List {
-		res.List[i] = unmarshalQuoteResponseBodyToQuoteQuote(val)
-	}
-
-	return res
-}
-
-// unmarshalQuoteResponseBodyToQuoteQuote builds a value of type *quote.Quote
-// from a value of type *QuoteResponseBody.
-func unmarshalQuoteResponseBodyToQuoteQuote(v *QuoteResponseBody) *quote.Quote {
-	res := &quote.Quote{
-		ChannelName:   *v.ChannelName,
-		ChannelID:     *v.ChannelID,
-		Type:          *v.Type,
-		MinNormalDays: *v.MinNormalDays,
-		MaxNormalDays: *v.MaxNormalDays,
-		TotalCost:     *v.TotalCost,
-		Currency:      *v.Currency,
-		Weight:        *v.Weight,
-	}
-
-	return res
-}
-
-// unmarshalUserDataResponseBodyToQuoteUserData builds a value of type
-// *quote.UserData from a value of type *UserDataResponseBody.
-func unmarshalUserDataResponseBodyToQuoteUserData(v *UserDataResponseBody) *quote.UserData {
-	if v == nil {
-		return nil
-	}
-	res := &quote.UserData{
+	res := &quote.UpdateCustomerConfigData{
 		Status: *v.Status,
 	}
 
